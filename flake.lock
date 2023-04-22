@@ -43,15 +43,16 @@
     "jovian": {
       "flake": false,
       "locked": {
-        "lastModified": 1681078890,
-        "narHash": "sha256-zcRbZ12jl6MB1UMLH6daBIrc5XVw0IskZD8b6Zps/aQ=",
-        "owner": "Jovian-Experiments",
+        "lastModified": 1681665901,
+        "narHash": "sha256-ynmQpHVEgdHvkhqVSzW6z/cee8wEhs2dRfM5Pp6E290=",
+        "owner": "K900",
         "repo": "Jovian-NixOS",
-        "rev": "0586e3d1f3689ccd4c8820d2fd7775b39eb14c0d",
+        "rev": "7b754a9c444085a78386823d8ff23097cf9b7ae3",
         "type": "github"
       },
       "original": {
-        "owner": "Jovian-Experiments",
+        "owner": "K900",
+        "ref": "haxes",
         "repo": "Jovian-NixOS",
         "type": "github"
       }
