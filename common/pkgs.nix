@@ -1,6 +1,6 @@
 { pkgs, inputs, ... }: {
   nix = {
-    package = pkgs.nix;
+    # package = pkgs.nix;
     extraOptions = ''
       experimental-features = nix-command flakes
     '';

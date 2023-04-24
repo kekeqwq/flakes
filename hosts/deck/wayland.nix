@@ -21,9 +21,7 @@
   };
 
   environment.systemPackages = with pkgs; [
-    wofi
     pavucontrol
-    imv
     libsForQt5.qt5.qtvirtualkeyboard
     wvkbd
   ];
