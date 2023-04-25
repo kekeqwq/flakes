@@ -1,1 +1,1 @@
-{ pkgs, ... }: { environment.systemPackages = with pkgs; [ iptables v2raya ]; }
+{ pkgs, ... }: { environment.systemPackages = with pkgs; [ ]; }

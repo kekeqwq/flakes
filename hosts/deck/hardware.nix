@@ -9,15 +9,24 @@
   boot.kernelModules = [ "kvm-amd" ];
   boot.extraModulePackages = [ ];
 
-  fileSystems."/" = {
-    device = "/dev/nvme0n1p2";
-    fsType = "btrfs";
-    options = [ "compress=zstd:6" ];
-  };
-
   fileSystems."/boot" = {
     device = "/dev/nvme0n1p1";
     fsType = "vfat";
+  };
+
+  fileSystems."/" = {
+    device = "deck/nixos";
+    fsType = "zfs";
+  };
+
+  fileSystems."/nix" = {
+    device = "deck/nix";
+    fsType = "zfs";
+  };
+
+  fileSystems."/home" = {
+    device = "deck/home";
+    fsType = "zfs";
   };
 
   swapDevices = [ ];
