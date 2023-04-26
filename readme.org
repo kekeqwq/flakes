@@ -1,0 +1,24 @@
+* SteamDeck
+LiveCD need "Tmux" "Onboard" packages.
+#+begin_src nix
+  environment.systemPackages = with pkgs; [ onboard tmux];
+#+end_src
+Install Progress.
+#+begin_src shell
+  mkfs.fat -F32 /dev/nvme0n1p1
+  zpool create -f -o ashift=12 -o cachefile= -O compression=zstd -O acltype=posixacl -O atime=off -O xattr=sa -m none -O mountpoint=none deck /dev/disk/by-id/nvme-WD_PC_SN740_SDDPTQD-1T00_230255456613-part2
+  zfs create -o mountpoint=legacy deck/nixos
+  zfs create -o mountpoint=legacy deck/nix
+  zfs create -o mountpoint=legacy deck/home
+  zfs create -V 20G deck/swap
+  mkswap /dev/zvol/deck/swap
+  swapon /dev/zvol/deck/swap
+  mount -t zfs deck/nixos /mnt/
+  mount --mkdir -t zfs deck/nix /mnt/nix
+  mount --mkdir -t zfs deck/home /mnt/home
+  mount --mkdir /dev/nvme0n1p1 /mnt/boot
+  git clone https://github.com/kekeqwq/flakes
+  nixos-install --root /mnt --flake ./#deck
+#+end_src
+* Decktop PC
+*WorkInProgress*
