@@ -24,6 +24,19 @@ in self: super: {
   #     [ ../files/fix-stack_size.patch ];
   # });
 
+  # meson Workaround
+  # https://github.com/NixOS/nixpkgs/issues/229358
+  # Wait: https://nixpk.gs/pr-tracker.html?pr=229528
+  # meson = super.meson.overrideAttrs (o: {
+  #   patches = o.patches ++ [
+  #     (super.fetchpatch {
+  #       url =
+  #         "https://github.com/mesonbuild/meson/commit/7c78c2b5a0314078bdabb998ead56925dc8b0fc0.patch";
+  #       sha256 = "sha256-vSnHhuOIXf/1X+bUkUmGND5b30ES0O8EDArwb4p2/w4=";
+  #     })
+  #   ];
+  # });
+
   # My waybar
   waybar = super.waybar.overrideAttrs
     (o: { mesonFlags = o.mesonFlags ++ [ "-Dexperimental=true" ]; });
@@ -171,5 +184,9 @@ in self: super: {
     # withGTK3 = true;
     withPgtk = true;
   };
+  NetworkManager-l2tp =
+    (super.NetworkManager-l2tp.overrideAttrs (old: { })).override {
+      withGnome = false;
+    };
 
 }

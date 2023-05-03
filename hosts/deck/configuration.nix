@@ -17,7 +17,7 @@
   myuser.name = "keke";
   myuser.users = {
     isNormalUser = true;
-    extraGroups = [ "wheel" ];
+    extraGroups = [ "wheel" "networkmanager" ];
   };
 
   # Base

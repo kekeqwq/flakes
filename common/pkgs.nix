@@ -8,9 +8,9 @@
   };
 
   environment.systemPackages = with pkgs; [
+    htop
     nixfmt
     gcc
-    python3
     exa
     pass
     neofetch

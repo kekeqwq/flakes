@@ -3,7 +3,7 @@
   environment.systemPackages = with pkgs; [
     cataclysm-dda-git
     firefox
-    prismlauncher
+    # prismlauncher
     tdesktop
   ];
   myuser.hm.programs.emacs = {

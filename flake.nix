@@ -10,7 +10,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     jovian = {
-      url = "github:K900/Jovian-NixOS/haxes";
+      url = "github:Jovian-Experiments/Jovian-NixOS";
       flake = false;
     };
       
