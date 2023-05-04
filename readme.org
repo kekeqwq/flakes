@@ -1,7 +1,7 @@
 * SteamDeck
 LiveCD need "Tmux" "Onboard" packages.
 #+begin_src nix
-  environment.systemPackages = with pkgs; [ onboard tmux];
+  environment.systemPackages = with pkgs; [ onboard tmux ];
 #+end_src
 Install Progress.
 #+begin_src shell
