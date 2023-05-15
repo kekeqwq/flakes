@@ -5,5 +5,6 @@ _: {
     ./pkgs.nix
     ./nextcloud.nix
     ./wayland.nix
+    ./kvm.nix
   ];
 }

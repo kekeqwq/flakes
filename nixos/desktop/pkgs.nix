@@ -5,6 +5,7 @@
     firefox
     prismlauncher
     tdesktop
+    pinentry-curses
   ];
   myuser.hm.programs.emacs = {
     enable = true;
