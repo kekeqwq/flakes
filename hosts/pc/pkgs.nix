@@ -65,7 +65,7 @@
     # })
 
     # Base
-    qq
+    # qq
     mpv
     sioyek
     # clash
