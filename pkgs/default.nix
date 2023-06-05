@@ -7,8 +7,8 @@ let
   brave_version = "1.44.105";
   brave_sha256 = "sha256-m4wmUc5EcJ+hKG/yCcbpfYPvBCeX4InVNF4OdjLYsTc=";
   # Emacs
-  emacs_rev = "112858c40f52411932f79cf997795c54d54717c6";
-  emacs_sha256 = "sha256-60NHLkNyBbrtliTpd3Is7K7Gd0cpYEgra4tfCU0ntIU=";
+  # emacs_rev = "112858c40f52411932f79cf997795c54d54717c6";
+  # emacs_sha256 = "sha256-60NHLkNyBbrtliTpd3Is7K7Gd0cpYEgra4tfCU0ntIU=";
   # Edge
   edge_version = "114.0.1788.0-1";
   edge_sha256 = "sha256-ydqRbeeIsWTXS24n0/5sRC7Z5qkLJ2TQo7qRfWTE0Kc=";
@@ -160,30 +160,30 @@ in self: super: {
 
   # Emacs Master And Patches ---------------------------------------------------------------
 
-  emacs-head = (super.emacs.overrideAttrs (old: {
-    version = "${emacs_rev}";
-    src = super.fetchFromGitHub {
-      owner = "emacs-mirror";
-      repo = "emacs";
-      rev = "${emacs_rev}";
-      sha256 = "${emacs_sha256}";
-    };
-    patches = [
-      ./00-patchs/emacs-system-appearance.patch
-      ./00-patchs/emacs-fix-window-role.patch
-      ./00-patchs/emacs-round-undecorated-frame.patch
-    ];
-    # configureFlags = old.configureFlags ++ [ "--with-json" ];
-    preConfigure = "./autogen.sh";
-    buildInputs = old.buildInputs
-      ++ [ super.autoconf super.texinfo super.tree-sitter ];
-  })).override {
-    # withXinput2 = true;
-    # withXwidgets = true;
-    nativeComp = false;
-    # withGTK3 = true;
-    withPgtk = true;
-  };
+  # emacs-head = (super.emacs.overrideAttrs (old: {
+  #   version = "${emacs_rev}";
+  #   src = super.fetchFromGitHub {
+  #     owner = "emacs-mirror";
+  #     repo = "emacs";
+  #     rev = "${emacs_rev}";
+  #     sha256 = "${emacs_sha256}";
+  #   };
+  #   patches = [
+  #     ./00-patchs/emacs-system-appearance.patch
+  #     ./00-patchs/emacs-fix-window-role.patch
+  #     ./00-patchs/emacs-round-undecorated-frame.patch
+  #   ];
+  #   # configureFlags = old.configureFlags ++ [ "--with-json" ];
+  #   preConfigure = "./autogen.sh";
+  #   buildInputs = old.buildInputs
+  #     ++ [ super.autoconf super.texinfo super.tree-sitter ];
+  # })).override {
+  #   # withXinput2 = true;
+  #   # withXwidgets = true;
+  #   nativeComp = false;
+  #   withGTK3 = true;
+  #   withPgtk = true;
+  # };
   NetworkManager-l2tp =
     (super.NetworkManager-l2tp.overrideAttrs (old: { })).override {
       withGnome = false;

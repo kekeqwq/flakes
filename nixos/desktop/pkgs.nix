@@ -9,7 +9,7 @@
   ];
   myuser.hm.programs.emacs = {
     enable = true;
-    package = pkgs.emacs-head;
+    package = pkgs.emacs29-pgtk;
   };
 
   # GPG
