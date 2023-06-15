@@ -27,8 +27,8 @@
   # ];
 
   # WIP:fix sddm
-  # services.xserver.displayManager.setupCommands =
-  #   "${pkgs.xorg.xrandr}/bin/xrandr --output eDP-1 --rotate right";
+  services.xserver.displayManager.setupCommands =
+    "${pkgs.xorg.xrandr}/bin/xrandr --output eDP-1 --rotate right";
 
   myuser.hm.home.stateVersion = "23.05";
   system.stateVersion = "23.05";
