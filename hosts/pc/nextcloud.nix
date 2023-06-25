@@ -47,5 +47,5 @@
     after = [ "postgresql.service" ];
   };
 
-  services.nextcloud.package = pkgs.nextcloud26;
+  services.nextcloud.package = pkgs.nextcloud27;
 }
