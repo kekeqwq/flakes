@@ -3,7 +3,7 @@ _: {
     ./configuration.nix
     ./hardware.nix
     ./pkgs.nix
-    ./nextcloud.nix
+    # ./nextcloud.nix
     ./wayland.nix
     # ./kvm.nix
   ];
