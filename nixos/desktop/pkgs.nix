@@ -2,7 +2,7 @@
 
   environment.systemPackages = with pkgs; [
     cataclysm-dda-git
-    firefox-bin
+    firefox
     prismlauncher
     tdesktop
     pinentry-curses

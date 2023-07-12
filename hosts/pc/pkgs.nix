@@ -1,5 +1,6 @@
 { pkgs, ... }: {
 
+  virtualisation.podman.enable = true;
   programs.adb.enable = true;
   myuser.users = { extraGroups = [ "adbusers" ]; };
   # services.udev.packages = [ pkgs.android-udev-rules ];
