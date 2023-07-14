@@ -1,7 +1,7 @@
 { config, pkgs, lib, ... }: {
   # Local Firesystem(ZFS)
   boot.zfs.requestEncryptionCredentials = [ "tank" ];
-
+  boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
   # boot.kernelPackages = pkgs.linuxPackages_latest;
 
   ## ZFS
