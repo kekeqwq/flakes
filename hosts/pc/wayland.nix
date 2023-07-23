@@ -4,7 +4,7 @@
     enable = true;
     settings = rec {
       initial_session = {
-        command = "Hyprland";
+        command = "sway";
         # command = "steam-session";
         user = config.myuser.name;
       };
@@ -12,7 +12,7 @@
     };
   };
 
-  programs.hyprland.enable = true;
+  programs.sway.enable = true;
 
   myuser.hm.programs.foot = {
     enable = true;
@@ -24,8 +24,7 @@
   
   environment.systemPackages = with pkgs; [
     swaybg
-    waybar
-    wofi
+    dmenu
     pavucontrol
     imv
   ];
