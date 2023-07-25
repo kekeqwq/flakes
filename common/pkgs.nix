@@ -17,6 +17,8 @@
     gnumake
     ranger
     dua
+    p7zip
+    python3
     fd
     unzip
     unrar
