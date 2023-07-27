@@ -16,6 +16,7 @@
 
   # Application
   environment.systemPackages = with pkgs; [
+    spotify
     # Study
     # zotero
     # mask for https://github.com/NixOS/nixpkgs/pull/201028
