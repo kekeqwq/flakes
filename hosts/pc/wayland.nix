@@ -24,6 +24,8 @@
   };
   
   environment.systemPackages = with pkgs; [
+    grim
+    slurp
     swaybg
     dmenu
     pavucontrol

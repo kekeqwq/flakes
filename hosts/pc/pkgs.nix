@@ -16,6 +16,7 @@
 
   # Application
   environment.systemPackages = with pkgs; [
+    gimp
     spotify
     # Study
     # zotero
