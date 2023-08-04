@@ -1,5 +1,8 @@
 { pkgs, ... }: {
-
+  myuser.hm.programs.emacs = {
+    enable = true;
+    package = pkgs.emacs29-pgtk;
+  };
   virtualisation.podman.enable = true;
   programs.adb.enable = true;
   myuser.users = { extraGroups = [ "adbusers" ]; };

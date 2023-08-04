@@ -1,5 +1,8 @@
 { pkgs, lib, ... }: {
-
+  myuser.hm.programs.emacs = {
+    enable = true;
+    package = pkgs.emacs29;
+  };
   services.xserver = {
     enable = true;
     excludePackages = [ pkgs.xterm ];
@@ -14,6 +17,9 @@
   services.xrdp.defaultWindowManager = "i3";
 
   environment.systemPackages = with pkgs; [
+    feh
+    sxiv
+    alacritty
     pavucontrol
     libsForQt5.qt5.qtvirtualkeyboard
     onboard
