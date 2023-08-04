@@ -18,6 +18,7 @@
   environment.systemPackages = with pkgs; [
     gimp
     spotify
+    remmina
     # Study
     # zotero
     # mask for https://github.com/NixOS/nixpkgs/pull/201028
