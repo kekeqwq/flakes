@@ -3,28 +3,20 @@
   services.xserver = {
     enable = true;
     excludePackages = [ pkgs.xterm ];
+    windowManager.i3.enable = true;
     displayManager.sddm.enable = true;
     displayManager.sddm.settings = {
       General.InputMethod = "qtvirtualkeyboard";
       Theme.Current = "maldives";
     };
   };
-
-  programs.sway.enable = true;
-
-  myuser.hm.programs.foot = {
-    enable = true;
-    settings = {
-      main.term = "xterm-256color";
-      main.font = "MonoLisa Nasy:size=11";
-      colors.alpha = .92;
-    };
-  };
+  services.xrdp.enable = true;
+  services.xrdp.defaultWindowManager = "i3";
 
   environment.systemPackages = with pkgs; [
     pavucontrol
     libsForQt5.qt5.qtvirtualkeyboard
-    wvkbd
+    onboard
   ];
 
   # Aduio
