@@ -1,6 +1,7 @@
 { pkgs, config, ... }: {
 
   environment.systemPackages = with pkgs; [
+    spotify
     cataclysm-dda-git
     firefox
     prismlauncher

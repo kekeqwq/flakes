@@ -20,7 +20,6 @@
   # Application
   environment.systemPackages = with pkgs; [
     gimp
-    spotify
     remmina
     # Study
     # zotero
