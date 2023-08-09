@@ -2,7 +2,7 @@
 
   environment.systemPackages = with pkgs; [
     spotify
-    cataclysm-dda-git
+    # cataclysm-dda-git
     firefox
     prismlauncher
     tdesktop
