@@ -3,7 +3,6 @@
 {
   # Core
   jovian.devices.steamdeck.enable = true;
-  jovian.steam.enable = true;
   programs.steam.enable = true;
   boot.zfs.devNodes =
     "/dev/disk/by-id/nvme-WD_PC_SN740_SDDPTQD-1T00_230255456613-part2";

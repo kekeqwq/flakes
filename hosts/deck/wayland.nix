@@ -1,28 +1,16 @@
-{ pkgs, lib, ... }: {
-  myuser.hm.programs.emacs = {
-    enable = true;
-    package = pkgs.emacs29;
-  };
-  services.xserver = {
-    enable = true;
-    excludePackages = [ pkgs.xterm ];
-    windowManager.i3.enable = true;
-    displayManager.sddm.enable = true;
-    displayManager.sddm.settings = {
-      General.InputMethod = "qtvirtualkeyboard";
-      Theme.Current = "maldives";
-    };
-  };
-  services.xrdp.enable = true;
-  services.xrdp.defaultWindowManager = "i3";
+{ config, pkgs, lib, ... }: {
 
+  jovian.steam = {
+    enable = true;
+    autoStart = true;
+    user = "${config.myuser.name}";
+    desktopSession = "sway";
+  };
+
+  programs.sway.enable = true;
   environment.systemPackages = with pkgs; [
-    feh
-    sxiv
-    alacritty
+    squeekboard
     pavucontrol
-    libsForQt5.qt5.qtvirtualkeyboard
-    onboard
   ];
 
   # Aduio

@@ -1,4 +1,8 @@
 { pkgs, config, ... }: {
+  myuser.hm.programs.emacs = {
+    enable = true;
+    package = pkgs.emacs29-pgtk;
+  };
 
   environment.systemPackages = with pkgs; [
     spotify
