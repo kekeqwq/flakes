@@ -4,8 +4,6 @@
   myuser.users = { extraGroups = [ "adbusers" ]; };
   # services.udev.packages = [ pkgs.android-udev-rules ];
 
-  programs.steam.enable = true;
-
   # WORKAROUND: I don't build firefox.
   # myuser.hm.programs.firefox.package = pkgs.firefox-bin;
 
@@ -15,6 +13,7 @@
 
   # Application
   environment.systemPackages = with pkgs; [
+    wineWowPackages.waylandFull
     gimp
     remmina
     # Study

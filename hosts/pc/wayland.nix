@@ -5,7 +5,6 @@
     settings = rec {
       initial_session = {
         command = "sway";
-        # command = "steam-session";
         user = config.myuser.name;
       };
       default_session = initial_session;
