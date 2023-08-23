@@ -9,6 +9,7 @@
   };
 
   environment.systemPackages = with pkgs; [
+    file
     htop
     nixfmt
     gcc

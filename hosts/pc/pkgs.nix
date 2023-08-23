@@ -10,10 +10,10 @@
   # security.pam.services.swaylock = { };
   # nix-flake-utils-plus force use nix unstable
   # nix.package = pkgs.nix;
-
+  programs.steam.enable = true;
   # Application
   environment.systemPackages = with pkgs; [
-    wineWowPackages.waylandFull
+    # goldendict-ng
     gimp
     remmina
     # Study

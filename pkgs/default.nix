@@ -38,8 +38,8 @@ in self: super: {
   # });
 
   # My waybar
-  waybar = super.waybar.overrideAttrs
-    (o: { mesonFlags = o.mesonFlags ++ [ "-Dexperimental=true" ]; });
+  # waybar = super.waybar.overrideAttrs
+  #   (o: { mesonFlags = o.mesonFlags ++ [ "-Dexperimental=true" ]; });
 
   # My DWM ---------------------------------------------------------------
 
