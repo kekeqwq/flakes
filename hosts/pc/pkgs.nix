@@ -13,6 +13,7 @@
   programs.steam.enable = true;
   # Application
   environment.systemPackages = with pkgs; [
+    chromium
     # goldendict-ng
     gimp
     remmina
