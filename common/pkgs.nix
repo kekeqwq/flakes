@@ -13,7 +13,7 @@
     htop
     nixfmt
     gcc
-    exa
+    eza
     pass
     neofetch
     gnumake

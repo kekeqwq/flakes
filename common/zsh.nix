@@ -2,7 +2,7 @@
 
 {
   users.defaultUserShell = pkgs.zsh;
-  environment.shellAliases.ls = "exa -l";
+  environment.shellAliases.ls = "eza -l";
   environment.shellAliases.e = "emacsclient -t -nw";
   environment.shellAliases.a = "aria2c -x 16";
   programs.zsh = { enable = true; };
