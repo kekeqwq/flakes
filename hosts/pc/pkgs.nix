@@ -1,4 +1,5 @@
 { pkgs, ... }: {
+  hardware.opentabletdriver.enable = true;
   virtualisation.podman.enable = true;
   programs.adb.enable = true;
   myuser.users = { extraGroups = [ "adbusers" ]; };
@@ -13,6 +14,7 @@
   programs.steam.enable = true;
   # Application
   environment.systemPackages = with pkgs; [
+    xournalpp
     jmtpfs
     chromium
     goldendict-ng
