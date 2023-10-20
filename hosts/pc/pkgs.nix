@@ -14,6 +14,7 @@
   programs.steam.enable = true;
   # Application
   environment.systemPackages = with pkgs; [
+    # anki-bin
     krita
     xournalpp
     jmtpfs
@@ -47,10 +48,10 @@
     # pyright
 
     ## Rust
-    # rustc
-    # rustfmt
-    # cargo
-    # rust-analyzer
+    rustc
+    rustfmt
+    cargo
+    rust-analyzer
     # libiconv
 
     ## Haskell

@@ -19,6 +19,15 @@ in self: super: {
 
   style-detector = super.callPackage ./style-detector { };
 
+  anki-bin = super.anki-bin.overrideAttrs (o: {
+    version = "23.10b6";
+    sources = super.fetchurl {
+      url =
+        "https://github.com/ankitects/anki/releases/download/23.10beta6/anki-23.10-linux-qt6.tar.zst";
+      sha256 = "sha256-IRW2hicZ2a5oM7OSnEeZJV30joI/s5oclgqkRXb34ig=";
+    };
+  });
+
   # kitty = super.kitty.overrideAttrs (o: rec {
   #   patches = o.patches ++ super.lib.optionals super.stdenv.isDarwin
   #     [ ../files/fix-stack_size.patch ];
