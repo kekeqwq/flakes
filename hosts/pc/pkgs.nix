@@ -14,6 +14,7 @@
   programs.steam.enable = true;
   # Application
   environment.systemPackages = with pkgs; [
+    syncthing
     # anki-bin
     krita
     xournalpp
