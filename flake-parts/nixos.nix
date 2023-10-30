@@ -5,6 +5,7 @@ let
   pkgs = import inputs.nixpkgs {
     inherit system;
     config.allowUnfree = true;
+    config.permittedInsecurePackages = [ "electron-24.8.6" ];
     overlays = [ self.overlays.default ];
   };
   mkNixos =
