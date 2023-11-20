@@ -32,6 +32,9 @@ in self: super: {
   #   patches = o.patches ++ super.lib.optionals super.stdenv.isDarwin
   #     [ ../files/fix-stack_size.patch ];
   # });
+  
+  #temp fix
+  aria2 = super.aria2.overrideAttrs (o: rec { patches = [ ]; });
 
   # meson Workaround
   # https://github.com/NixOS/nixpkgs/issues/229358
@@ -105,13 +108,13 @@ in self: super: {
 
   # My qbittorrent
   qbittorrent = super.qbittorrent.overrideAttrs (o: {
-    version = "4.5.4.10";
+    version = "4.6.0.10";
     pname = "qbittorrent-enhamced";
     src = super.fetchFromGitHub {
       repo = "qBittorrent-Enhanced-Edition";
       owner = "c0re100";
-      rev = "416904b363014e3a30d908f39721243577e6ed64";
-      sha256 = "sha256-2kHjW3CMcAEITbYzw8QNRqkTWrMkaktkdAd69moyk2M=";
+      rev = "267831d53274bb096e57b3bab87c30732eb5dabc";
+      sha256 = "sha256-frpYJzxjFlTFKTj0jnuVactIXplUwEhseQcXoMgbVsw=";
     };
   });
 

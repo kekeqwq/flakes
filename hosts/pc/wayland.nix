@@ -1,17 +1,20 @@
 { config, pkgs, lib, ... }: {
-  
+
   services.greetd = {
     enable = true;
     settings = rec {
       initial_session = {
-        command = "sway";
+        command = "wayfire";
         user = config.myuser.name;
       };
       default_session = initial_session;
     };
   };
 
-  programs.sway.enable = true;
+  programs.wayfire = {
+    enable = true;
+    plugins = with pkgs.wayfirePlugins; [ wcm wf-shell wayfire-plugins-extra ];
+  };
 
   myuser.hm.programs.foot = {
     enable = true;
@@ -21,15 +24,14 @@
       colors.alpha = .92;
     };
   };
-  
+
   environment.systemPackages = with pkgs; [
     wl-clipboard
     grim
     slurp
-    swaybg
-    dmenu
     pavucontrol
     imv
+    wofi
   ];
 
   # Aduio
