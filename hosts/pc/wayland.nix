@@ -26,6 +26,8 @@
   };
 
   environment.systemPackages = with pkgs; [
+    swaybg
+    waybar
     wl-clipboard
     grim
     slurp
