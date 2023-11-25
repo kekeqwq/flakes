@@ -108,13 +108,13 @@ in self: super: {
 
   # My qbittorrent
   qbittorrent = super.qbittorrent.overrideAttrs (o: {
-    version = "4.6.0.10";
+    version = "4.6.1.10";
     pname = "qbittorrent-enhamced";
     src = super.fetchFromGitHub {
       repo = "qBittorrent-Enhanced-Edition";
       owner = "c0re100";
-      rev = "267831d53274bb096e57b3bab87c30732eb5dabc";
-      sha256 = "sha256-frpYJzxjFlTFKTj0jnuVactIXplUwEhseQcXoMgbVsw=";
+      rev = "294ddf94a769bca822e9698cfd23ab6247cdb2d7";
+      sha256 = "sha256-flcvWFWGNcUhgpI5YCKIgJrCbp2Q6cE2WaaluYVNKoA=";
     };
   });
 

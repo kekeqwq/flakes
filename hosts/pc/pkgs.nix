@@ -1,4 +1,5 @@
 { pkgs, ... }: {
+  services.udev.packages = with pkgs; [ via ];
   hardware.opentabletdriver.enable = true;
   virtualisation.podman.enable = true;
   programs.adb.enable = true;
@@ -14,6 +15,7 @@
   programs.steam.enable = true;
   # Application
   environment.systemPackages = with pkgs; [
+    via
     syncthing
     # anki-bin
     krita
