@@ -4,14 +4,17 @@
     enable = true;
     autoStart = true;
     user = "${config.myuser.name}";
-    desktopSession = "sway";
+    desktopSession = "none+i3";
   };
 
-  programs.sway.enable = true;
-  environment.systemPackages = with pkgs; [
-    squeekboard
-    pavucontrol
-  ];
+  services.xserver = {
+    enable = true;
+    desktopManager = { xterm.enable = false; };
+    windowManager.i3 = {
+      enable = true;
+      extraPackages = with pkgs; [ dmenu i3status onboard pavucontrol alacritty];
+    };
+  };
 
   # Aduio
   hardware.pulseaudio.enable = lib.mkDefault false;
