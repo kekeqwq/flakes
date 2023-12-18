@@ -2,6 +2,7 @@
   fonts.packages = with pkgs; [
     font-awesome_5
     noto-fonts-emoji
+    unifont
   ];
   fonts.fontconfig = {
     enable = true;
