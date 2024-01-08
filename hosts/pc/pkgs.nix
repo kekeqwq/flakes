@@ -1,10 +1,13 @@
 { pkgs, ... }: {
-  services.udev.packages = with pkgs; [ via ];
+  services.udev.packages = with pkgs; [ via android-udev-rules ];
   hardware.opentabletdriver.enable = true;
   virtualisation.podman.enable = true;
   programs.adb.enable = true;
   myuser.users = { extraGroups = [ "adbusers" ]; };
-  # services.udev.packages = [ pkgs.android-udev-rules ];
+  #allow touch lite
+  services.udev.extraRules = ''
+    SUBSYSTEM=="usb", ATTR{idVendor}=="109b", ATTR{idProduct}=="911f", MODE="0666", GROUP="adbusers"
+  '';
 
   # WORKAROUND: I don't build firefox.
   # myuser.hm.programs.firefox.package = pkgs.firefox-bin;
@@ -15,6 +18,7 @@
   programs.steam.enable = true;
   # Application
   environment.systemPackages = with pkgs; [
+    distrobox
     via
     syncthing
     # anki-bin
