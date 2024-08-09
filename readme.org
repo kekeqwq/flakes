@@ -1,4 +1,4 @@
-* COMMENT Clean Iptables..
+* Clean Iptables..
 #+begin_src shell
   iptables -F
   iptables -X
