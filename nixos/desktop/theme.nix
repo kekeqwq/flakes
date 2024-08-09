@@ -17,7 +17,7 @@
   };
   myuser.hm.qt = {
     enable = true;
-    platformTheme = "gtk";
+    platformTheme.name = "gtk";
   };
 
   myuser.hm.home.pointerCursor = {

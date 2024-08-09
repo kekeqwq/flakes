@@ -11,11 +11,10 @@
   environment.systemPackages = with pkgs; [
     file
     htop
-    nixfmt
     gcc
     eza
     pass
-    neofetch
+    fastfetch
     gnumake
     ranger
     dua

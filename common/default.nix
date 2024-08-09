@@ -2,8 +2,6 @@ _: {
   imports = [
     ./pkgs.nix
     ./options.nix
-    ./zsh.nix
-    ./homefile.nix
     ./git.nix
     ./tmux.nix
     ./configuration.nix

@@ -40,5 +40,6 @@ Install Progress.
   git clone https://github.com/kekeqwq/flakes
   nixos-install --root /mnt --flake ./#deck
 #+end_src
+To switch to an arbitrary session (e.g., sway.desktop), echo "sway" >~/.local/state/steamos-session-select then trigger a logout.
 * Decktop PC
 *WorkInProgress*
