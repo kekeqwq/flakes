@@ -32,7 +32,7 @@ in self: super: {
   #   patches = o.patches ++ super.lib.optionals super.stdenv.isDarwin
   #     [ ../files/fix-stack_size.patch ];
   # });
-  
+
   #temp fix
   aria2 = super.aria2.overrideAttrs (o: rec { patches = [ ]; });
 

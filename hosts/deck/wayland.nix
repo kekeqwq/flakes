@@ -12,7 +12,13 @@
     desktopManager = { xterm.enable = false; };
     windowManager.i3 = {
       enable = true;
-      extraPackages = with pkgs; [ dmenu i3status onboard pavucontrol alacritty];
+      extraPackages = with pkgs; [
+        dmenu
+        i3status
+        onboard
+        pavucontrol
+        alacritty
+      ];
     };
   };
 

@@ -81,7 +81,6 @@
     };
   };
 
-
   # Users
   myuser.name = "me";
   # users.groups.uinput = { };
@@ -92,7 +91,6 @@
     #   "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAojYQZoakphJU+/HM3dWETjND4+duXFi2CFHKELPXv0 me"
     # ];
   };
-
 
   # myuser.hm.programs.ssh = {
   #   enable = true;
