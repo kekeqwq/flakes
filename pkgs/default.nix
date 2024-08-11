@@ -12,7 +12,8 @@ let
   # Edge
   edge_version = "114.0.1788.0-1";
   edge_sha256 = "sha256-ydqRbeeIsWTXS24n0/5sRC7Z5qkLJ2TQo7qRfWTE0Kc=";
-in self: super: {
+in
+self: super: {
   # My Packages ---------------------------------------------------------------
 
   yabai-bin = super.callPackage ./yabai-bin { };
@@ -22,8 +23,7 @@ in self: super: {
   anki-bin = super.anki-bin.overrideAttrs (o: {
     version = "23.10b6";
     sources = super.fetchurl {
-      url =
-        "https://github.com/ankitects/anki/releases/download/23.10beta6/anki-23.10-linux-qt6.tar.zst";
+      url = "https://github.com/ankitects/anki/releases/download/23.10beta6/anki-23.10-linux-qt6.tar.zst";
       sha256 = "sha256-IRW2hicZ2a5oM7OSnEeZJV30joI/s5oclgqkRXb34ig=";
     };
   });
@@ -34,7 +34,9 @@ in self: super: {
   # });
 
   #temp fix
-  aria2 = super.aria2.overrideAttrs (o: rec { patches = [ ]; });
+  aria2 = super.aria2.overrideAttrs (o: rec {
+    patches = [ ];
+  });
 
   # meson Workaround
   # https://github.com/NixOS/nixpkgs/issues/229358
@@ -90,8 +92,7 @@ in self: super: {
   brave = super.brave.overrideAttrs (o: {
     version = "${brave_version}";
     src = super.fetchurl {
-      url =
-        "https://github.com/brave/brave-browser/releases/download/v${brave_version}/brave-browser_${brave_version}_amd64.deb";
+      url = "https://github.com/brave/brave-browser/releases/download/v${brave_version}/brave-browser_${brave_version}_amd64.deb";
       sha256 = "${brave_sha256}";
     };
   });
@@ -100,8 +101,7 @@ in self: super: {
   microsoft-edge-dev = super.microsoft-edge-dev.overrideAttrs (o: {
     version = "${edge_version}";
     src = super.fetchurl {
-      url =
-        "https://packages.microsoft.com/repos/edge/pool/main/m/microsoft-edge-dev/microsoft-edge-dev_${edge_version}_amd64.deb";
+      url = "https://packages.microsoft.com/repos/edge/pool/main/m/microsoft-edge-dev/microsoft-edge-dev_${edge_version}_amd64.deb";
       sha256 = "${edge_sha256}";
     };
   });
@@ -196,9 +196,8 @@ in self: super: {
   #   withGTK3 = true;
   #   withPgtk = true;
   # };
-  NetworkManager-l2tp =
-    (super.NetworkManager-l2tp.overrideAttrs (old: { })).override {
-      withGnome = false;
-    };
+  NetworkManager-l2tp = (super.NetworkManager-l2tp.overrideAttrs (old: { })).override {
+    withGnome = false;
+  };
 
 }

@@ -1,1 +1,4 @@
-{ self, inputs, ... }: { flake.overlays.default = import ../pkgs; }
+{ self, inputs, ... }:
+{
+  flake.overlays.default = import ../pkgs;
+}

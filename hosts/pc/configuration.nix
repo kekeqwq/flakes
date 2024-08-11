@@ -1,40 +1,43 @@
-{ config, pkgs, lib, ... }: {
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
+{
   # Local Firesystem(ZFS)
   boot.zfs.requestEncryptionCredentials = [ "tank" ];
   boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
   # boot.kernelPackages = pkgs.linuxPackages_latest;
 
   ## ZFS
-  boot.kernelPackages =
-    lib.mkForce config.boot.zfs.package.latestCompatibleLinuxPackages;
+  boot.kernelPackages = lib.mkForce config.boot.zfs.package.latestCompatibleLinuxPackages;
   # Power Management
   #services.logind.extraConfig = ''
   #  IdleAction=hybrid-sleep
   #  IdleActionSec=1min
   #'';
-  boot.zfs.devNodes =
-    "/dev/disk/by-id/ata-PLEXTOR_PX-512M8VC_P02011403287-part2";
+  boot.zfs.devNodes = "/dev/disk/by-id/ata-PLEXTOR_PX-512M8VC_P02011403287-part2";
 
   # root on tmpfs
   users.mutableUsers = false;
-  myuser.users.initialHashedPassword =
-    "$6$01tf1dfctTu10Yj0$/3wpVVRxR.5QQs8Dww2LMY4sFRks35IG/miXcpwUjkhWD2M/olSCV05RATV5itbAXOE3oI4CKsD4UnkZOjzZ1.";
+  myuser.users.initialHashedPassword = "$6$01tf1dfctTu10Yj0$/3wpVVRxR.5QQs8Dww2LMY4sFRks35IG/miXcpwUjkhWD2M/olSCV05RATV5itbAXOE3oI4CKsD4UnkZOjzZ1.";
   environment.etc."machine-id".source = "/nix/persist/etc/machine-id";
-  environment.etc."ssh/ssh_host_rsa_key".source =
-    "/nix/persist/etc/ssh/ssh_host_rsa_key";
-  environment.etc."ssh/ssh_host_rsa_key.pub".source =
-    "/nix/persist/etc/ssh/ssh_host_rsa_key.pub";
-  environment.etc."ssh/ssh_host_ed25519_key".source =
-    "/nix/persist/etc/ssh/ssh_host_ed25519_key";
-  environment.etc."ssh/ssh_host_ed25519_key.pub".source =
-    "/nix/persist/etc/ssh/ssh_host_ed25519_key.pub";
+  environment.etc."ssh/ssh_host_rsa_key".source = "/nix/persist/etc/ssh/ssh_host_rsa_key";
+  environment.etc."ssh/ssh_host_rsa_key.pub".source = "/nix/persist/etc/ssh/ssh_host_rsa_key.pub";
+  environment.etc."ssh/ssh_host_ed25519_key".source = "/nix/persist/etc/ssh/ssh_host_ed25519_key";
+  environment.etc."ssh/ssh_host_ed25519_key.pub".source = "/nix/persist/etc/ssh/ssh_host_ed25519_key.pub";
 
   # Networking
   networking.hostId = "00bab10c";
   networking.useDHCP = false;
   networking.interfaces.enp34s0.useDHCP = true;
   networking.interfaces.br0.useDHCP = true;
-  networking.bridges = { "br0" = { interfaces = [ "enp34s0" ]; }; };
+  networking.bridges = {
+    "br0" = {
+      interfaces = [ "enp34s0" ];
+    };
+  };
   networking.firewall.enable = false;
   networking.extraHosts = ''
     140.82.113.3 gist.github.com
@@ -115,6 +118,16 @@
   #     dockerCompat = true;
   #   };
   # };
+  services.greetd = {
+    enable = true;
+    settings = rec {
+      initial_session = {
+        command = "wayfire";
+        user = config.myuser.name;
+      };
+      default_session = initial_session;
+    };
+  };
 
   # System
   system.stateVersion = "22.05";

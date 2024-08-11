@@ -1,6 +1,12 @@
-{ config, options, lib, ... }:
+{
+  config,
+  options,
+  lib,
+  ...
+}:
 
-with lib; {
+with lib;
+{
   options.myuser = {
     name = mkOption {
       description = "My Current user 'username'";
@@ -14,8 +20,7 @@ with lib; {
   };
 
   config = {
-    home-manager.users.${config.myuser.name} =
-      mkAliasDefinitions options.myuser.hm;
+    home-manager.users.${config.myuser.name} = mkAliasDefinitions options.myuser.hm;
     users.users.${config.myuser.name} = mkAliasDefinitions options.myuser.users;
   };
 

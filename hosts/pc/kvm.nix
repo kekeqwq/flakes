@@ -11,7 +11,10 @@
     onShutdown = "shutdown";
   };
   # security.polkit.enable = true;
-  users.groups.libvirtd.members = [ "root" "me" ];
+  users.groups.libvirtd.members = [
+    "root"
+    "me"
+  ];
   environment.systemPackages = with pkgs; [ virt-manager ];
 
   # boot.postBootCommands = ''

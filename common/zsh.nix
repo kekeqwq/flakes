@@ -5,7 +5,9 @@
   environment.shellAliases.ls = "eza -l";
   environment.shellAliases.e = "emacsclient -t -nw";
   environment.shellAliases.a = "aria2c -x 16";
-  programs.zsh = { enable = true; };
+  programs.zsh = {
+    enable = true;
+  };
   myuser.hm.programs.zsh = {
     enable = true;
     enableAutosuggestions = true;
@@ -20,21 +22,22 @@
     envExtra = ''
       export PATH=$PATH:$HOME/.local/share/bin
     '';
-    plugins = [{
-      name = "powerlevel10k";
-      src = pkgs.zsh-powerlevel10k;
-      file = "share/zsh-powerlevel10k/powerlevel10k.zsh-theme";
-    }
-    # {
-    #   name = "wakatime";
-    #   src = pkgs.fetchFromGitHub {
-    #     owner = "sobolevn";
-    #     repo = "wakatime-zsh-plugin";
-    #     rev = "69c6028b0c8f72e2afcfa5135b1af29afb49764a";
-    #     sha256 = "sha256-pA1VOkzbHQjmcI2skzB/OP5pXn8CFUz5Ok/GLC6KKXQ=";
-    #   };
-    #   file = "wakatime.plugin.zsh";
-    # }
-      ];
+    plugins = [
+      {
+        name = "powerlevel10k";
+        src = pkgs.zsh-powerlevel10k;
+        file = "share/zsh-powerlevel10k/powerlevel10k.zsh-theme";
+      }
+      # {
+      #   name = "wakatime";
+      #   src = pkgs.fetchFromGitHub {
+      #     owner = "sobolevn";
+      #     repo = "wakatime-zsh-plugin";
+      #     rev = "69c6028b0c8f72e2afcfa5135b1af29afb49764a";
+      #     sha256 = "sha256-pA1VOkzbHQjmcI2skzB/OP5pXn8CFUz5Ok/GLC6KKXQ=";
+      #   };
+      #   file = "wakatime.plugin.zsh";
+      # }
+    ];
   };
 }

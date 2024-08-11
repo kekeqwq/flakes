@@ -1,4 +1,5 @@
-{ pkgs, ... }: {
+{ pkgs, ... }:
+{
 
   # Set theme need by Dconf
   programs.dconf.enable = true;

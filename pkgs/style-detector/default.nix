@@ -1,9 +1,10 @@
 { lib, fetchzip }:
-let version = "1.1";
-in fetchzip {
+let
+  version = "1.1";
+in
+fetchzip {
   name = "style-detector";
-  url =
-    "https://gitlab.com/haveagoodtime/style-detector/uploads/72ac6dc64942b308bee3be24083a1585/style-detector.zip";
+  url = "https://gitlab.com/haveagoodtime/style-detector/uploads/72ac6dc64942b308bee3be24083a1585/style-detector.zip";
   sha256 = "sha256-Hr4Q86aCnUfjF2E32VwLPY5iHeqMFZ3iIY4FzuZXPgM=";
   stripRoot = false;
   postFetch = ''

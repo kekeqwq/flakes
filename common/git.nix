@@ -5,6 +5,8 @@
     enable = true;
     userName = "keke";
     userEmail = "zrignshw@duck.com";
-    extraConfig = { credential.helper = "store"; };
+    extraConfig = {
+      credential.helper = "store";
+    };
   };
 }

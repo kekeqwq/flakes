@@ -1,9 +1,15 @@
-{ pkgs, ... }: {
-  services.udev.packages = with pkgs; [ via android-udev-rules ];
+{ pkgs, ... }:
+{
+  services.udev.packages = with pkgs; [
+    via
+    android-udev-rules
+  ];
   hardware.opentabletdriver.enable = true;
   virtualisation.podman.enable = true;
   programs.adb.enable = true;
-  myuser.users = { extraGroups = [ "adbusers" ]; };
+  myuser.users = {
+    extraGroups = [ "adbusers" ];
+  };
   #allow touch lite
   services.udev.extraRules = ''
     SUBSYSTEM=="usb", ATTR{idVendor}=="109b", ATTR{idProduct}=="911f", MODE="0666", GROUP="adbusers"
@@ -107,6 +113,9 @@
 
   # Fcitx5
   i18n.inputMethod.enabled = "fcitx5";
-  i18n.inputMethod.fcitx5.addons = with pkgs; [ fcitx5-rime fcitx5-configtool ];
+  i18n.inputMethod.fcitx5.addons = with pkgs; [
+    fcitx5-rime
+    fcitx5-configtool
+  ];
 
 }

@@ -1,1 +1,6 @@
-_: { imports = [ ./nixos.nix ./overlays.nix ]; }
+_: {
+  imports = [
+    ./nixos.nix
+    ./overlays.nix
+  ];
+}

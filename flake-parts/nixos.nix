@@ -1,4 +1,9 @@
-{ self, inputs, withSystem, ... }:
+{
+  self,
+  inputs,
+  withSystem,
+  ...
+}:
 
 let
   system = "x86_64-linux";
@@ -9,8 +14,14 @@ let
     overlays = [ self.overlays.default ];
   };
   mkNixos =
-    { system ? "x86_64-linux", modules ? [ ], desktop ? true, p ? pkgs }:
-    withSystem system ({ pkgs, system, ... }:
+    {
+      system ? "x86_64-linux",
+      modules ? [ ],
+      desktop ? true,
+      p ? pkgs,
+    }:
+    withSystem system (
+      { pkgs, system, ... }:
       inputs.nixpkgs.lib.nixosSystem {
         inherit system;
         specialArgs = {
@@ -22,8 +33,10 @@ let
           ../common
           ../nixos/pkgs.nix
         ] ++ pkgs.lib.optionals desktop [ ../nixos/desktop ] ++ modules;
-      });
-in {
+      }
+    );
+in
+{
   flake.nixosConfigurations = {
     pc = mkNixos { modules = [ ../hosts/pc ]; };
     deck = mkNixos {

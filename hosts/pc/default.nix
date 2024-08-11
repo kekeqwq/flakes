@@ -4,7 +4,6 @@ _: {
     ./hardware.nix
     ./pkgs.nix
     # ./nextcloud.nix
-    ./wayland.nix
     ./kvm.nix
   ];
 }

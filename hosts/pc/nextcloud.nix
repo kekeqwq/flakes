@@ -1,4 +1,5 @@
-{ pkgs, ... }: {
+{ pkgs, ... }:
+{
   services.nextcloud = {
     enable = true;
     home = "/nix/persist/var/lib/nextcloud";
@@ -10,8 +11,12 @@
       dbname = "nextcloud";
       adminpassFile = "/nix/persist/nextcloud.key";
       adminuser = "root";
-      extraTrustedDomains =
-        [ "127.0.0.1" "192.168.1.101" "192.168.1.102" "100.120.160.34" ];
+      extraTrustedDomains = [
+        "127.0.0.1"
+        "192.168.1.101"
+        "192.168.1.102"
+        "100.120.160.34"
+      ];
     };
   };
 
@@ -35,10 +40,12 @@
   services.postgresql = {
     enable = true;
     ensureDatabases = [ "nextcloud" ];
-    ensureUsers = [{
-      name = "nextcloud";
-      ensurePermissions."DATABASE nextcloud" = "ALL PRIVILEGES";
-    }];
+    ensureUsers = [
+      {
+        name = "nextcloud";
+        ensurePermissions."DATABASE nextcloud" = "ALL PRIVILEGES";
+      }
+    ];
   };
 
   # ensure that postgres is running *before* running the setup

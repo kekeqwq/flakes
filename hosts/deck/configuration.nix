@@ -4,8 +4,7 @@
   # Core
   jovian.devices.steamdeck.enable = true;
   programs.steam.enable = true;
-  boot.zfs.devNodes =
-    "/dev/disk/by-id/nvme-WD_PC_SN740_SDDPTQD-1T00_230255456613-part2";
+  boot.zfs.devNodes = "/dev/disk/by-id/nvme-WD_PC_SN740_SDDPTQD-1T00_230255456613-part2";
 
   # Network
   networking.hostName = "deck";
@@ -16,14 +15,32 @@
   myuser.name = "keke";
   myuser.users = {
     isNormalUser = true;
-    extraGroups = [ "wheel" "networkmanager" ];
+    extraGroups = [
+      "wheel"
+      "networkmanager"
+      "video"
+      "audio"
+    ];
   };
 
-  # Base
-  # environment.systemPackages = with pkgs; [
-  #   compsize
-  #   cemu
-  # ];
+  myuser.hm.programs.fish = {
+    interactiveShellInit = ''
+      set -Ux WLR_BACKENDS headless
+      set -Ux WLR_LIBINPUT_NO_DEVICES 1
+      set -Ux WAYLAND_DISPLAY wayland-1
+      set -Ux WLR_RENDER_DRM_DEVICE /dev/dri/card0
+    '';
+  };
+
+  jovian.steam = {
+    enable = true;
+    autoStart = true;
+    user = "${config.myuser.name}";
+    desktopSession = "gamescope-wayland";
+  };
+
+  #TODO: fix sound issue in minimal system
+  environment.pathsToLink = [ "/share/alsa/ucm2" ];
 
   # WIP:fix sddm
   # services.xserver.displayManager.setupCommands =
@@ -32,4 +49,3 @@
   myuser.hm.home.stateVersion = "24.11";
   system.stateVersion = "24.11";
 }
-

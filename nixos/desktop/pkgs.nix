@@ -1,10 +1,12 @@
-{ pkgs, config, ... }: {
+{ pkgs, config, ... }:
+{
   myuser.hm.programs.emacs = {
     enable = true;
     package = pkgs.emacs29-pgtk;
   };
 
   environment.systemPackages = with pkgs; [
+    wayvnc
     spotify
     # cataclysm-dda-git
     firefox
@@ -16,10 +18,12 @@
   #Sing-box
   systemd.services.sing-box = {
     wantedBy = [ "multi-user.target" ];
-    after = [ "network.target" "nss-lookup.target" ];
+    after = [
+      "network.target"
+      "nss-lookup.target"
+    ];
     serviceConfig = {
-      ExecStart =
-        "${pkgs.sing-box}/bin/sing-box run --config /home/${config.myuser.name}/.config/sing-box/config.json";
+      ExecStart = "${pkgs.sing-box}/bin/sing-box run --config /home/${config.myuser.name}/.config/sing-box/config.json";
       ExecReload = "/run/current-system/sw/bin/pkill sing-box";
       WorkingDirectory = "/home/${config.myuser.name}/.config/sing-box";
       Restart = "on-failure";
