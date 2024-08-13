@@ -26,9 +26,8 @@
     # FIx:
     # ⚠️ Mount point '/boot' which backs the random seed file is world accessible, which is a security hole! ⚠️
     # ⚠️ Random seed file '/boot/loader/.#bootctlrandom-seed27820771c01feea9' is world accessible, which is a security hole! ⚠
-    options = [ "umask=0077" "defaults" ];
-
-  };
+    options = [ "umask=0077" ];
+ };
 
   fileSystems."/" = {
     device = "deck/nixos";
