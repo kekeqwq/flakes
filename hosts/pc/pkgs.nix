@@ -87,7 +87,6 @@
 
     # Base
     # qq
-    mpv
     sioyek
     # clash
     logseq

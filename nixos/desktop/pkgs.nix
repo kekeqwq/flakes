@@ -6,6 +6,7 @@
   };
 
   environment.systemPackages = with pkgs; [
+    mpv
     wayvnc
     spotify
     # cataclysm-dda-git
