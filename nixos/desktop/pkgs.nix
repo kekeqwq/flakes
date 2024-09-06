@@ -11,7 +11,7 @@
     fcitx5-rime
     fcitx5-configtool
   ];
-  
+
   environment.systemPackages = with pkgs; [
     mpv
     wayvnc
