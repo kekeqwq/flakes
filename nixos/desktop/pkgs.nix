@@ -5,6 +5,13 @@
     package = pkgs.emacs29-pgtk;
   };
 
+  # Fcitx5
+  i18n.inputMethod.enabled = "fcitx5";
+  i18n.inputMethod.fcitx5.addons = with pkgs; [
+    fcitx5-rime
+    fcitx5-configtool
+  ];
+  
   environment.systemPackages = with pkgs; [
     mpv
     wayvnc
