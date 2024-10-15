@@ -13,6 +13,8 @@
   ];
 
   environment.systemPackages = with pkgs; [
+    tor-browser-bundle-bin
+    discord
     mpv
     wayvnc
     spotify

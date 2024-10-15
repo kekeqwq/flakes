@@ -24,12 +24,9 @@
   programs.steam.enable = true;
   # Application
   environment.systemPackages = with pkgs; [
-    moonlight-qt
     distrobox
     via
-    syncthing
     # anki-bin
-    krita
     xournalpp
     jmtpfs
     chromium
