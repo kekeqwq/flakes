@@ -13,7 +13,7 @@
   ];
 
   environment.systemPackages = with pkgs; [
-    tor-browser-bundle-bin
+    chromium
     discord
     mpv
     wayvnc
