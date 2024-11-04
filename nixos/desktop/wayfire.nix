@@ -18,7 +18,7 @@
   };
 
   environment.systemPackages = with pkgs; [
-    wf-recorder
+    # wf-recorder
     swaybg
     waybar
     wl-clipboard
