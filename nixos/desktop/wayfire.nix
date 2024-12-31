@@ -29,7 +29,7 @@
     wofi
   ];
 
-  hardware.pulseaudio.enable = lib.mkDefault false;
+  #hardware.pulseaudio.enable = false;
   services.pipewire = {
     enable = lib.mkDefault true;
     pulse.enable = lib.mkDefault true;
