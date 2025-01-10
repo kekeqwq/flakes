@@ -4,6 +4,21 @@
     enable = true;
     package = pkgs.emacs29-pgtk;
   };
+  programs.adb.enable = true;
+  myuser.users = {
+    extraGroups = [ "adbusers" "dialout" ];
+  };
+  services.udev.packages = with pkgs; [
+    via
+    android-udev-rules
+    yubikey-personalization
+  ];
+  services.udev.extraRules = ''
+    # Touch Lite
+    SUBSYSTEM=="usb", ATTR{idVendor}=="109b", ATTR{idProduct}=="911f", MODE="0666", GROUP="adbusers"
+    # Espressif USB Serial/JTAG Controller
+    SUBSYSTEM=="tty", ATTRS{idVendor}=="303a", ATTRS{idProduct}=="1001", MODE="0660", TAG+="uaccess"
+  '';
 
   # Fcitx5
   i18n.inputMethod.enable = true;
@@ -14,7 +29,6 @@
   ];
 
   environment.systemPackages = with pkgs; [
-    chromium
     discord
     mpv
     wayvnc
@@ -44,7 +58,6 @@
 
   # GPG
   services.pcscd.enable = true;
-  services.udev.packages = [ pkgs.yubikey-personalization ];
   programs = {
     gnupg.agent = {
       enable = true;

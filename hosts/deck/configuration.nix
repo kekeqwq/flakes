@@ -22,12 +22,8 @@
       "networkmanager"
       "video"
       "audio"
-      "adbusers"
     ];
   };
-
-  programs.adb.enable = true;
-  services.udev.packages = [ pkgs.android-udev-rules ];
 
   myuser.hm.programs.fish = {
     interactiveShellInit = ''
