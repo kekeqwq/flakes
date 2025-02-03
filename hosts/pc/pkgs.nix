@@ -30,7 +30,6 @@
     # clojure
     # leiningen
     # clojure-lsp
-    # jdk17
 
     ## Golang
     # go

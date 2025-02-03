@@ -2,7 +2,7 @@
 {
   myuser.hm.programs.emacs = {
     enable = true;
-    package = pkgs.emacs29-pgtk;
+    package = pkgs.emacs30-pgtk;
   };
   programs.adb.enable = true;
   myuser.users = {
@@ -33,7 +33,6 @@
     mpv
     wayvnc
     spotify
-    # cataclysm-dda-git
     firefox
     prismlauncher
     tdesktop

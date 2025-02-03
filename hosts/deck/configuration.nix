@@ -38,7 +38,7 @@
     enable = true;
     autoStart = true;
     user = "${config.myuser.name}";
-    desktopSession = "gamescope-wayland";
+    desktopSession = "wayfire";
   };
 
   #TODO: fix sound issue in minimal system
