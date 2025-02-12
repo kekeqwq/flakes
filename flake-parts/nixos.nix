@@ -6,12 +6,6 @@
 }:
 
 let
-  system = "x86_64-linux";
-  pkgs = import inputs.nixpkgs {
-    inherit system;
-    config.allowUnfree = true;
-    overlays = [ self.overlays.default ];
-  };
   mkNixos =
     {
       system ? "x86_64-linux",
@@ -22,6 +16,11 @@ let
       { pkgs, system, ... }:
       inputs.nixpkgs.lib.nixosSystem {
         inherit system;
+        pkgs = import inputs.nixpkgs {
+          inherit system;
+          config.allowUnfree = true;
+          overlays = [ self.overlays.default ];
+        };
         specialArgs = {
           inherit inputs;
         };
