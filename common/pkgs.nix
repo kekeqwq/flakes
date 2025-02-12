@@ -18,7 +18,6 @@
   };
 
   environment.systemPackages = with pkgs; [
-    nixfmt-rfc-style
     gh
     file
     htop
