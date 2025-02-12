@@ -6,7 +6,10 @@
   };
   programs.adb.enable = true;
   myuser.users = {
-    extraGroups = [ "adbusers" "dialout" ];
+    extraGroups = [
+      "adbusers"
+      "dialout"
+    ];
   };
   services.udev.packages = with pkgs; [
     via

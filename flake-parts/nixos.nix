@@ -10,7 +10,6 @@ let
   pkgs = import inputs.nixpkgs {
     inherit system;
     config.allowUnfree = true;
-    config.permittedInsecurePackages = [ "electron-25.9.0" ];
     overlays = [ self.overlays.default ];
   };
   mkNixos =
@@ -18,7 +17,6 @@ let
       system ? "x86_64-linux",
       modules ? [ ],
       desktop ? true,
-      p ? pkgs,
     }:
     withSystem system (
       { pkgs, system, ... }:
@@ -26,7 +24,6 @@ let
         inherit system;
         specialArgs = {
           inherit inputs;
-          pkgs = p;
         };
         modules =
           [
@@ -43,8 +40,10 @@ in
   flake.nixosConfigurations = {
     pc = mkNixos { modules = [ ../hosts/pc ]; };
     deck = mkNixos {
-      modules = [ ../hosts/deck ];
-      p = (pkgs.extend (import "${inputs.jovian}/overlay.nix"));
+      modules = [
+        ../hosts/deck
+        inputs.jovian.nixosModules.default
+      ];
     };
   };
 }

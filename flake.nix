@@ -11,12 +11,12 @@
     };
     jovian = {
       url = "github:Jovian-Experiments/Jovian-NixOS";
-      flake = false;
+      inputs.nixpkgs.follows = "nixpkgs";
     };
       
   };
 
-  outputs = inputs@{ flake-parts, ... }:
+  outputs = inputs@{ self, nixpkgs, jovian, flake-parts, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
       systems = [ "x86_64-linux" ];
       imports = [ ./flake-parts ];
