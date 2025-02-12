@@ -45,10 +45,6 @@
   #TODO: fix sound issue in minimal system
   environment.pathsToLink = [ "/share/alsa/ucm2" ];
 
-  # WIP:fix sddm
-  # services.xserver.displayManager.setupCommands =
-  #  "${pkgs.xorg.xrandr}/bin/xrandr --output eDP-1 --rotate right";
-
   myuser.hm.home.stateVersion = "24.11";
   system.stateVersion = "24.11";
 }
