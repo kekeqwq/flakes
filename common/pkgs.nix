@@ -4,6 +4,7 @@
   inputs,
   ...
 }:
+
 {
   nix = {
     # package = pkgs.nix;
@@ -18,6 +19,26 @@
   };
 
   environment.systemPackages = with pkgs; [
+    (texlive.combine {
+      inherit (texlive)
+        scheme-basic
+        collection-bibtexextra
+        collection-binextra
+        collection-fontutils
+        collection-formatsextra
+        collection-humanities
+        collection-langchinese
+        collection-langcjk
+        collection-langenglish
+        collection-latexextra
+        collection-latexrecommended
+        collection-mathscience
+        collection-plaingeneric
+        collection-pstricks
+        collection-xetex
+        ;
+    })
+
     gh
     file
     htop
