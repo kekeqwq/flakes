@@ -11,10 +11,10 @@
       name = "Orchis-Green-Dark";
       package = pkgs.orchis-theme;
     };
-    #    iconTheme = {
-    #      name = "Fluent";
-    #      package = pkgs.fluent-icon-theme;
-    #    };
+       iconTheme = {
+         name = "Fluent";
+         package = pkgs.fluent-icon-theme;
+       };
   };
   myuser.hm.qt = {
     enable = true;
