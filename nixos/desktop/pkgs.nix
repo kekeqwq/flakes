@@ -40,6 +40,7 @@
     prismlauncher
     tdesktop
     pinentry-curses
+    scrcpy
   ];
 
   #Sing-box

@@ -6,7 +6,7 @@
     {
       projectRootFile = "flake.nix";
       # formatter for nix
-      package = pkgs.treefmt2;
+      package = pkgs.treefmt;
       programs.nixfmt.enable = true;
     };
 }
