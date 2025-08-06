@@ -162,13 +162,13 @@ self: super: {
 
   # My Xmonad ---------------------------------------------------------------
 
-  haskellPackages = super.haskellPackages.override {
-    overrides = hself: hsuper: {
-      xmonad = hsuper.xmonad_0_17_0;
-      xmonad-contrib = hsuper.xmonad-contrib_0_17_0;
-      xmonad-extras = hsuper.xmonad-extras_0_17_0;
-    };
-  };
+  # haskellPackages = super.haskellPackages.override {
+  #   overrides = hself: hsuper: {
+  #     xmonad = hsuper.xmonad_0_18_0;
+  #     xmonad-contrib = hsuper.xmonad-contrib_0_18_0;
+  #     xmonad-extras = hsuper.xmonad-extras_0_18_0;
+  #   };
+  # };
 
   # Emacs Master And Patches ---------------------------------------------------------------
 

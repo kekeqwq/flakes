@@ -24,14 +24,13 @@ let
         specialArgs = {
           inherit inputs;
         };
-        modules =
-          [
-            inputs.home-manager.nixosModules.home-manager
-            ../common
-            ../nixos/pkgs.nix
-          ]
-          ++ pkgs.lib.optionals desktop [ ../nixos/desktop ]
-          ++ modules;
+        modules = [
+          inputs.home-manager.nixosModules.home-manager
+          ../common
+          ../nixos/pkgs.nix
+        ]
+        ++ pkgs.lib.optionals desktop [ ../nixos/desktop ]
+        ++ modules;
       }
     );
 in
