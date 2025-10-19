@@ -25,6 +25,7 @@ let
         };
         modules = [
           inputs.home-manager.darwinModules.home-manager
+          ../common
         ]
         ++ modules;
       }

@@ -28,6 +28,7 @@ let
           inputs.home-manager.nixosModules.home-manager
           ../common
           ../nixos/pkgs.nix
+          ../nixos/sys.nix
         ]
         ++ pkgs.lib.optionals desktop [ ../nixos/desktop ]
         ++ modules;
