@@ -13,7 +13,7 @@ let
     }:
     withSystem system (
       { pkgs, system, ... }:
-      inputs.nixpkgs.lib.darwinSystem {
+      inputs.darwin.lib.darwinSystem {
         inherit system;
         pkgs = import inputs.nixpkgs {
           inherit system;
@@ -32,6 +32,6 @@ let
 in
 {
   flake.darwinConfigurations = {
-    mba = mkDarwin { modules = [ ../hosts/mba.nix ]; };
+    mba = mkDarwin { modules = [ ../hosts/mba.nix ../common/options.nix ]; };
   };
 }
