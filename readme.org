@@ -46,3 +46,12 @@ To switch to an arbitrary session (e.g., sway.desktop), echo "sway" >~/.local/st
 
 * Decktop PC
 *WorkInProgress*
+* Darwin
+[Install][https://nixos.org/download.html#nix-install-macos]
+#+begin_src shell
+  nix build --extra-experimental-features "nix-command flakes" ./#darwinConfigurations.mba.system
+
+  ./result/sw/bin/darwin-rebuild switch --flake .#mba
+
+  darwin-rebuild switch --flake .#mba -L -v
+#+end_src
