@@ -3,9 +3,9 @@
 {
   myuser.hm.programs.git = {
     enable = true;
-    userName = "keke";
-    userEmail = "zrignshw@duck.com";
-    extraConfig = {
+    settings = {
+      user.name = "keke";
+      user.email = "zrignshw@duck.com";
       credential.helper = "store";
     };
   };
