@@ -3,5 +3,6 @@ _: {
     ./nixos.nix
     ./overlays.nix
     ./treefmt.nix
+    ./darwin.nix
   ];
 }
