@@ -2,5 +2,8 @@
 
 {
   system.stateVersion = 6;
-  environment.systemPackages = with pkgs; [ fastfetch ];
+  environment.systemPackages = with pkgs; [
+    fastfetch
+    git
+  ];
 }
