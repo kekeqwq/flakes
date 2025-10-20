@@ -5,4 +5,22 @@
   myuser.users.home = /Users/keke;
   myuser.hm.home.stateVersion = "25.11";
   system.stateVersion = 6;
+  system.primaryUser = "keke";
+  system.defaults = {
+    screencapture = {
+      location = "/tmp";
+    };
+    finder = {
+      AppleShowAllExtensions = true;
+      FXEnableExtensionChangeWarning = false;
+    };
+    NSGlobalDomain = {
+      _HIHideMenuBar = false;
+      AppleTemperatureUnit = "Celsius";
+      NSAutomaticSpellingCorrectionEnabled = false;
+      InitialKeyRepeat = 11;
+      KeyRepeat = 1;
+    };
+  };
+  environment.systemPackages = with pkgs; [ emacs ];
 }
