@@ -44,6 +44,14 @@ Install Progress.
 #+end_src
 To switch to an arbitrary session (e.g., sway.desktop), echo "sway" >~/.local/state/steamos-session-select then trigger a logout.
 
+~/.local/share/fcitx5/rime
+#+begin_src yaml
+patch:
+  __include: rime_ice_suggestion:/
+
+  schema_list:
+    - schema: double_pinyin_flypy  
+#+end_src
 * Decktop PC
 *WorkInProgress*
 * Darwin

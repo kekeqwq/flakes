@@ -24,12 +24,21 @@
   '';
 
   # Fcitx5
-  i18n.inputMethod.enable = true;
-  i18n.inputMethod.type = "fcitx5";
-  i18n.inputMethod.fcitx5.addons = with pkgs; [
-    fcitx5-rime
-    fcitx5-configtool
-  ];
+  i18n.inputMethod = {
+    enable = true;
+    type = "fcitx5";
+    fcitx5 = {
+      # waylandFrontend = true;
+      addons = with pkgs; [
+        catppuccin-fcitx5
+        (fcitx5-rime.override {
+          rimeDataPkgs = with pkgs; [
+            rime-ice
+          ];
+        })
+      ];
+    };
+  };
 
   environment.systemPackages = with pkgs; [
     discord
