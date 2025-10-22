@@ -25,5 +25,7 @@
   environment.systemPackages = with pkgs; [
     emacs
     sing-box
+    ffmpeg
+    ffprobe
   ];
 }
