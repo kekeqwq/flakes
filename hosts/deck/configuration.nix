@@ -24,6 +24,12 @@
       "audio"
     ];
   };
+  services = {
+    logind.settings.Login = {
+      HandlePowerKey = "ignore";
+      HandlePowerKeyLongPress = "suspend";
+    };
+  };
 
   myuser.hm.programs.fish = {
     interactiveShellInit = ''
@@ -38,7 +44,7 @@
     enable = true;
     autoStart = true;
     user = "${config.myuser.name}";
-    desktopSession = "wayfire";
+    desktopSession = "niri";
   };
 
   #TODO: fix sound issue in minimal system

@@ -8,6 +8,8 @@
 
   security.polkit.enable = true;
 
+  programs.niri.enable = true;
+
   programs.wayfire = {
     enable = true;
     plugins = with pkgs.wayfirePlugins; [
@@ -18,6 +20,8 @@
   };
 
   environment.systemPackages = with pkgs; [
+    wev
+    wlr-randr
     # wf-recorder
     swaybg
     waybar
