@@ -4,6 +4,7 @@
   myuser.name = "keke";
   myuser.users.home = /Users/keke;
   myuser.hm.home.stateVersion = "25.11";
+  networking.hostName = "mba";
   system.stateVersion = 6;
   system.primaryUser = "keke";
   system.defaults = {
@@ -25,7 +26,5 @@
   environment.systemPackages = with pkgs; [
     emacs
     sing-box
-    ffmpeg
-    ffprobe
   ];
 }
