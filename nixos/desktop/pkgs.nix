@@ -41,6 +41,7 @@
   };
 
   environment.systemPackages = with pkgs; [
+    snipaste
     discord
     mpv
     wayvnc
