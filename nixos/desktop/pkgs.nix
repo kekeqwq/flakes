@@ -13,7 +13,6 @@
   };
   services.udev.packages = with pkgs; [
     via
-    android-udev-rules
     yubikey-personalization
   ];
   services.udev.extraRules = ''
