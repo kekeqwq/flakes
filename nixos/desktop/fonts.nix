@@ -4,6 +4,7 @@
     font-awesome_5
     noto-fonts-emoji
     unifont
+    nerd-fonts.symbols-only
   ];
   fonts.fontconfig = {
     enable = true;
