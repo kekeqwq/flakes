@@ -30,7 +30,7 @@
     slurp
     pavucontrol
     imv
-    wofi
+    rofi
   ];
 
   #hardware.pulseaudio.enable = false;

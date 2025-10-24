@@ -47,7 +47,7 @@
     pass
     fastfetch
     gnumake
-    ranger
+    yazi
     dua
     p7zip
     python3
