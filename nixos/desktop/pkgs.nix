@@ -48,6 +48,7 @@ in
   };
   environment.systemPackages = with pkgs; [
     firefoxFlake.firefox-nightly-bin
+    google-chrome
     qbittorrent
     discord
     mpv
