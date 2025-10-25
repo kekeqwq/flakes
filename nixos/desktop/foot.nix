@@ -10,6 +10,7 @@
     settings = {
       main.term = "xterm-256color";
       main.font = "MonoLisa Nasy:size=11";
+      tweak.overflowing-glyphs = "yes";
       colors = {
         alpha = 0.92;
         # foreground = "D8DEE9";

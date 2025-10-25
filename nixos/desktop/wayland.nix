@@ -9,6 +9,7 @@
   security.polkit.enable = true;
 
   programs.niri.enable = true;
+  programs.xwayland.enable = true;
 
   programs.wayfire = {
     enable = true;

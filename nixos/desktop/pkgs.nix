@@ -40,6 +40,7 @@
   };
 
   environment.systemPackages = with pkgs; [
+    qbittorrent
     discord
     mpv
     wayvnc
