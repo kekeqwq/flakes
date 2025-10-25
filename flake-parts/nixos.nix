@@ -19,7 +19,9 @@ let
         pkgs = import inputs.nixpkgs {
           inherit system;
           config.allowUnfree = true;
-          overlays = [ self.overlays.default ];
+          overlays = [
+            self.overlays.default
+          ];
         };
         specialArgs = {
           inherit inputs;
@@ -36,7 +38,11 @@ let
 in
 {
   flake.nixosConfigurations = {
-    pc = mkNixos { modules = [ ../hosts/pc ]; };
+    pc = mkNixos {
+      modules = [
+        ../hosts/pc
+      ];
+    };
     deck = mkNixos {
       modules = [
         ../hosts/deck

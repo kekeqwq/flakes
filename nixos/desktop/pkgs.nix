@@ -1,4 +1,12 @@
-{ pkgs, config, ... }:
+{
+  pkgs,
+  config,
+  inputs,
+  ...
+}:
+let
+  firefoxFlake = inputs.firefox.packages.${pkgs.system};
+in
 {
   myuser.hm.programs.emacs = {
     enable = true;
@@ -38,14 +46,12 @@
       ];
     };
   };
-
   environment.systemPackages = with pkgs; [
+    firefoxFlake.firefox-nightly-bin
     qbittorrent
     discord
     mpv
-    wayvnc
     spotify
-    firefox
     prismlauncher
     tdesktop
     pinentry-curses

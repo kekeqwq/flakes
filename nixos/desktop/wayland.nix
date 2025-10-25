@@ -9,10 +9,9 @@
   security.polkit.enable = true;
 
   programs.niri.enable = true;
-  programs.xwayland.enable = true;
 
   programs.wayfire = {
-    enable = true;
+    enable = false;
     plugins = with pkgs.wayfirePlugins; [
       wcm
       wf-shell
@@ -21,6 +20,8 @@
   };
 
   environment.systemPackages = with pkgs; [
+    # Niri need statllite
+    xwayland-satellite
     wev
     wlr-randr
     # wf-recorder
