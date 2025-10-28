@@ -29,7 +29,7 @@ let
         modules = [
           inputs.home-manager.nixosModules.home-manager
           ../common
-          ../nixos/sys.nix
+          ../nixos
         ]
         ++ pkgs.lib.optionals desktop [ ../nixos/desktop ]
         ++ modules;
@@ -46,7 +46,6 @@ in
     deck = mkNixos {
       modules = [
         ../hosts/deck
-        ../nixos/sunshine.nix
         inputs.jovian.nixosModules.default
       ];
     };

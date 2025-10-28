@@ -52,39 +52,6 @@
   # services.zerotierone.joinNetworks = [ "b15644912e5357b7" ];
   services.tailscale.enable = true;
 
-  services.samba = {
-    enable = true;
-    securityType = "user";
-    extraConfig = ''
-      workgroup = WORKGROUP
-      server string = pc
-      netbios name = pc
-      security = user 
-      #use sendfile = yes
-      #max protocol = smb2
-      guest account = nobody
-      map to guest = bad user
-    '';
-    shares = {
-      # Poorpool = {
-      #   path = "/mnt";
-      #   browseable = "yes";
-      #   "read only" = "no";
-      #   "guest ok" = "no";
-      #   "create mask" = "0644";
-      #   "directory mask" = "0755";
-      # };
-      Home = {
-        path = "/home/me/Downloads";
-        browseable = "yes";
-        "read only" = "no";
-        "guest ok" = "no";
-        "create mask" = "0644";
-        "directory mask" = "0755";
-      };
-    };
-  };
-
   # Users
   myuser.name = "me";
   # users.groups.uinput = { };
