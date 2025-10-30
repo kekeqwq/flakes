@@ -54,7 +54,7 @@ in
     mpv
     spotify
     prismlauncher
-    tdesktop
+    telegram-desktop
     pinentry-curses
     scrcpy
   ];

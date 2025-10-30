@@ -1,7 +1,7 @@
 { pkgs, ... }:
 {
   fonts.packages = with pkgs; [
-    noto-fonts-emoji
+    noto-fonts-color-emoji
     nerd-fonts.symbols-only
   ];
   fonts.fontconfig = {
