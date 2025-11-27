@@ -24,6 +24,11 @@
     };
   };
   environment.systemPackages = with pkgs; [
+    ffmpeg
+    anki
+    wezterm
+    mpv
+    moonlight-qt
     emacs
     sing-box
   ];
