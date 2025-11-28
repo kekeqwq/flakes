@@ -24,6 +24,8 @@
     };
   };
   environment.systemPackages = with pkgs; [
+    telegram-desktop
+    discord
     ffmpeg
     anki
     wezterm
