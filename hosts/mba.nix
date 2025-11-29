@@ -24,6 +24,7 @@
     };
   };
   environment.systemPackages = with pkgs; [
+    localsend
     telegram-desktop
     discord
     ffmpeg
