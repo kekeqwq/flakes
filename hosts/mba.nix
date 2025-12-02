@@ -24,6 +24,7 @@
     };
   };
   environment.systemPackages = with pkgs; [
+    qbittorrent-enhanced
     localsend
     telegram-desktop
     discord
