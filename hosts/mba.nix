@@ -24,6 +24,7 @@
     };
   };
   environment.systemPackages = with pkgs; [
+    cinny-desktop
     qbittorrent-enhanced
     localsend
     telegram-desktop
