@@ -8,6 +8,11 @@ let
   firefoxFlake = inputs.firefox.packages.${pkgs.system};
 in
 {
+  programs.weylus = {
+    enable = true;
+    users = [ "keke" ];
+  };
+  
   myuser.hm.programs.emacs = {
     enable = true;
     package = pkgs.emacs30-pgtk;
@@ -47,6 +52,7 @@ in
     };
   };
   environment.systemPackages = with pkgs; [
+    xournalpp
     firefoxFlake.firefox-nightly-bin
     google-chrome
     qbittorrent
