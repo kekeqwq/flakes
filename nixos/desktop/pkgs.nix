@@ -52,6 +52,7 @@ in
     };
   };
   environment.systemPackages = with pkgs; [
+    exfat-utils
     xournalpp
     firefoxFlake.firefox-nightly-bin
     google-chrome

@@ -24,6 +24,8 @@
     };
   };
   environment.systemPackages = with pkgs; [
+    android-tools
+    scrcpy
     cinny-desktop
     qbittorrent-enhanced
     localsend
