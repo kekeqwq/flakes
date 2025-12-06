@@ -67,6 +67,19 @@ self: super: {
     };
   });
 
+  # My weylus
+  weylus-community = super.weylus.overrideAttrs (o: {
+    version = "fd1f1f1";
+    pname = "weylus-community";
+    src = super.fetchFromGitHub {
+      repo = "WeylusCommunityEdition";
+      owner = "electronstudio";
+      rev = "fd1f1f1efc910613d8a80d7e73d24b667a6d8b4a";
+      sha256 = "sha256-Q3gipRgZCzihKUQZZmETT65AUSEUfgj9dFxZFybq258=";
+    };
+  });
+
+  
   # My shattered-pixel-dungeon
   # shattered-pixel-dungeon = super.shattered-pixel-dungeon.overrideAttrs (o: {
   #   version = "1.3.2";
