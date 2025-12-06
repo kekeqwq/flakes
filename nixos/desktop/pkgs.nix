@@ -52,6 +52,8 @@ in
     };
   };
   environment.systemPackages = with pkgs; [
+    usbutils
+    exfat-utils
     exfat-utils
     xournalpp
     firefoxFlake.firefox-nightly-bin
