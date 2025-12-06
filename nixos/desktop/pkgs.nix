@@ -53,8 +53,8 @@ in
   };
   environment.systemPackages = with pkgs; [
     usbutils
-    exfat-utils
-    exfat-utils
+    exfatprogs
+    f2fs-tools
     xournalpp
     firefoxFlake.firefox-nightly-bin
     google-chrome
