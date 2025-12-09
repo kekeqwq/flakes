@@ -53,11 +53,8 @@ in
   };
   environment.systemPackages = with pkgs; [
     usbutils
-    exfatprogs
     f2fs-tools
-    xournalpp
     firefoxFlake.firefox-nightly-bin
-    google-chrome
     qbittorrent
     discord
     mpv
