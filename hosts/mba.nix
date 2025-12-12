@@ -24,6 +24,7 @@
     };
   };
   environment.systemPackages = with pkgs; [
+    clang
     android-tools
     scrcpy
     cinny-desktop
