@@ -24,7 +24,6 @@
     };
   };
   environment.systemPackages = with pkgs; [
-    blueutil
     clang
     android-tools
     scrcpy
