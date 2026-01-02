@@ -79,7 +79,6 @@ self: super: {
     };
   });
 
-  
   # My shattered-pixel-dungeon
   # shattered-pixel-dungeon = super.shattered-pixel-dungeon.overrideAttrs (o: {
   #   version = "1.3.2";

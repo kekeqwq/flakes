@@ -12,7 +12,7 @@ in
     enable = true;
     users = [ "keke" ];
   };
-  
+
   myuser.hm.programs.emacs = {
     enable = true;
     package = pkgs.emacs30-pgtk;
