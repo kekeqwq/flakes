@@ -17,7 +17,6 @@ in
     enable = true;
     package = pkgs.emacs30-pgtk;
   };
-  programs.adb.enable = true;
   myuser.users = {
     extraGroups = [
       "adbusers"
@@ -52,6 +51,7 @@ in
     };
   };
   environment.systemPackages = with pkgs; [
+    android-tools
     usbutils
     f2fs-tools
     firefoxFlake.firefox-nightly-bin
