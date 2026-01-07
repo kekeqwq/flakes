@@ -5,7 +5,7 @@
   ...
 }:
 let
-  firefoxFlake = inputs.firefox.packages.${pkgs.system};
+  firefoxFlake = inputs.firefox.packages.${pkgs.stdenv.hostPlatform.system};
 in
 {
   programs.weylus = {
@@ -17,22 +17,11 @@ in
     enable = true;
     package = pkgs.emacs30-pgtk;
   };
-  myuser.users = {
-    extraGroups = [
-      "adbusers"
-      "dialout"
-    ];
-  };
+
   services.udev.packages = with pkgs; [
     via
     yubikey-personalization
   ];
-  services.udev.extraRules = ''
-    # Touch Lite
-    SUBSYSTEM=="usb", ATTR{idVendor}=="109b", ATTR{idProduct}=="911f", MODE="0666", GROUP="adbusers"
-    # Espressif USB Serial/JTAG Controller
-    SUBSYSTEM=="tty", ATTRS{idVendor}=="303a", ATTRS{idProduct}=="1001", MODE="0660", TAG+="uaccess"
-  '';
 
   # Fcitx5
   i18n.inputMethod = {
@@ -51,7 +40,6 @@ in
     };
   };
   environment.systemPackages = with pkgs; [
-    android-tools
     usbutils
     f2fs-tools
     firefoxFlake.firefox-nightly-bin
