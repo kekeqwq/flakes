@@ -24,6 +24,7 @@
     };
   };
   environment.systemPackages = with pkgs; [
+    stylua
     clang
     android-tools
     scrcpy
