@@ -24,6 +24,7 @@
     };
   };
   environment.systemPackages = with pkgs; [
+    iina
     stylua
     clang
     android-tools
