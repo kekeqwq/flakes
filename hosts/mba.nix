@@ -24,6 +24,7 @@
     };
   };
   environment.systemPackages = with pkgs; [
+    typst
     git
     iina
     stylua
