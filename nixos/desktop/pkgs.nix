@@ -4,9 +4,6 @@
   inputs,
   ...
 }:
-let
-  firefoxFlake = inputs.firefox.packages.${pkgs.stdenv.hostPlatform.system};
-in
 {
   programs.weylus = {
     enable = true;
@@ -42,7 +39,6 @@ in
   environment.systemPackages = with pkgs; [
     usbutils
     f2fs-tools
-    firefoxFlake.firefox-nightly-bin
     qbittorrent
     discord
     mpv
@@ -51,6 +47,7 @@ in
     telegram-desktop
     pinentry-curses
     scrcpy
+    google-chrome
   ];
 
   #Sing-box

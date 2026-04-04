@@ -25,7 +25,7 @@
   };
   fonts.packages = with pkgs; [
     nerd-fonts.symbols-only
-  ];  
+  ];
   environment.systemPackages = with pkgs; [
     typst
     git
