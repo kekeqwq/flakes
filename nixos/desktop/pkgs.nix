@@ -52,7 +52,7 @@
 
   #Sing-box
   systemd.services.sing-box = {
-    enable = true;
+    enable = false;
     wantedBy = [ "multi-user.target" ];
     after = [
       "network.target"

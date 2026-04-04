@@ -11,7 +11,7 @@
       main.term = "xterm-256color";
       main.font = "MonoLisa Nasy:size=11";
       tweak.overflowing-glyphs = "yes";
-      colors = {
+      colors-dark = {
         alpha = 0.92;
         # foreground = "D8DEE9";
         # background = "2E3440";

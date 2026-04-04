@@ -8,5 +8,6 @@
       user.email = "zrignshw@duck.com";
       credential.helper = "store";
     };
+    signing.format = null;
   };
 }

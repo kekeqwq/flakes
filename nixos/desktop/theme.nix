@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs, config, ... }:
 {
 
   # Set theme need by Dconf
@@ -15,6 +15,7 @@
       name = "Fluent";
       package = pkgs.fluent-icon-theme;
     };
+    gtk4.theme = null;
   };
   myuser.hm.qt = {
     enable = true;

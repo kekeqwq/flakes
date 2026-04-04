@@ -28,11 +28,7 @@ _: {
         browseable = "yes";
         printable = "no";
         "valid users" = "keke";
-        "unix charset" = "utf-8";
-        "display charset" = "cp936";
-        "dos charset" = "cp936";
       };
-
     };
   };
 }
