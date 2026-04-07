@@ -31,7 +31,7 @@
     grim
     slurp
     pavucontrol
-    imv
+    qimgv
     rofi
   ];
 
