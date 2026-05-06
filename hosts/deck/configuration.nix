@@ -7,6 +7,7 @@
   boot.zfs.devNodes = "/dev/disk/by-id/nvme-WD_PC_SN740_SDDPTQD-1T00_230255456613-part2";
   ## If only one sensitive zvol is encrypted, then this option prevents automatic decryption on boot.
   boot.zfs.requestEncryptionCredentials = false;
+  boot.zfs.forceImportRoot = false;
 
   # Network
   networking.hostName = "deck";
@@ -14,10 +15,13 @@
   networking.networkmanager.enable = true;
   networking.firewall.enable = false;
 
+  virtualisation.docker.enable = true;
+  
   myuser.name = "keke";
   myuser.users = {
     isNormalUser = true;
     extraGroups = [
+      "docker"
       "wheel"
       "networkmanager"
       "video"
