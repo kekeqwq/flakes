@@ -40,7 +40,7 @@
     telegram-desktop
     discord
     ffmpeg
-    anki
+    # anki
     wezterm
     mpv
     moonlight-qt
