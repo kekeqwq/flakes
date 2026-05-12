@@ -38,7 +38,6 @@
     qbittorrent-enhanced
     localsend
     telegram-desktop
-    discord
     ffmpeg
     # anki
     wezterm

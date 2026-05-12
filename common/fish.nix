@@ -7,6 +7,7 @@
       set fish_greeting # Disable greeting
       starship init fish | source
       alias ls="exa"
+      alias sc="screen /dev/cu.usbmodem5B162124901 9600"
     '';
   };
 }
