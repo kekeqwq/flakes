@@ -1,6 +1,6 @@
 _: {
   imports = [
-    ./smb.nix
+    # ./smb.nix
     ./sys.nix
     ./sunshine.nix
   ];

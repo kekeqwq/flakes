@@ -48,6 +48,6 @@
     device = "/dev/mmcblk0p1";
     fsType = "f2fs";
   };
-  
+
   swapDevices = [ ];
 }

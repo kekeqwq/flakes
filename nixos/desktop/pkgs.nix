@@ -77,12 +77,11 @@
     ];
     serviceConfig = {
       ExecStart = "${pkgs.openlist}/bin/OpenList server";
-      WorkingDirectory = "/home/${config.myuser.name}/data";
+      WorkingDirectory = "/home/${config.myuser.name}";
       Restart = "on-failure";
     };
   };
 
-  
   # GPG
   services.pcscd.enable = true;
   programs = {

@@ -16,7 +16,7 @@
   networking.firewall.enable = false;
 
   virtualisation.docker.enable = true;
-  
+
   myuser.name = "keke";
   myuser.users = {
     isNormalUser = true;
