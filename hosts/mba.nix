@@ -27,6 +27,7 @@
     nerd-fonts.symbols-only
   ];
   environment.systemPackages = with pkgs; [
+    mihomo
     typst
     git
     iina
