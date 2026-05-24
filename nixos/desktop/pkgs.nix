@@ -68,6 +68,21 @@
     };
   };
 
+  #OpenList
+  systemd.services.openlist = {
+    enable = true;
+    wantedBy = [ "multi-user.target" ];
+    after = [
+      "network.target"
+    ];
+    serviceConfig = {
+      ExecStart = "${pkgs.openlist}/bin/OpenList server";
+      WorkingDirectory = "/home/${config.myuser.name}/data";
+      Restart = "on-failure";
+    };
+  };
+
+  
   # GPG
   services.pcscd.enable = true;
   programs = {
