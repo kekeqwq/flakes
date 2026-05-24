@@ -44,5 +44,10 @@
     fsType = "zfs";
   };
 
+  fileSystems."/kk" = {
+    device = "/dev/mmcblk0p1";
+    fsType = "f2fs";
+  };
+  
   swapDevices = [ ];
 }

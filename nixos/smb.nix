@@ -29,6 +29,20 @@ _: {
         printable = "no";
         "valid users" = "keke";
       };
+      kk = {
+        comment = "kkk";
+        path = "/kk";
+        "force user" = "keke";
+        public = "yes";
+        "guest ok" = "no";
+        "create mask" = "0644";
+        "directory mask" = "2777";
+        writable = "yes";
+        browseable = "yes";
+        printable = "no";
+        "valid users" = "keke";
+      };
+
     };
   };
 }
