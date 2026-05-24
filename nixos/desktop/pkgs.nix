@@ -37,6 +37,7 @@
     };
   };
   environment.systemPackages = with pkgs; [
+    openlist
     usbutils
     f2fs-tools
     qbittorrent
