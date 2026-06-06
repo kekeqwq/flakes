@@ -27,10 +27,10 @@
     nerd-fonts.symbols-only
   ];
   environment.systemPackages = with pkgs; [
+    obsidian
     mihomo
     typst
     git
-    iina
     stylua
     clang
     android-tools
@@ -40,7 +40,6 @@
     localsend
     telegram-desktop
     ffmpeg
-    # anki
     wezterm
     mpv
     moonlight-qt
