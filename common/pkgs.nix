@@ -38,6 +38,7 @@
         collection-xetex
         ;
     })
+    android-tools
     gh
     file
     htop

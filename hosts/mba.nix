@@ -33,7 +33,6 @@
     git
     stylua
     clang
-    android-tools
     scrcpy
     cinny-desktop
     qbittorrent-enhanced
