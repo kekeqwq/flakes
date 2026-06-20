@@ -37,14 +37,12 @@
     };
   };
   environment.systemPackages = with pkgs; [
-    tor-browser
     openlist
     usbutils
     f2fs-tools
     qbittorrent
     discord
     mpv
-    spotify
     prismlauncher
     telegram-desktop
     pinentry-curses
