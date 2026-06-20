@@ -19,7 +19,7 @@
   };
   myuser.hm.qt = {
     enable = true;
-    platformTheme.name = "gtk";
+    platformTheme.name = "gtk3";
   };
 
   myuser.hm.home.pointerCursor = {
