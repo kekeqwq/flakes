@@ -35,7 +35,6 @@
     clang
     scrcpy
     cinny-desktop
-    qbittorrent-enhanced
     localsend
     telegram-desktop
     ffmpeg
