@@ -37,6 +37,7 @@
     };
   };
   environment.systemPackages = with pkgs; [
+    tor-browser
     openlist
     usbutils
     f2fs-tools
