@@ -54,6 +54,39 @@
   #TODO: fix sound issue in minimal system
   environment.pathsToLink = [ "/share/alsa/ucm2" ];
 
+  services.nginx = {
+    enable = true;
+    recommendedProxySettings = true;
+    recommendedTlsSettings = true;
+
+    virtualHosts."usb-wifi-proxy" = {
+      listen = [
+        {
+          addr = "0.0.0.0";
+          port = 8181;
+        }
+      ];
+
+      locations."/" = {
+        proxyPass = "http://192.168.1.1";
+
+        extraConfig = ''
+          # 伪装 Host，绕过随身 Wi-Fi 的安全检查
+          proxy_set_header Host "192.168.1.1";
+          proxy_set_header Referer "http://192.168.1.1/";
+
+          # 确保 Cookie 和 Session 在转发时不会因为域名/IP不匹配而丢失
+          proxy_cookie_domain 192.168.1.1 $host;
+          proxy_cookie_path / /;
+
+          # 禁用缓存，防止浏览器缓存旧的短信列表
+          proxy_buffering off;
+          add_header Cache-Control "no-cache, no-store, must-revalidate";
+        '';
+      };
+    };
+  };
+
   myuser.hm.home.stateVersion = "24.11";
   system.stateVersion = "24.11";
 }
