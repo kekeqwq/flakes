@@ -19,8 +19,8 @@
   };
 
   environment.systemPackages = with pkgs; [
-    (texlive.combine {
-      inherit (texlive)
+    (texliveSmall.withPackages (
+      ps: with ps; [
         scheme-basic
         collection-bibtexextra
         collection-binextra
@@ -36,8 +36,8 @@
         collection-plaingeneric
         collection-pstricks
         collection-xetex
-        ;
-    })
+      ]
+    ))
     android-tools
     gh
     file

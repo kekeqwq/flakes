@@ -1,12 +1,6 @@
 { pkgs, ... }:
 
 {
-
-  # Temp
-  documentation.enable = false;
-  system.tools.darwin-uninstaller.enable = false;
-  #github.com/nix-darwin/nix-darwin/issues/1817
-  
   myuser.name = "keke";
   myuser.users.home = /Users/keke;
   myuser.hm.home.stateVersion = "25.11";
