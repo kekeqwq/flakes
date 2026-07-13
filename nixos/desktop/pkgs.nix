@@ -48,7 +48,9 @@
     telegram-desktop
     pinentry-curses
     scrcpy
-    google-chrome
+    (pkgs.google-chrome.override {
+      commandLineArgs = "--password-store=basic";
+    })    
   ];
 
   #Sing-box
