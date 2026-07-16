@@ -16,6 +16,17 @@ in
 self: super: {
   # My Packages ---------------------------------------------------------------
 
+  moonlight-qt = super.moonlight-qt.overrideAttrs (oldAttrs: {
+    MACOSX_DEPLOYMENT_TARGET = "14.0";
+    QMAKE_MACOSX_DEPLOYMENT_TARGET = "14.0";
+    NIX_CFLAGS_COMPILE = (oldAttrs.NIX_CFLAGS_COMPILE or "") + " -mmacosx-version-min=14.0";
+    nativeBuildInputs = (oldAttrs.nativeBuildInputs or [ ]) ++ [ super.llvmPackages.lld ];
+    NIX_CFLAGS_LINK = "-fuse-ld=${super.llvmPackages.lld}/bin/ld64.lld";
+    preConfigure = (oldAttrs.preConfigure or "") + ''
+      find . -name "*.pro" -exec sh -c 'echo "QMAKE_MACOSX_DEPLOYMENT_TARGET = 14.0" >> "{}"' \;
+    '';
+  });
+
   yabai-bin = super.callPackage ./yabai-bin { };
 
   style-detector = super.callPackage ./style-detector { };

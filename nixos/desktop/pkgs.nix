@@ -50,7 +50,7 @@
     scrcpy
     (pkgs.google-chrome.override {
       commandLineArgs = "--password-store=basic";
-    })    
+    })
   ];
 
   #Sing-box
