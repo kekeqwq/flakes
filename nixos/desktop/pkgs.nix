@@ -37,6 +37,7 @@
     };
   };
   environment.systemPackages = with pkgs; [
+    localsend
     tor-browser
     openlist
     usbutils
