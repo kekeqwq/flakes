@@ -5,28 +5,26 @@
   programs.dconf.enable = true;
 
   # Use home-manager set theme
-  # myuser.hm.gtk = {
-  #   enable = true;
-  #   theme = {
-  #     package = pkgs.catppuccin-gtk;
-  #     name = "Catppuccin-Dark";
-  #   };
-  #   cursorTheme = {
-  #     package = pkgs.bibata-cursors;
-  #     name = "Bibata-Original-Ice";
-  #     size = 24;
-  #   };
-  #   iconTheme = {
-  #     name = "Colloid";
-  #     package = pkgs.colloid-icon-theme;
-  #   };
-  #   gtk4.theme = null;
-  # };
+  myuser.hm.gtk = {
+    enable = true;
+    # theme = {
+    #   name = "Orchis-Green-Dark";
+    #   package = pkgs.orchis-theme;
+    # };
+    iconTheme = {
+      name = "Fluent";
+      package = pkgs.fluent-icon-theme;
+    };
+    gtk4.theme = null;
+  };
+  myuser.hm.qt = {
+    enable = true;
+    platformTheme.name = "gtk3";
+  };
 
   myuser.hm.home.pointerCursor = {
     enable = true;
     package = pkgs.bibata-cursors;
-    name = "Bibata-Original-Ice";
-    size = 24;
+    name = "Bibata-Modern-Ice";
   };
 }
