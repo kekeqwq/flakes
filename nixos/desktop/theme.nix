@@ -7,10 +7,10 @@
   # Use home-manager set theme
   myuser.hm.gtk = {
     enable = true;
-    # theme = {
-    #   name = "Orchis-Green-Dark";
-    #   package = pkgs.orchis-theme;
-    # };
+    theme = {
+      name = "Colloid-Dark";
+      package = pkgs.colloid-gtk-theme;
+    };
     iconTheme = {
       name = "Fluent";
       package = pkgs.fluent-icon-theme;
