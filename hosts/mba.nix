@@ -27,7 +27,6 @@
     nerd-fonts.symbols-only
   ];
   environment.systemPackages = with pkgs; [
-    obsidian
     mihomo
     typst
     git
@@ -42,6 +41,5 @@
     mpv
     moonlight-qt
     emacs
-    sing-box
   ];
 }
