@@ -30,7 +30,6 @@
     mihomo
     typst
     git
-    stylua
     clang
     scrcpy
     cinny-desktop

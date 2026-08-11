@@ -21,6 +21,7 @@
 
   environment.systemPackages = with pkgs; [
     # Niri need statllite
+    wezterm
     xwayland-satellite
     wev
     wlr-randr

@@ -19,6 +19,7 @@
   };
 
   environment.systemPackages = with pkgs; [
+    stylua
     (texliveSmall.withPackages (
       ps: with ps; [
         scheme-basic
