@@ -31,7 +31,7 @@ in
     };
     theme = "${rofi-theme}/catppuccin-default.rasi";
   };
-  
+
   security.polkit.enable = true;
 
   programs.niri.enable = true;
