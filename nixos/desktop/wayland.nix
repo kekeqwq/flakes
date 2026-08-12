@@ -174,7 +174,7 @@ in
         }
     }
   '';
-  
+
   programs.wayfire = {
     enable = false;
     plugins = with pkgs.wayfirePlugins; [
