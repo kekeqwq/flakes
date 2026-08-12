@@ -48,7 +48,6 @@
     pass
     fastfetch
     gnumake
-    yazi
     dua
     p7zip
     python3

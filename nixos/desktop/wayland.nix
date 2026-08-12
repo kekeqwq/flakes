@@ -4,8 +4,34 @@
   lib,
   ...
 }:
+let
+  rofi-theme = pkgs.fetchFromGitHub {
+    owner = "kekeqwq";
+    repo = "rofi";
+    rev = "b4f6e1d7a06986954beed4d1ba327d862c7dac6f";
+    hash = "sha256-8/uqYUEEI5Tyz4padRLuqA9xC6g0hphE8R9NMavtQnU=";
+  };
+in
 {
-
+  myuser.hm.programs.rofi = {
+    enable = true;
+    package = pkgs.rofi;
+    extraConfig = {
+      modi = "drun";
+      show-icons = true;
+      icon-theme = "Fluent";
+      matching = "fuzzy";
+      sort = true;
+      drun-display-format = "{name}";
+      disable-history = false;
+      hide-scrollbar = true;
+      display-drun = "Apps";
+      display-run = "Run";
+      display-window = "Windows";
+    };
+    theme = "${rofi-theme}/catppuccin-default.rasi";
+  };
+  
   security.polkit.enable = true;
 
   programs.niri.enable = true;
@@ -31,7 +57,6 @@
     grim
     slurp
     qimgv
-    rofi
   ];
 
   #hardware.pulseaudio.enable = false;
