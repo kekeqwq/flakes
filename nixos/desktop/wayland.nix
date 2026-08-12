@@ -35,7 +35,146 @@ in
   security.polkit.enable = true;
 
   programs.niri.enable = true;
-
+  myuser.hm.home.file.".config/niri/config.kdl".text = ''
+    include "/home/keke/Downloads/deck.kdl"
+    input {
+        mod-key "Alt"
+    }
+    output "DP-1" {
+        mode "3840x2160@30"
+        scale 2
+        transform "normal"
+    }
+    layout {
+        gaps 14
+        center-focused-column "never"
+        always-center-single-column
+        default-column-display "tabbed"
+        preset-column-widths {
+            proportion 0.33333
+            proportion 0.5
+            proportion 0.66667
+        }
+        default-column-width {
+            proportion 0.5
+        }
+        preset-window-heights {
+            proportion 0.33333
+            proportion 0.5
+            proportion 0.66667
+        }
+        focus-ring {
+            width 3
+            active-color "#d8dee9"
+            inactive-color "rgba(0,0,0,0)"
+        }
+        shadow {
+            on
+            softness 10
+            spread 10
+            offset x=0 y=5
+        }
+        tab-indicator {
+            off
+        }
+        insert-hint {
+            color "#ffc87f80"
+        }
+    }
+    spawn-at-startup "fcitx5"
+    spawn-at-startup "swaybg" "-i" "/home/keke/Downloads/wall.jpg" "-m" "fill"
+    prefer-no-csd
+    layer-rule {
+        match namespace="waybar"
+        match namespace="rofi"
+        match at-startup=true
+        opacity 0.8
+        shadow {
+            on
+            softness 10
+            spread 10
+            offset x=0 y=5
+        }
+        geometry-corner-radius 10
+    }
+    window-rule {
+        geometry-corner-radius 6
+        clip-to-geometry true
+        draw-border-with-background false
+    }
+    binds {
+        Mod+Return {
+            spawn "wezterm"
+        }
+        Mod+D {
+            spawn "rofi" "-show"
+        }
+        XF86AudioRaiseVolume allow-when-locked=true {
+            spawn "wpctl" "set-volume" "@DEFAULT_AUDIO_SINK@" "0.1+"
+        }
+        XF86AudioLowerVolume allow-when-locked=true {
+            spawn "wpctl" "set-volume" "@DEFAULT_AUDIO_SINK@" "0.1-"
+        }
+        Mod+M {
+            maximize-column
+        }
+        Mod+1 {
+            focus-workspace 1
+        }
+        Mod+2 {
+            focus-workspace 2
+        }
+        Mod+3 {
+            focus-workspace 3
+        }
+        Mod+4 {
+            focus-workspace 4
+        }
+        Mod+5 {
+            focus-workspace 5
+        }
+        Mod+6 {
+            focus-workspace 6
+        }
+        Mod+7 {
+            focus-workspace 7
+        }
+        Mod+8 {
+            focus-workspace 8
+        }
+        Mod+9 {
+            focus-workspace 9
+        }
+        Mod+Ctrl+1 {
+            move-column-to-workspace 1
+        }
+        Mod+Ctrl+2 {
+            move-column-to-workspace 2
+        }
+        Mod+Ctrl+3 {
+            move-column-to-workspace 3
+        }
+        Mod+Ctrl+4 {
+            move-column-to-workspace 4
+        }
+        Mod+Ctrl+5 {
+            move-column-to-workspace 5
+        }
+        Mod+Ctrl+6 {
+            move-column-to-workspace 6
+        }
+        Mod+Ctrl+7 {
+            move-column-to-workspace 7
+        }
+        Mod+Ctrl+8 {
+            move-column-to-workspace 8
+        }
+        Mod+Ctrl+9 {
+            move-column-to-workspace 9
+        }
+    }
+  '';
+  
   programs.wayfire = {
     enable = false;
     plugins = with pkgs.wayfirePlugins; [
