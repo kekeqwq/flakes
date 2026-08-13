@@ -27,6 +27,7 @@
       "video"
       "audio"
       "render"
+      "input"
     ];
   };
   services = {
