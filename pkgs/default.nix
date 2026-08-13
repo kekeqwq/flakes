@@ -29,6 +29,8 @@ self: super: {
 
   obs-input-bridge = super.callPackage ./obs-input-bridge { };
 
+  obs-input-bridge-macos = super.callPackage ./obs-input-bridge-macos { };
+
   yabai-bin = super.callPackage ./yabai-bin { };
 
   style-detector = super.callPackage ./style-detector { };
