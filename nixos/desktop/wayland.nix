@@ -13,6 +13,26 @@ let
   };
 in
 {
+  systemd.services.obs-input-bridge = {
+    description = "OBS Input Bridge";
+    wantedBy = [
+      "multi-user.target"
+    ];
+    after = [
+      "network.target"
+    ];
+    serviceConfig = {
+      ExecStart = "${pkgs.obs-input-bridge}/bin/obs-input-bridge";
+      User = "keke";
+      SupplementaryGroups = [
+        "input"
+      ];
+      Restart = "always";
+      RestartSec = 2;
+      Type = "simple";
+    };
+  };
+
   myuser.hm.programs.rofi = {
     enable = true;
     package = pkgs.rofi;

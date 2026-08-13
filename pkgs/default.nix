@@ -27,6 +27,8 @@ self: super: {
   #   '';
   # });
 
+  obs-input-bridge = super.callPackage ./obs-input-bridge { };
+
   yabai-bin = super.callPackage ./yabai-bin { };
 
   style-detector = super.callPackage ./style-detector { };
