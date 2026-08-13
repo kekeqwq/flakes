@@ -118,6 +118,9 @@ in
         Mod+M {
             maximize-column
         }
+        Mod+Q {
+            close-window
+        }
         Mod+1 {
             focus-workspace 1
         }
