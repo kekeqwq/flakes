@@ -15,11 +15,11 @@ in
 
 stdenv.mkDerivation rec {
   pname = "obs-input-bridge";
-  version = "unstable-2026-08-13";
+  version = "unstable-2026-08-14";
   src = fetchFromGitHub {
     owner = "kekeqwq";
     repo = "obs-input-bridge";
-    rev = "6b344066306f732c4a4356578809865264a10e5c";
+    rev = "8addb56d270e177c4e8e822d66a0294ac2f5be82";
     hash = "sha256-4OFR1Am2lIPgdgzWScHVF2UA8Dazcm8nJjcFhxDSqx0=";
   };
   nativeBuildInputs = [
