@@ -28,7 +28,7 @@ in
       SupplementaryGroups = [ "input" ];
     };
   };
-  
+
   myuser.hm.programs.rofi = {
     enable = true;
     package = pkgs.rofi;

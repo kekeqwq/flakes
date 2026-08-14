@@ -20,7 +20,7 @@ stdenv.mkDerivation rec {
     owner = "kekeqwq";
     repo = "obs-input-bridge";
     rev = "8addb56d270e177c4e8e822d66a0294ac2f5be82";
-    hash = "sha256-4OFR1Am2lIPgdgzWScHVF2UA8Dazcm8nJjcFhxDSqx0=";
+    hash = "sha256-McL53emg0NMHieuyYZEklwC3BmGtGyoD03cttvE3+CQ=";
   };
   nativeBuildInputs = [
     makeWrapper
