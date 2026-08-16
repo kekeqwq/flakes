@@ -56,11 +56,6 @@ in
     input {
         mod-key "Alt"
     }
-    output "DP-1" {
-        mode "3840x2160@30"
-        scale 2
-        transform "normal"
-    }
     layout {
         gaps 14
         center-focused-column "never"
