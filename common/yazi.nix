@@ -36,12 +36,12 @@ in
           {
             run = "qimgv %s";
             orphan = true;
-            for = "unix";
+            for = "linux";
           }
           {
             run = "localsend_app %s";
             orphan = true;
-            for = "unix";
+            for = "linux";
           }
         ];
 
@@ -49,12 +49,12 @@ in
           {
             run = "mpv %s";
             orphan = true;
-            for = "unix";
+            for = "linux";
           }
           {
-            run = "iina %s";
+            run = "open -a IINA %s";
             orphan = true;
-            for = "unix";
+            for = "macos";
           }
         ];
       };
