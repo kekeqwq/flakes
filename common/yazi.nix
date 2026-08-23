@@ -51,6 +51,11 @@ in
             orphan = true;
             for = "unix";
           }
+          {
+            run = "iina %s";
+            orphan = true;
+            for = "unix";
+          }
         ];
       };
       open.rules = [

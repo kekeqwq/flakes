@@ -39,14 +39,15 @@
   fonts.packages = with pkgs; [
     nerd-fonts.symbols-only
   ];
+  programs.tmux.enable = pkgs.lib.mkForce false;
   environment.systemPackages = with pkgs; [
+    iina
     mihomo
     typst
     git
     clang
     scrcpy
     cinny-desktop
-    localsend
     telegram-desktop
     ffmpeg
     wezterm
