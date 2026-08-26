@@ -27,6 +27,8 @@ self: super: {
   #   '';
   # });
 
+  xrock = super.callPackage ./xrock { };
+
   obs-input-bridge = super.callPackage ./obs-input-bridge { };
 
   obs-input-bridge-macos = super.callPackage ./obs-input-bridge-macos { };
