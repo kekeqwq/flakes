@@ -27,6 +27,8 @@ self: super: {
   #   '';
   # });
 
+  kikieye = super.callPackage ./kikieye { };
+
   xrock = super.callPackage ./xrock { };
 
   obs-input-bridge = super.callPackage ./obs-input-bridge { };

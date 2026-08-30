@@ -41,6 +41,7 @@
   ];
   programs.tmux.enable = pkgs.lib.mkForce false;
   environment.systemPackages = with pkgs; [
+    kikieye
     iina
     mihomo
     typst
