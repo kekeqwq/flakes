@@ -13,6 +13,20 @@ let
   };
 in
 {
+  systemd.services.kikibridge-rx = {
+    description = "KikiBridge UDP → uinput receiver";
+    wantedBy = [ "multi-user.target" ];
+    after = [ "network-online.target" ];
+    wants = [ "network-online.target" ];
+    serviceConfig = {
+      Type = "simple";
+      ExecStart = "${pkgs.kikibridge-rx}/bin/kikibridge-rx";
+      Restart = "always";
+      RestartSec = 2;
+      DeviceAllow = [ "/dev/uinput rw" ];
+    };
+  };
+
   myuser.hm.programs.rofi = {
     enable = true;
     package = pkgs.rofi;
