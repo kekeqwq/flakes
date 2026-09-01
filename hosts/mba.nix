@@ -7,19 +7,6 @@
   networking.hostName = "mba";
   system.stateVersion = 6;
   system.primaryUser = "keke";
-
-  # launchd.user.agents.obs-input-bridge = {
-  #   serviceConfig = {
-  #     ProgramArguments = [
-  #       "${pkgs.obs-input-bridge-macos}/bin/obs-input-bridge-macos"
-  #     ];
-  #     RunAtLoad = true;
-  #     KeepAlive = true;
-  #     StandardOutPath = "/tmp/obs-input-bridge.log";
-  #     StandardErrorPath = "/tmp/obs-input-bridge.error.log";
-  #   };
-  # };
-
   system.defaults = {
     screencapture = {
       location = "/tmp";
