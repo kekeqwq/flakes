@@ -6,13 +6,13 @@
 
 stdenv.mkDerivation rec {
   pname = "kikibridge";
-  version = "0.3.0";
+  version = "0.3.1";
 
   src = fetchFromGitHub {
     owner = "kekeqwq";
     repo = "kikibridge-macos";
-    rev = "6b605764ae5871dbad77ef2c3a4488d777d5150a";
-    hash = "sha256-n+fRF4CAAxJuZoyNza0qDeZkFNn/ocHooZ5UOeNoG6I=";
+    rev = "311d46f68cb166c629bd2b4d7e4e5408878e9e83";
+    hash = "sha256-8x5VuDQjhtv737nAAMFmiLTKJd6T+XNvekNiicZ5/1E=";
   };
 
   __darwinAllowLocalNetworking = true;
