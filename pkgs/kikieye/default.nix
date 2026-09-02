@@ -11,8 +11,8 @@ stdenv.mkDerivation rec {
   src = fetchFromGitHub {
     owner = "kekeqwq";
     repo = "kikieye";
-    rev = "18e7241f5bb1fff3a96a16eb0e20d1d0079dc212";
-    hash = "sha256-X8cFc0ffXKmr7V6Du20CsLOLXVOtuVcIpswrhw8OSAU=";
+    rev = "1a80d64bf47da7444f0e55e55c64fb96bf7703a3";
+    hash = "sha256-6lwquubjUmqhyCWQUKRgjnGQC0D5LwzMW0Z7p94KFSM=";
   };
 
   dontConfigure = true;
