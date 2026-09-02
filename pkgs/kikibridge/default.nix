@@ -2,31 +2,58 @@
   lib,
   stdenv,
   fetchFromGitHub,
+  actool,
 }:
 
-stdenv.mkDerivation rec {
+assert lib.assertMsg stdenv.hostPlatform.isDarwin "kikibridge is Darwin-only";
+
+let
+  triple =
+    if stdenv.hostPlatform.isAarch64 then "arm64-apple-macos27.0" else "x86_64-apple-macos27.0";
+in
+stdenv.mkDerivation {
   pname = "kikibridge";
-  version = "0.3.1";
+  version = "0.7.0";
 
   src = fetchFromGitHub {
     owner = "kekeqwq";
     repo = "kikibridge-macos";
-    rev = "311d46f68cb166c629bd2b4d7e4e5408878e9e83";
-    hash = "sha256-8x5VuDQjhtv737nAAMFmiLTKJd6T+XNvekNiicZ5/1E=";
+    rev = "45075b5661a0e655433d96240c9e11c9ea8efeb9";
+    hash = "sha256-72bb+ycjt48uKO8dax94EM0+p5g9KprJXBDygiX9xkc=";
   };
 
-  __darwinAllowLocalNetworking = true;
+  nativeBuildInputs = [ actool ];
+  dontUseNixBuildInputsCompiler = true;
+
+  # 仅此包出沙箱，摸本机 Xcode 27。全局保持 sandbox = "relaxed"。
+  __noChroot = true;
 
   buildPhase = ''
     runHook preBuild
-    $CC -O2 -fobjc-arc -fvisibility=hidden \
-      -framework Cocoa \
-      -framework ApplicationServices \
-      -framework CoreGraphics \
-      -framework Foundation \
-      -framework IOKit \
-      -sectcreate __TEXT __info_plist Info.plist \
-      -o kikibridge kikibridge.m kikibridge-tap.m
+    unset NIX_CFLAGS_COMPILE NIX_LDFLAGS CC CXX MACOSX_DEPLOYMENT_TARGET
+    unset SDKROOT
+    if [ -d /Applications/Xcode-beta.app/Contents/Developer ]; then
+      export DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer
+    elif [ -d /Applications/Xcode.app/Contents/Developer ]; then
+      export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
+    else
+      export DEVELOPER_DIR=$(/usr/bin/xcode-select -p)
+    fi
+    SDK=$(/usr/bin/xcrun --sdk macosx --show-sdk-path)
+    SWIFT=$(/usr/bin/xcrun -f swiftc)
+    test -n "$SDK" -a -x "$SWIFT"
+    echo "kikibridge: DEVELOPER_DIR=$DEVELOPER_DIR"
+    echo "kikibridge: SDK=$SDK"
+    echo "kikibridge: SWIFT=$SWIFT"
+    "$SWIFT" -O -parse-as-library \
+      -sdk "$SDK" -target ${triple} \
+      -Xfrontend -disable-sandbox \
+      -o kikibridge \
+      Entry.swift App.swift Bridge.swift Tap.swift \
+      -framework SwiftUI -framework AppKit -framework Combine \
+      -framework ApplicationServices -framework CoreGraphics \
+      -framework IOKit -framework QuartzCore -framework Foundation \
+      -framework Cocoa
     runHook postBuild
   '';
 
@@ -37,9 +64,26 @@ stdenv.mkDerivation rec {
     cp kikibridge $app/Contents/MacOS/kikibridge
     cp Info.plist $app/Contents/Info.plist
     printf 'APPL????' > $app/Contents/PkgInfo
-    cp kikibridge.icns $app/Contents/Resources/kikibridge.icns
     cp kikibridge.png $app/Contents/Resources/kikibridge.png
     cp kikibridge-template.png $app/Contents/Resources/kikibridge-template.png
+    cp icon.png $app/Contents/Resources/icon.png
+    cp AppIcon.icon/Assets/girl.png $app/Contents/Resources/girl.png
+    cp -R AppIcon.icon $app/Contents/Resources/AppIcon.icon
+    actool AppIcon.icon \
+      --compile $app/Contents/Resources \
+      --platform macosx \
+      --minimum-deployment-target 27.0 \
+      --app-icon AppIcon \
+      --include-all-app-icons \
+      --standalone-icon-behavior none \
+      --target-device mac \
+      --output-partial-info-plist $TMPDIR/assetcatalog_generated_info.plist \
+      --output-format human-readable-text
+    test -f $app/Contents/Resources/Assets.car
+    rm -f $app/Contents/Resources/AppIcon.icns
+    if command -v codesign >/dev/null 2>&1; then
+      codesign --force --deep --sign - "$app" || true
+    fi
     cat > $out/bin/kikibridge <<EOF
     #!/bin/sh
     set -e
@@ -56,11 +100,13 @@ stdenv.mkDerivation rec {
     exec "\$dest/Contents/MacOS/kikibridge" "\$@"
     EOF
     chmod +x $out/bin/kikibridge
+    printf '%s\n' '#!/bin/sh' "exec /usr/bin/open -n \"$app\"" > $out/bin/kikibridge-app
+    chmod +x $out/bin/kikibridge-app
     runHook postInstall
   '';
 
   meta = {
-    description = "KikiBridge macOS sender (manager + tap child)";
+    description = "KikiBridge macOS sender";
     homepage = "https://github.com/kekeqwq/kikibridge-macos";
     license = lib.licenses.gpl3Plus;
     platforms = lib.platforms.darwin;

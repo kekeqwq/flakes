@@ -1,6 +1,7 @@
 { pkgs, ... }:
 
 {
+  nix.settings.sandbox = "relaxed";
   myuser.name = "keke";
   myuser.users.home = /Users/keke;
   myuser.hm.home.stateVersion = "25.11";
