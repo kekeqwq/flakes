@@ -7,13 +7,13 @@
 
 stdenv.mkDerivation rec {
   pname = "kikibridge";
-  version = "0.7.24";
+  version = "0.7.28";
 
   src = fetchFromGitHub {
     owner = "kekeqwq";
     repo = "kikibridge-macos";
-    rev = "438c427f1ed8783f5fcbd6ebd7e63c65ae17046d";
-    hash = "sha256-bOL4KZla/NPyPoNOZXXLRXRrJb42TY34b4i03HVhSUU=";
+    rev = "cb4f4e304024969512e54a63c8155cfbc641d051";
+    hash = "sha256-aYyMIOglBRbeMZK7mAgrQ2sZINtKbxKbjFOlHWw4Sn0=";
   };
 
   nativeBuildInputs = [ actool ];
@@ -59,8 +59,6 @@ stdenv.mkDerivation rec {
     cp kikibridge.png $app/Contents/Resources/kikibridge.png
     cp kikibridge-template.png $app/Contents/Resources/kikibridge-template.png
     cp karabiner-kikibridge.json $app/Contents/Resources/karabiner-kikibridge.json
-    cp icon.png $app/Contents/Resources/icon.png
-    cp AppIcon.icon/Assets/girl.png $app/Contents/Resources/girl.png
     cp -R AppIcon.icon $app/Contents/Resources/AppIcon.icon
     actool AppIcon.icon \
       --compile $app/Contents/Resources \

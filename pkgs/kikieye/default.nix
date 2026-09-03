@@ -5,33 +5,24 @@
   actool,
 }:
 
-assert lib.assertMsg stdenv.hostPlatform.isDarwin "kikieye is Darwin-only";
-
-let
-  triple =
-    if stdenv.hostPlatform.isAarch64 then "arm64-apple-macos27.0" else "x86_64-apple-macos27.0";
-in
-stdenv.mkDerivation {
+stdenv.mkDerivation rec {
   pname = "kikieye";
-  version = "1.3.0";
+  version = "1.3.2";
 
   src = fetchFromGitHub {
     owner = "kekeqwq";
     repo = "kikieye";
-    rev = "19622e8c1c968477a7db3f7d672fef7c003437f3";
-    hash = "sha256-rZw/HQ/NUsxTTtTRJnA0urX1SKX6I5ZvOw4RkLTfDQE=";
+    rev = "2e721737c8fa4569861c9f242824ba7979145fee";
+    hash = "sha256-pbdSc3B7puT820NB7+kBBDFWH6jlRHs6OixN03qSNTU=";
   };
 
   nativeBuildInputs = [ actool ];
   dontUseNixBuildInputsCompiler = true;
-
-  # 仅此包出沙箱，摸本机 Xcode 27。全局保持 sandbox = "relaxed"。
   __noChroot = true;
 
   buildPhase = ''
     runHook preBuild
-    unset NIX_CFLAGS_COMPILE NIX_LDFLAGS CC CXX MACOSX_DEPLOYMENT_TARGET
-    unset SDKROOT
+    unset NIX_CFLAGS_COMPILE NIX_LDFLAGS CC CXX MACOSX_DEPLOYMENT_TARGET SDKROOT
     if [ -d /Applications/Xcode-beta.app/Contents/Developer ]; then
       export DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer
     elif [ -d /Applications/Xcode.app/Contents/Developer ]; then
@@ -42,11 +33,12 @@ stdenv.mkDerivation {
     SDK=$(/usr/bin/xcrun --sdk macosx --show-sdk-path)
     SWIFT=$(/usr/bin/xcrun -f swiftc)
     test -n "$SDK" -a -x "$SWIFT"
+    triple="${if stdenv.hostPlatform.isAarch64 then "arm64" else "x86_64"}-apple-macos27.0"
     echo "kikieye: DEVELOPER_DIR=$DEVELOPER_DIR"
     echo "kikieye: SDK=$SDK"
     echo "kikieye: SWIFT=$SWIFT"
     "$SWIFT" -O -parse-as-library \
-      -sdk "$SDK" -target ${triple} \
+      -sdk "$SDK" -target "$triple" \
       -Xfrontend -disable-sandbox \
       -o kikieye \
       Entry.swift Config.swift App.swift Capture.swift \
@@ -64,9 +56,7 @@ stdenv.mkDerivation {
     cp kikieye $app/Contents/MacOS/kikieye
     cp Info.plist $app/Contents/Info.plist
     printf 'APPL????' > $app/Contents/PkgInfo
-    cp icon.png $app/Contents/Resources/icon.png
     cp -R AppIcon.icon $app/Contents/Resources/AppIcon.icon
-    cp AppIcon.icon/Assets/eye.png $app/Contents/Resources/eye.png
     actool AppIcon.icon \
       --compile $app/Contents/Resources \
       --platform macosx \
@@ -105,7 +95,6 @@ stdenv.mkDerivation {
 
   meta = {
     description = "KikiEye — borderless capture-card monitor";
-    homepage = "https://github.com/kekeqwq/kikieye";
     license = lib.licenses.gpl3Plus;
     platforms = lib.platforms.darwin;
     mainProgram = "kikieye";
