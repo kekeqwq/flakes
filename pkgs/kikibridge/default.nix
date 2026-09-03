@@ -5,33 +5,24 @@
   actool,
 }:
 
-assert lib.assertMsg stdenv.hostPlatform.isDarwin "kikibridge is Darwin-only";
-
-let
-  triple =
-    if stdenv.hostPlatform.isAarch64 then "arm64-apple-macos27.0" else "x86_64-apple-macos27.0";
-in
-stdenv.mkDerivation {
+stdenv.mkDerivation rec {
   pname = "kikibridge";
-  version = "0.7.0";
+  version = "0.7.24";
 
   src = fetchFromGitHub {
     owner = "kekeqwq";
     repo = "kikibridge-macos";
-    rev = "45075b5661a0e655433d96240c9e11c9ea8efeb9";
-    hash = "sha256-72bb+ycjt48uKO8dax94EM0+p5g9KprJXBDygiX9xkc=";
+    rev = "438c427f1ed8783f5fcbd6ebd7e63c65ae17046d";
+    hash = "sha256-bOL4KZla/NPyPoNOZXXLRXRrJb42TY34b4i03HVhSUU=";
   };
 
   nativeBuildInputs = [ actool ];
   dontUseNixBuildInputsCompiler = true;
-
-  # 仅此包出沙箱，摸本机 Xcode 27。全局保持 sandbox = "relaxed"。
   __noChroot = true;
 
   buildPhase = ''
     runHook preBuild
-    unset NIX_CFLAGS_COMPILE NIX_LDFLAGS CC CXX MACOSX_DEPLOYMENT_TARGET
-    unset SDKROOT
+    unset NIX_CFLAGS_COMPILE NIX_LDFLAGS CC CXX MACOSX_DEPLOYMENT_TARGET SDKROOT
     if [ -d /Applications/Xcode-beta.app/Contents/Developer ]; then
       export DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer
     elif [ -d /Applications/Xcode.app/Contents/Developer ]; then
@@ -42,11 +33,12 @@ stdenv.mkDerivation {
     SDK=$(/usr/bin/xcrun --sdk macosx --show-sdk-path)
     SWIFT=$(/usr/bin/xcrun -f swiftc)
     test -n "$SDK" -a -x "$SWIFT"
+    triple="${if stdenv.hostPlatform.isAarch64 then "arm64" else "x86_64"}-apple-macos27.0"
     echo "kikibridge: DEVELOPER_DIR=$DEVELOPER_DIR"
     echo "kikibridge: SDK=$SDK"
     echo "kikibridge: SWIFT=$SWIFT"
     "$SWIFT" -O -parse-as-library \
-      -sdk "$SDK" -target ${triple} \
+      -sdk "$SDK" -target "$triple" \
       -Xfrontend -disable-sandbox \
       -o kikibridge \
       Entry.swift App.swift Bridge.swift Tap.swift \
@@ -66,6 +58,7 @@ stdenv.mkDerivation {
     printf 'APPL????' > $app/Contents/PkgInfo
     cp kikibridge.png $app/Contents/Resources/kikibridge.png
     cp kikibridge-template.png $app/Contents/Resources/kikibridge-template.png
+    cp karabiner-kikibridge.json $app/Contents/Resources/karabiner-kikibridge.json
     cp icon.png $app/Contents/Resources/icon.png
     cp AppIcon.icon/Assets/girl.png $app/Contents/Resources/girl.png
     cp -R AppIcon.icon $app/Contents/Resources/AppIcon.icon
@@ -107,7 +100,6 @@ stdenv.mkDerivation {
 
   meta = {
     description = "KikiBridge macOS sender";
-    homepage = "https://github.com/kekeqwq/kikibridge-macos";
     license = lib.licenses.gpl3Plus;
     platforms = lib.platforms.darwin;
     mainProgram = "kikibridge";
