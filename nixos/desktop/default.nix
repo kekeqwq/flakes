@@ -4,5 +4,6 @@ _: {
     ./theme.nix
     ./pkgs.nix
     ./wayland.nix
+    ./wezterm.nix
   ];
 }

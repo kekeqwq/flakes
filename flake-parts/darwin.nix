@@ -33,6 +33,6 @@ let
 in
 {
   flake.darwinConfigurations = {
-    mba = mkDarwin { modules = [ ../hosts/mba.nix ]; };
+    mba = mkDarwin { modules = [ ../hosts/mba ]; };
   };
 }
