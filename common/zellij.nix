@@ -5,6 +5,7 @@
     enable = true;
 
     settings = {
+      default_shell = "fish";
       default_layout = "wez";
       theme = "catppuccin-mocha";
       theme_dark = "catppuccin-mocha";
