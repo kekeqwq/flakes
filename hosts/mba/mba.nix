@@ -31,6 +31,7 @@
     antigravity-cli
     kikibridge
     kikieye
+    kikinavmap
     iina
     mihomo
     typst
