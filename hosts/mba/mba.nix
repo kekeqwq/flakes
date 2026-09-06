@@ -28,6 +28,7 @@
     nerd-fonts.symbols-only
   ];
   environment.systemPackages = with pkgs; [
+    antigravity-cli
     kikibridge
     kikieye
     iina
