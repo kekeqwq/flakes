@@ -2,6 +2,7 @@ self: super: {
   kikieye = super.callPackage ./kikieye { };
   kikibridge = super.callPackage ./kikibridge { };
   kikibridge-rx = super.callPackage ./kikibridge-rx { };
+  kikinavmap = super.callPackage ./kikinavmap { };
   xrock = super.callPackage ./xrock { };
 
   weylus-community = super.weylus.overrideAttrs (o: {
