@@ -18,7 +18,8 @@
       scroll_buffer_size = 10000;
       show_startup_tips = false;
       show_release_notes = false;
-      session_serialization = true;
+      session_serialization = false;
+      on_force_close = "detach";
 
       ui.pane_frames.hide_session_name = true;
 
@@ -615,7 +616,7 @@
       layout {
           default_tab_template {
               children
-              pane size=1 borderless=true {
+              pane size=1 borderless=true unselectable=true {
                   plugin location="https://github.com/dj95/zjstatus/releases/latest/download/zjstatus.wasm" {
                       format_left   ""
                       format_center "{mode} {tabs}"
