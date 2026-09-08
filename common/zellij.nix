@@ -68,6 +68,15 @@
               }
               {
                 bind = {
+                  _args = [ "c" ];
+                  _children = [
+                    { NewTab = { }; }
+                    { SwitchToMode._args = [ "Normal" ]; }
+                  ];
+                };
+              }
+              {
+                bind = {
                   _args = [ "n" ];
                   _children = [
                     { GoToNextTab = { }; }
