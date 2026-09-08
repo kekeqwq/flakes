@@ -29,7 +29,7 @@
   ];
   myuser.hm.programs.emacs = {
     enable = true;
-    package = pkgs.emacs;
+    package = pkgs.emacs-head;
     extraPackages = epkgs: [
       epkgs.ghostel
     ];
