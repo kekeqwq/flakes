@@ -102,55 +102,118 @@
         {
           pane = {
             _props.clear-defaults = true;
-            _children = [ ];
+            _children = [
+              {
+                bind = {
+                  _args = [ "Esc" ];
+                  SwitchToMode._args = [ "Normal" ];
+                };
+              }
+            ];
           };
         }
         {
           tab = {
             _props.clear-defaults = true;
-            _children = [ ];
+            _children = [
+              {
+                bind = {
+                  _args = [ "Esc" ];
+                  SwitchToMode._args = [ "Normal" ];
+                };
+              }
+            ];
           };
         }
         {
           resize = {
             _props.clear-defaults = true;
-            _children = [ ];
+            _children = [
+              {
+                bind = {
+                  _args = [ "Esc" ];
+                  SwitchToMode._args = [ "Normal" ];
+                };
+              }
+            ];
           };
         }
         {
           move = {
             _props.clear-defaults = true;
-            _children = [ ];
+            _children = [
+              {
+                bind = {
+                  _args = [ "Esc" ];
+                  SwitchToMode._args = [ "Normal" ];
+                };
+              }
+            ];
           };
         }
         {
           scroll = {
             _props.clear-defaults = true;
-            _children = [ ];
+            _children = [
+              {
+                bind = {
+                  _args = [ "Esc" ];
+                  SwitchToMode._args = [ "Normal" ];
+                };
+              }
+            ];
           };
         }
         {
           session = {
             _props.clear-defaults = true;
-            _children = [ ];
+            _children = [
+              {
+                bind = {
+                  _args = [ "Esc" ];
+                  SwitchToMode._args = [ "Normal" ];
+                };
+              }
+            ];
           };
         }
         {
           search = {
             _props.clear-defaults = true;
-            _children = [ ];
+            _children = [
+              {
+                bind = {
+                  _args = [ "Esc" ];
+                  SwitchToMode._args = [ "Normal" ];
+                };
+              }
+            ];
           };
         }
         {
           entersearch = {
             _props.clear-defaults = true;
-            _children = [ ];
+            _children = [
+              {
+                bind = {
+                  _args = [ "Esc" ];
+                  SwitchToMode._args = [ "Normal" ];
+                };
+              }
+            ];
           };
         }
         {
           renametab = {
             _props.clear-defaults = true;
-            _children = [ ];
+            _children = [
+              {
+                bind = {
+                  _args = [ "Esc" ];
+                  SwitchToMode._args = [ "Normal" ];
+                };
+              }
+            ];
           };
         }
 
