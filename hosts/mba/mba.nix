@@ -27,7 +27,15 @@
   fonts.packages = with pkgs; [
     nerd-fonts.symbols-only
   ];
+  myuser.hm.programs.emacs = {
+    enable = true;
+    package = pkgs.emacs;
+    extraPackages = epkgs: [
+      epkgs.ghostel
+    ];
+  };
   environment.systemPackages = with pkgs; [
+    grok-build
     antigravity-cli
     kikibridge
     kikieye
@@ -44,6 +52,5 @@
     wezterm
     mpv
     moonlight-qt
-    emacs
   ];
 }
