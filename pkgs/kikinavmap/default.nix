@@ -57,37 +57,37 @@ stdenv.mkDerivation rec {
   '';
 
   installPhase = ''
-    runHook preInstall
-    app=$out/Applications/KikiNavMap.app
-    mkdir -p $app/Contents/MacOS $app/Contents/Resources $out/bin
-    cp kikinavmap $app/Contents/MacOS/kikinavmap
-    cp Info.plist $app/Contents/Info.plist
-    printf 'APPL????' > $app/Contents/PkgInfo
-    if [ -d Sources/KikiNavMap/Resources ]; then
-      cp -R Sources/KikiNavMap/Resources/* $app/Contents/Resources/ || true
+        runHook preInstall
+        app=$out/Applications/KikiNavMap.app
+        mkdir -p $app/Contents/MacOS $app/Contents/Resources $out/bin
+        cp kikinavmap $app/Contents/MacOS/kikinavmap
+        cp Info.plist $app/Contents/Info.plist
+        printf 'APPL????' > $app/Contents/PkgInfo
+        if [ -d Sources/KikiNavMap/Resources ]; then
+          cp -R Sources/KikiNavMap/Resources/* $app/Contents/Resources/ || true
+        fi
+        if command -v codesign >/dev/null 2>&1; then
+          codesign --force --deep --sign - "$app" || true
+        fi
+        cat > $out/bin/kikinavmap <<EOF
+    #!/bin/sh
+    set -e
+    dest="\$HOME/Applications/KikiNavMap.app"
+    src="$app"
+    mkdir -p "\$HOME/Applications"
+    stamp="\$dest/Contents/Resources/.nix-out"
+    if [ "\$(cat "\$stamp" 2>/dev/null || true)" != "\$src" ]; then
+      rm -rf "\$dest"
+      cp -R "\$src" "\$dest"
+      chmod -R u+w "\$dest"
+      echo "\$src" > "\$stamp"
     fi
-    if command -v codesign >/dev/null 2>&1; then
-      codesign --force --deep --sign - "$app" || true
-    fi
-    cat > $out/bin/kikinavmap <<EOF
-#!/bin/sh
-set -e
-dest="\$HOME/Applications/KikiNavMap.app"
-src="$app"
-mkdir -p "\$HOME/Applications"
-stamp="\$dest/Contents/Resources/.nix-out"
-if [ "\$(cat "\$stamp" 2>/dev/null || true)" != "\$src" ]; then
-  rm -rf "\$dest"
-  cp -R "\$src" "\$dest"
-  chmod -R u+w "\$dest"
-  echo "\$src" > "\$stamp"
-fi
-exec "\$dest/Contents/MacOS/kikinavmap" "\$@"
-EOF
-    chmod +x $out/bin/kikinavmap
-    printf '%s\n' '#!/bin/sh' "exec /usr/bin/open -n \"$app\"" > $out/bin/kikinavmap-app
-    chmod +x $out/bin/kikinavmap-app
-    runHook postInstall
+    exec "\$dest/Contents/MacOS/kikinavmap" "\$@"
+    EOF
+        chmod +x $out/bin/kikinavmap
+        printf '%s\n' '#!/bin/sh' "exec /usr/bin/open -n \"$app\"" > $out/bin/kikinavmap-app
+        chmod +x $out/bin/kikinavmap-app
+        runHook postInstall
   '';
 
   meta = {

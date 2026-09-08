@@ -5,8 +5,24 @@
     { pkgs, ... }:
     {
       projectRootFile = "flake.nix";
-      # formatter for nix
       package = pkgs.treefmt;
-      programs.nixfmt.enable = true;
+
+      settings.global.excludes = [
+        "flake.lock"
+        "**/.p10k.zsh"
+        "**/p10k.zsh"
+      ];
+
+      programs = {
+        # Nix
+        nixfmt.enable = true;
+
+        # Shell / Fish
+        shfmt.enable = true;
+        fish_indent.enable = true;
+
+        # Web / Docs / Configs (Markdown, JSON, YAML, etc.)
+        prettier.enable = true;
+      };
     };
 }
