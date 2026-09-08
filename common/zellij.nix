@@ -34,6 +34,7 @@
         session-manager._props.location = "zellij:session-manager";
       };
 
+      # 只保留 Ctrl+b 前缀；其它模式清空默认绑定，避免 Ctrl+g/q/p 等被 Zellij 吃掉
       keybinds._children = [
         {
           normal = {
@@ -45,16 +46,39 @@
                   SwitchToMode._args = [ "Tmux" ];
                 };
               }
+            ];
+          };
+        }
+
+        {
+          tmux = {
+            _props.clear-defaults = true;
+            _children = [
               {
                 bind = {
-                  _args = [ "Ctrl g" ];
-                  SwitchToMode._args = [ "Locked" ];
+                  _args = [
+                    "Ctrl b"
+                    "b"
+                  ];
+                  _children = [
+                    { Write._args = [ 2 ]; }
+                    { SwitchToMode._args = [ "Normal" ]; }
+                  ];
                 };
               }
               {
                 bind = {
-                  _args = [ "Ctrl q" ];
-                  Quit = { };
+                  _args = [ "n" ];
+                  _children = [
+                    { GoToNextTab = { }; }
+                    { SwitchToMode._args = [ "Normal" ]; }
+                  ];
+                };
+              }
+              {
+                bind = {
+                  _args = [ "Esc" ];
+                  SwitchToMode._args = [ "Normal" ];
                 };
               }
             ];
@@ -62,523 +86,8 @@
         }
 
         {
-          locked._children = [
-            {
-              bind = {
-                _args = [ "Ctrl g" ];
-                SwitchToMode._args = [ "Normal" ];
-              };
-            }
-            {
-              bind = {
-                _args = [ "Ctrl b" ];
-                SwitchToMode._args = [ "Tmux" ];
-              };
-            }
-          ];
-        }
-
-        {
-          tmux._children = [
-            {
-              bind = {
-                _args = [ "Ctrl b" ];
-                _children = [
-                  { Write._args = [ 2 ]; }
-                  { SwitchToMode._args = [ "Normal" ]; }
-                ];
-              };
-            }
-            {
-              bind = {
-                _args = [ "Esc" ];
-                SwitchToMode._args = [ "Normal" ];
-              };
-            }
-            {
-              bind = {
-                _args = [ "c" ];
-                _children = [
-                  { NewTab = { }; }
-                  { SwitchToMode._args = [ "Normal" ]; }
-                ];
-              };
-            }
-            {
-              bind = {
-                _args = [ "n" ];
-                _children = [
-                  { GoToNextTab = { }; }
-                  { SwitchToMode._args = [ "Normal" ]; }
-                ];
-              };
-            }
-            {
-              bind = {
-                _args = [ "p" ];
-                _children = [
-                  { GoToPreviousTab = { }; }
-                  { SwitchToMode._args = [ "Normal" ]; }
-                ];
-              };
-            }
-            {
-              bind = {
-                _args = [ "1" ];
-                _children = [
-                  { GoToTab._args = [ 1 ]; }
-                  { SwitchToMode._args = [ "Normal" ]; }
-                ];
-              };
-            }
-            {
-              bind = {
-                _args = [ "2" ];
-                _children = [
-                  { GoToTab._args = [ 2 ]; }
-                  { SwitchToMode._args = [ "Normal" ]; }
-                ];
-              };
-            }
-            {
-              bind = {
-                _args = [ "3" ];
-                _children = [
-                  { GoToTab._args = [ 3 ]; }
-                  { SwitchToMode._args = [ "Normal" ]; }
-                ];
-              };
-            }
-            {
-              bind = {
-                _args = [ "4" ];
-                _children = [
-                  { GoToTab._args = [ 4 ]; }
-                  { SwitchToMode._args = [ "Normal" ]; }
-                ];
-              };
-            }
-            {
-              bind = {
-                _args = [ "5" ];
-                _children = [
-                  { GoToTab._args = [ 5 ]; }
-                  { SwitchToMode._args = [ "Normal" ]; }
-                ];
-              };
-            }
-            {
-              bind = {
-                _args = [ "6" ];
-                _children = [
-                  { GoToTab._args = [ 6 ]; }
-                  { SwitchToMode._args = [ "Normal" ]; }
-                ];
-              };
-            }
-            {
-              bind = {
-                _args = [ "7" ];
-                _children = [
-                  { GoToTab._args = [ 7 ]; }
-                  { SwitchToMode._args = [ "Normal" ]; }
-                ];
-              };
-            }
-            {
-              bind = {
-                _args = [ "8" ];
-                _children = [
-                  { GoToTab._args = [ 8 ]; }
-                  { SwitchToMode._args = [ "Normal" ]; }
-                ];
-              };
-            }
-            {
-              bind = {
-                _args = [ "9" ];
-                _children = [
-                  { GoToTab._args = [ 9 ]; }
-                  { SwitchToMode._args = [ "Normal" ]; }
-                ];
-              };
-            }
-            {
-              bind = {
-                _args = [ "\"" ];
-                _children = [
-                  { NewPane._args = [ "Down" ]; }
-                  { SwitchToMode._args = [ "Normal" ]; }
-                ];
-              };
-            }
-            {
-              bind = {
-                _args = [ "%" ];
-                _children = [
-                  { NewPane._args = [ "Right" ]; }
-                  { SwitchToMode._args = [ "Normal" ]; }
-                ];
-              };
-            }
-            {
-              bind = {
-                _args = [ "x" ];
-                _children = [
-                  { CloseFocus = { }; }
-                  { SwitchToMode._args = [ "Normal" ]; }
-                ];
-              };
-            }
-            {
-              bind = {
-                _args = [ "z" ];
-                _children = [
-                  { ToggleFocusFullscreen = { }; }
-                  { SwitchToMode._args = [ "Normal" ]; }
-                ];
-              };
-            }
-            {
-              bind = {
-                _args = [ "[" ];
-                SwitchToMode._args = [ "Scroll" ];
-              };
-            }
-            {
-              bind = {
-                _args = [ "," ];
-                _children = [
-                  { SwitchToMode._args = [ "RenameTab" ]; }
-                  { TabNameInput._args = [ 0 ]; }
-                ];
-              };
-            }
-            {
-              bind = {
-                _args = [ "d" ];
-                Detach = { };
-              };
-            }
-            {
-              bind = {
-                _args = [ "&" ];
-                _children = [
-                  { CloseTab = { }; }
-                  { SwitchToMode._args = [ "Normal" ]; }
-                ];
-              };
-            }
-            {
-              bind = {
-                _args = [
-                  "Left"
-                  "h"
-                ];
-                _children = [
-                  { MoveFocus._args = [ "Left" ]; }
-                  { SwitchToMode._args = [ "Normal" ]; }
-                ];
-              };
-            }
-            {
-              bind = {
-                _args = [
-                  "Right"
-                  "l"
-                ];
-                _children = [
-                  { MoveFocus._args = [ "Right" ]; }
-                  { SwitchToMode._args = [ "Normal" ]; }
-                ];
-              };
-            }
-            {
-              bind = {
-                _args = [
-                  "Down"
-                  "j"
-                ];
-                _children = [
-                  { MoveFocus._args = [ "Down" ]; }
-                  { SwitchToMode._args = [ "Normal" ]; }
-                ];
-              };
-            }
-            {
-              bind = {
-                _args = [
-                  "Up"
-                  "k"
-                ];
-                _children = [
-                  { MoveFocus._args = [ "Up" ]; }
-                  { SwitchToMode._args = [ "Normal" ]; }
-                ];
-              };
-            }
-            {
-              bind = {
-                _args = [ "o" ];
-                _children = [
-                  { FocusNextPane = { }; }
-                  { SwitchToMode._args = [ "Normal" ]; }
-                ];
-              };
-            }
-            {
-              bind = {
-                _args = [ ";" ];
-                _children = [
-                  { FocusLastPane = { }; }
-                  { SwitchToMode._args = [ "Normal" ]; }
-                ];
-              };
-            }
-          ];
-        }
-
-        {
-          scroll._children = [
-            {
-              bind = {
-                _args = [
-                  "Esc"
-                  "q"
-                  "Ctrl c"
-                ];
-                _children = [
-                  { ScrollToBottom = { }; }
-                  { SwitchToMode._args = [ "Normal" ]; }
-                ];
-              };
-            }
-            {
-              bind = {
-                _args = [ "e" ];
-                _children = [
-                  { EditScrollback = { }; }
-                  { SwitchToMode._args = [ "Normal" ]; }
-                ];
-              };
-            }
-            {
-              bind = {
-                _args = [
-                  "j"
-                  "Down"
-                ];
-                ScrollDown = { };
-              };
-            }
-            {
-              bind = {
-                _args = [
-                  "k"
-                  "Up"
-                ];
-                ScrollUp = { };
-              };
-            }
-            {
-              bind = {
-                _args = [
-                  "Ctrl f"
-                  "PageDown"
-                ];
-                PageScrollDown = { };
-              };
-            }
-            {
-              bind = {
-                _args = [
-                  "Ctrl b"
-                  "PageUp"
-                ];
-                PageScrollUp = { };
-              };
-            }
-            {
-              bind = {
-                _args = [ "d" ];
-                HalfPageScrollDown = { };
-              };
-            }
-            {
-              bind = {
-                _args = [ "u" ];
-                HalfPageScrollUp = { };
-              };
-            }
-            {
-              bind = {
-                _args = [ "s" ];
-                _children = [
-                  { SwitchToMode._args = [ "EnterSearch" ]; }
-                  { SearchInput._args = [ 0 ]; }
-                ];
-              };
-            }
-          ];
-        }
-
-        {
-          search._children = [
-            {
-              bind = {
-                _args = [
-                  "Esc"
-                  "Ctrl c"
-                ];
-                _children = [
-                  { ScrollToBottom = { }; }
-                  { SwitchToMode._args = [ "Normal" ]; }
-                ];
-              };
-            }
-            {
-              bind = {
-                _args = [ "n" ];
-                Search._args = [ "down" ];
-              };
-            }
-            {
-              bind = {
-                _args = [ "p" ];
-                Search._args = [ "up" ];
-              };
-            }
-            {
-              bind = {
-                _args = [
-                  "j"
-                  "Down"
-                ];
-                ScrollDown = { };
-              };
-            }
-            {
-              bind = {
-                _args = [
-                  "k"
-                  "Up"
-                ];
-                ScrollUp = { };
-              };
-            }
-          ];
-        }
-
-        {
-          entersearch._children = [
-            {
-              bind = {
-                _args = [
-                  "Ctrl c"
-                  "Esc"
-                ];
-                SwitchToMode._args = [ "Scroll" ];
-              };
-            }
-            {
-              bind = {
-                _args = [ "Enter" ];
-                SwitchToMode._args = [ "Search" ];
-              };
-            }
-          ];
-        }
-
-        {
-          renametab._children = [
-            {
-              bind = {
-                _args = [ "Enter" ];
-                SwitchToMode._args = [ "Normal" ];
-              };
-            }
-            {
-              bind = {
-                _args = [
-                  "Esc"
-                  "Ctrl c"
-                ];
-                _children = [
-                  { UndoRenameTab = { }; }
-                  { SwitchToMode._args = [ "Normal" ]; }
-                ];
-              };
-            }
-          ];
-        }
-
-        {
-          pane._children = [
-            {
-              bind = {
-                _args = [ "Esc" ];
-                SwitchToMode._args = [ "Normal" ];
-              };
-            }
-          ];
-        }
-
-        {
-          resize._children = [
-            {
-              bind = {
-                _args = [ "Esc" ];
-                SwitchToMode._args = [ "Normal" ];
-              };
-            }
-          ];
-        }
-
-        {
-          move._children = [
-            {
-              bind = {
-                _args = [ "Esc" ];
-                SwitchToMode._args = [ "Normal" ];
-              };
-            }
-          ];
-        }
-
-        {
-          tab._children = [
-            {
-              bind = {
-                _args = [ "Esc" ];
-                SwitchToMode._args = [ "Normal" ];
-              };
-            }
-          ];
-        }
-
-        {
-          session._children = [
-            {
-              bind = {
-                _args = [ "Esc" ];
-                SwitchToMode._args = [ "Normal" ];
-              };
-            }
-            {
-              bind = {
-                _args = [ "d" ];
-                Detach = { };
-              };
-            }
-          ];
-        }
-
-        {
-          shared_except = {
-            _args = [
-              "tmux"
-              "locked"
-            ];
+          locked = {
+            _props.clear-defaults = true;
             _children = [
               {
                 bind = {
@@ -591,19 +100,68 @@
         }
 
         {
+          pane = {
+            _props.clear-defaults = true;
+            _children = [ ];
+          };
+        }
+        {
+          tab = {
+            _props.clear-defaults = true;
+            _children = [ ];
+          };
+        }
+        {
+          resize = {
+            _props.clear-defaults = true;
+            _children = [ ];
+          };
+        }
+        {
+          move = {
+            _props.clear-defaults = true;
+            _children = [ ];
+          };
+        }
+        {
+          scroll = {
+            _props.clear-defaults = true;
+            _children = [ ];
+          };
+        }
+        {
+          session = {
+            _props.clear-defaults = true;
+            _children = [ ];
+          };
+        }
+        {
+          search = {
+            _props.clear-defaults = true;
+            _children = [ ];
+          };
+        }
+        {
+          entersearch = {
+            _props.clear-defaults = true;
+            _children = [ ];
+          };
+        }
+        {
+          renametab = {
+            _props.clear-defaults = true;
+            _children = [ ];
+          };
+        }
+
+        {
           shared_except = {
-            _args = [ "locked" ];
+            _args = [ "tmux" ];
             _children = [
               {
                 bind = {
-                  _args = [ "Ctrl g" ];
-                  SwitchToMode._args = [ "Locked" ];
-                };
-              }
-              {
-                bind = {
-                  _args = [ "Ctrl q" ];
-                  Quit = { };
+                  _args = [ "Ctrl b" ];
+                  SwitchToMode._args = [ "Tmux" ];
                 };
               }
             ];
