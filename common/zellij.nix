@@ -237,7 +237,7 @@
       layout {
           default_tab_template {
               children
-              pane size=1 borderless=true unselectable=true {
+              pane size=1 borderless=true {
                   plugin location="https://github.com/dj95/zjstatus/releases/latest/download/zjstatus.wasm" {
                       format_left   ""
                       format_center "{mode} {tabs}"
