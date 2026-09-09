@@ -35,6 +35,8 @@
     ];
   };
   environment.systemPackages = with pkgs; [
+    claude-code
+    codex
     grok-build
     antigravity-cli
     kikibridge
