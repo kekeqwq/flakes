@@ -4,7 +4,8 @@ _: {
     ./pkgs.nix
     ./options.nix
     ./git.nix
-    ./zellij.nix
+    ./tmux.nix
+    # ./zellij.nix
     ./yazi.nix
   ];
   home-manager.useGlobalPkgs = true;
