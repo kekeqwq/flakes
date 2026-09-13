@@ -7,12 +7,12 @@ self: super: {
 
   emacs-head = super.emacs.overrideAttrs (old: {
     pname = "emacs-head";
-    version = "2026-09-07";
+    version = "2026-09-13";
     src = super.fetchFromGitHub {
       owner = "emacs-mirror";
       repo = "emacs";
-      rev = "45ee1b72668d61a8a904e9a91fc530b719a23da3";
-      hash = "sha256-yRVsdtU378gMM5UW2508JkWGUGnzI8ZrRPyRHWIvPVk=";
+      rev = "f0430371c8d5b1e172670cdbc59f4d298be64a29";
+      hash = "sha256-CNkd8yR4bD9lb6yHTTq7fjulYUYs+KLyK7L7QYu7ywQ=";
     };
     patches =
       (old.patches or [ ])
