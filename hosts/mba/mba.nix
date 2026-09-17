@@ -159,5 +159,7 @@ in
     mpv
     moonlight-qt
     duti
+    # PR: https://github.com/NixOS/nixpkgs/pull/552646 (待 PR 合并后删除)
+    localsend-cli
   ];
 }

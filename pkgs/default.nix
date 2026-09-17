@@ -5,6 +5,9 @@ self: super: {
   kikinavmap = super.callPackage ./kikinavmap { };
   xrock = super.callPackage ./xrock { };
 
+  # PR: https://github.com/NixOS/nixpkgs/pull/552646 (待 PR 合并后删除)
+  localsend-cli = super.callPackage ./localsend-cli { };
+
   emacs-head = super.emacs.overrideAttrs (old: {
     pname = "emacs-head";
     version = "2026-09-16";
