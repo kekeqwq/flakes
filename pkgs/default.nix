@@ -7,15 +7,21 @@ self: super: {
 
   emacs-head = super.emacs.overrideAttrs (old: {
     pname = "emacs-head";
-    version = "2026-09-13";
+    version = "2026-09-16";
     src = super.fetchFromGitHub {
       owner = "emacs-mirror";
       repo = "emacs";
-      rev = "f0430371c8d5b1e172670cdbc59f4d298be64a29";
-      hash = "sha256-CNkd8yR4bD9lb6yHTTq7fjulYUYs+KLyK7L7QYu7ywQ=";
+      rev = "5c91443e85c727b56dea38a0b1f7344a5cd7029e";
+      hash = "sha256-bfZbf9hHgBymnX/a92OTQYcaTLEI06H55a7DG4tVUWY=";
     };
     patches =
-      (old.patches or [ ])
+      builtins.filter (
+        p:
+        let
+          name = if builtins.isAttrs p && p ? name then p.name else baseNameOf (toString p);
+        in
+        !(super.lib.hasInfix "CVE-2024-53920" name)
+      ) (old.patches or [ ])
       ++ super.lib.optionals super.stdenv.hostPlatform.isDarwin [
         (super.fetchpatch {
           url = "https://raw.githubusercontent.com/d12frosted/homebrew-emacs-plus/b7b77a8978cdfa9bbb67a8b93830813dab308a27/patches/emacs-31/round-undecorated-frame.patch";
@@ -25,7 +31,6 @@ self: super: {
           url = "https://raw.githubusercontent.com/d12frosted/homebrew-emacs-plus/b7b77a8978cdfa9bbb67a8b93830813dab308a27/patches/emacs-31/system-appearance.patch";
           hash = "sha256-4+2U+4+2tpuaThNJfZOjy1JPnneGcsoge9r+WpgNDko=";
         })
-
       ];
     postPatch =
       (old.postPatch or "")

@@ -127,15 +127,15 @@
       "locked": {
         "lastModified": 1788981439,
         "narHash": "sha256-fEaFq0XgpgWFPLfpq1UK4/8ylHd2T0+fo6O3hKz1LUM=",
-        "ref": "refs/heads/main",
+        "owner": "zhaofengli",
+        "repo": "nix-homebrew",
         "rev": "09a921d0181146cf6163ec2cc1db7b6fd539a885",
-        "revCount": 170,
-        "type": "git",
-        "url": "https://github.com/zhaofengli-wip/nix-homebrew"
+        "type": "github"
       },
       "original": {
-        "type": "git",
-        "url": "https://github.com/zhaofengli-wip/nix-homebrew"
+        "owner": "zhaofengli",
+        "repo": "nix-homebrew",
+        "type": "github"
       }
     },
     "nixpkgs": {
