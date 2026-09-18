@@ -6,13 +6,13 @@
 
 stdenv.mkDerivation rec {
   pname = "kikinavmap";
-  version = "1.0.0";
+  version = "1.1.0";
 
   src = fetchFromGitHub {
     owner = "kekeqwq";
     repo = "KikiNavMap";
-    rev = "2259f0cc9237408e96660d565b1694c890a21eae";
-    hash = "sha256-xwqIapVu9VtNHRmslBkhqB0xQr/y/JY/6D1sucXBiJ0=";
+    rev = "v1.1.0";
+    hash = "sha256-QO2QHwMHYKFPXGleCT/f1uW8vT0I5eQIoxmrHI6auPk=";
   };
 
   dontUseNixBuildInputsCompiler = true;
