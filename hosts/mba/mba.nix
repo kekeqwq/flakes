@@ -141,7 +141,6 @@ in
   environment.systemPackages = with pkgs; [
     _7zz
     codex
-    grok-build
     antigravity-cli
     kikibridge
     kikieye
