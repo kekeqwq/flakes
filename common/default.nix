@@ -7,6 +7,7 @@ _: {
     ./tmux.nix
     # ./zellij.nix
     ./yazi.nix
+    ./codex.nix
   ];
   home-manager.useGlobalPkgs = true;
   home-manager.useUserPackages = true;
