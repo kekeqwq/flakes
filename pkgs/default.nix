@@ -23,7 +23,7 @@ self: super: {
         let
           name = if builtins.isAttrs p && p ? name then p.name else baseNameOf (toString p);
         in
-        !(super.lib.hasInfix "CVE-2024-53920" name)
+          !(super.lib.hasInfix "CVE-2024-53920" name)
       ) (old.patches or [ ])
       ++ super.lib.optionals super.stdenv.hostPlatform.isDarwin [
         (super.fetchpatch {
