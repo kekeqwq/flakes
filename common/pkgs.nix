@@ -19,6 +19,7 @@
   };
 
   environment.systemPackages = with pkgs; [
+    btop
     zip
     stylua
     (texliveSmall.withPackages (
