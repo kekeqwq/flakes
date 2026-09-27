@@ -95,6 +95,9 @@ in
     enableRosetta = false;
     user = config.myuser.name;
     autoMigrate = true;
+    trust.taps = [
+      "abue-ammar/tinycast"
+    ];
   };
   homebrew = {
     enable = true;
@@ -103,24 +106,24 @@ in
       upgrade = false;
       cleanup = "zap";
     };
+    taps = [
+      {
+        name = "abue-ammar/tinycast";
+        trusted = true;
+      }
+    ];
     casks = [
       "anki"
       "baidunetdisk"
-      "bilibili"
       "calibre"
       "discord"
       "google-chrome"
-      "grok-bot"
-      "hammerspoon"
       "karabiner-elements"
       "marginnote"
       "pikpak"
       "qq"
-      "quarkclouddrive"
-      "raycast"
-      "snipaste"
       "surge"
-      "volanta"
+      "tinycast"
       "wechat"
     ];
   };
