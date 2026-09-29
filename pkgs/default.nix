@@ -14,8 +14,8 @@ self: super: {
     src = super.fetchFromGitHub {
       owner = "emacs-mirror";
       repo = "emacs";
-      rev = "5c91443e85c727b56dea38a0b1f7344a5cd7029e";
-      hash = "sha256-bfZbf9hHgBymnX/a92OTQYcaTLEI06H55a7DG4tVUWY=";
+      rev = "da51f73acd21ae6cf52608a6de0306cd1e05ce24";
+      hash = "sha256-lJPU47H4ATYK1l4mTxVpqrDHPaKYVCUqlrtrYxMBwrQ=";
     };
     patches =
       builtins.filter (
