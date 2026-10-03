@@ -8,6 +8,7 @@ _: {
     # ./zellij.nix
     ./yazi.nix
     ./codex.nix
+    ./pi.nix
   ];
   home-manager.useGlobalPkgs = true;
   home-manager.useUserPackages = true;
