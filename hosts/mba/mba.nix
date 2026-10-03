@@ -144,6 +144,7 @@ in
   environment.systemPackages = with pkgs; [
     _7zz
     antigravity-cli
+    pi-coding-agent
     kikibridge
     kikieye
     kikinavmap
