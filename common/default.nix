@@ -7,7 +7,7 @@ _: {
     ./tmux.nix
     # ./zellij.nix
     ./yazi.nix
-    ./codex.nix
+    # ./codex.nix
     ./pi.nix
   ];
   home-manager.useGlobalPkgs = true;
