@@ -27,6 +27,20 @@
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.flake-parts.follows = "flake-parts";
     };
+    # Eero Alvar's current learning system. These repos have no flake.nix.
+    # Revisions are the verified HEADs of 2026-08-25; flake.lock pins them.
+    eero-learn = {
+      url = "github:amosblomqvist/learn/7cfd8942f82ab9476e63572387e1fe9bcea5082c";
+      flake = false;
+    };
+    eero-pi-config = {
+      url = "github:amosblomqvist/pi-config/f82da563ab05d66729492d64c7ed4e96db3663f3";
+      flake = false;
+    };
+    eero-interactive-subagents = {
+      url = "github:amosblomqvist/pi-interactive-subagents/c3e8b53c0754ae5ccc19fdab5a7481ec039bc2f7";
+      flake = false;
+    };
   };
 
   outputs =

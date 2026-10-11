@@ -9,6 +9,7 @@ _: {
     ./yazi.nix
     # ./codex.nix
     ./pi.nix
+    ./pi-learn.nix
   ];
   home-manager.useGlobalPkgs = true;
   home-manager.useUserPackages = true;
