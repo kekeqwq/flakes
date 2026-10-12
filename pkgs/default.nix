@@ -10,12 +10,12 @@ self: super: {
 
   emacs-head = super.emacs.overrideAttrs (old: {
     pname = "emacs-head";
-    version = "2026-09-16";
+    version = "2026-10-12";
     src = super.fetchFromGitHub {
       owner = "emacs-mirror";
       repo = "emacs";
-      rev = "da51f73acd21ae6cf52608a6de0306cd1e05ce24";
-      hash = "sha256-lJPU47H4ATYK1l4mTxVpqrDHPaKYVCUqlrtrYxMBwrQ=";
+      rev = "ee6b9d6962253b0c5d439dbe5f7d5396dcd4075a";
+      hash = "sha256-iNAEabV4eQpfs3v0Lh8mPvRJpzad1jH7FYey1e5cPvA=";
     };
     patches =
       builtins.filter (
