@@ -51,28 +51,23 @@ let
     done
   '';
 
-  courseSeed = pkgs.runCommand "python-scraping-course-seed" { } ''
-    mkdir -p $out
-    cp -R ${./pi-learn/course}/. $out/
-  '';
-
-  piTutor = pkgs.writeShellScriptBin "pi-tutor" ''
-    set -eu
-    course="''${PI_TUTOR_COURSE:-$HOME/Repos/python-scraping-learning}"
-    cd "$course"
-    exec pi "$@"
+  # The upstream PDF skill assumes it can pip-install into its own directory.
+  # A Nix store path is read-only; bundle the scripts with a Nix Python instead.
+  pdfPython = pkgs.python3.withPackages (ps: [ ps.pymupdf ]);
+  pdfReader = pkgs.runCommand "pi-pdf-reader" { } ''
+    mkdir -p $out/scripts
+    cp ${inputs.eero-pi-config}/skills/pdf-reader/scripts/*.py $out/scripts/
+    ${pkgs.gnused}/bin/sed 's|@PDF_PYTHON@|${pdfPython}/bin/python3|g' \
+      ${./pi-learn/pdf-reader/SKILL.md} > $out/SKILL.md
   '';
 in
 {
   config = lib.mkIf pkgs.stdenv.hostPlatform.isDarwin {
     myuser.hm = {
       home.packages = [
-        piTutor
         pkgs.librsvg
         pkgs.imagemagick
       ];
-
-      programs.pi.coding-agent.rules = ./pi-learn/tutor-rules.md;
 
       # Discoverable agent-dir resources, not wrapper --extension flags.
       # interactive-subagents launches child `pi` processes with --no-extensions;
@@ -84,7 +79,6 @@ in
           inputs.eero-learn + "/extensions/ask-user-question.ts";
         ".pi/agent/extensions/quiz.ts".source = inputs.eero-learn + "/extensions/quiz.ts";
         ".pi/agent/extensions/md-log.ts".source = inputs.eero-learn + "/extensions/md-log.ts";
-        ".pi/agent/extensions/learn-session.ts".source = ./pi-learn/learn-session.ts;
         ".pi/agent/extensions/visual-tools".source = visualTools;
         ".pi/agent/extensions/interactive-subagents".source =
           inputs.eero-interactive-subagents + "/pi-extension/subagents";
@@ -92,60 +86,12 @@ in
         ".pi/agent/extensions/web-fetch".source = webFetch;
         ".pi/agent/skills/teach".source = inputs.eero-learn + "/skills/teach";
         ".pi/agent/skills/visualize".source = inputs.eero-learn + "/skills/visualize";
+        ".pi/agent/skills/pdf-reader".source = pdfReader;
         ".pi/agent/agents/researcher.md".source = "${learnAgents}/researcher.md";
         ".pi/agent/agents/mermaid-maker.md".source = "${learnAgents}/mermaid-maker.md";
         ".pi/agent/agents/svg-maker.md".source = "${learnAgents}/svg-maker.md";
       };
 
-      home.activation.seedPythonScrapingCourse =
-        inputs.home-manager.lib.hm.dag.entryAfter [ "writeBoundary" ]
-          ''
-                    set -eu
-                    dest="$HOME/Repos/python-scraping-learning"
-                    seed=${courseSeed}
-                    mkdir -p "$dest/exercises" "$dest/projects" "$dest/src" "$dest/viz" \
-                      "$dest/data/raw" "$dest/data/processed" "$dest/notes/sessions"
-                    find "$seed" -type f | while IFS= read -r src; do
-                      rel="''${src#"$seed"/}"
-                      target="$dest/$rel"
-                      if [ ! -e "$target" ]; then
-                        mkdir -p "$(dirname "$target")"
-                        cp "$src" "$target"
-                      fi
-                    done
-                    # Store copies are mode 0444. The course repo must stay editable.
-                    chmod -R u+w "$dest"
-
-                    search_auth="$HOME/.pi/agent/web-search-auth.json"
-                    if [ ! -e "$search_auth" ]; then
-                      install -m 0600 /dev/null "$search_auth"
-                      cat > "$search_auth" <<'JSON'
-            {
-              "brave_search_api_key": ""
-            }
-            JSON
-                      chmod 0600 "$search_auth"
-                    fi
-
-                    obsidian_json="$HOME/Library/Application Support/obsidian/obsidian.json"
-                    if [ -f "$obsidian_json" ]; then
-                      if [ ! -e "$obsidian_json.bak-pi-learn" ]; then
-                        cp -p "$obsidian_json" "$obsidian_json.bak-pi-learn"
-                      fi
-                      tmp="$(mktemp)"
-                      ${pkgs.jq}/bin/jq \
-                        --arg path "$dest" \
-                        --argjson ts "$(date +%s%3N)" \
-                        '
-                          .vaults //= {} |
-                          if ([.vaults[]?.path] | index($path)) then .
-                          else .vaults["python-scraping-learning"] = { path: $path, ts: $ts, open: true }
-                          end
-                        ' \
-                        "$obsidian_json" > "$tmp"
-                      mv "$tmp" "$obsidian_json"
-                    fi
-          '';
     };
   };
 }
