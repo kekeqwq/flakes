@@ -113,7 +113,6 @@ in
       }
     ];
     casks = [
-      "obsidian"
       "anki"
       "baidunetdisk"
       "calibre"

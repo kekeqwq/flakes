@@ -5,5 +5,6 @@ _: {
     ./pkgs.nix
     ./wayland.nix
     ./wezterm.nix
+    ./obsidian.nix
   ];
 }
