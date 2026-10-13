@@ -10,12 +10,12 @@ self: super: {
 
   emacs-head = super.emacs.overrideAttrs (old: {
     pname = "emacs-head";
-    version = "2026-10-12";
+    version = "2026-10-13";
     src = super.fetchFromGitHub {
       owner = "emacs-mirror";
       repo = "emacs";
-      rev = "ee6b9d6962253b0c5d439dbe5f7d5396dcd4075a";
-      hash = "sha256-iNAEabV4eQpfs3v0Lh8mPvRJpzad1jH7FYey1e5cPvA=";
+      rev = "73e530ce886fc23076bd82c08624fb8734a25fd7";
+      hash = "sha256-vAYOZxq3brRU8j/0qYz0HkvDQxg0eawU2o0lqKPKK+o=";
     };
     patches =
       builtins.filter (
@@ -38,6 +38,10 @@ self: super: {
     postPatch =
       (old.postPatch or "")
       + super.lib.optionalString super.stdenv.hostPlatform.isDarwin ''
+        # Keep the enum aligned with the round-undecorated-frame parameter table.
+        # https://github.com/d12frosted/homebrew-emacs-plus/issues/1028
+        substituteInPlace src/frame.c \
+          --replace-fail '  UNDECORATED,' $'  UNDECORATED,\n  UNDECORATED_ROUND,'
         substituteInPlace lisp/gnus/smime.el \
           --replace-fail '(car (gnutls-trustfiles))' '"/etc/ssl/cert.pem"'
       '';

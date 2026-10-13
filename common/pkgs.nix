@@ -53,6 +53,7 @@
     dua
     p7zip
     python3
+    basedpyright
     fd
     unzip
     unrar

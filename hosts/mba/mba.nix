@@ -139,14 +139,18 @@ in
     enable = true;
     package = pkgs.emacs-head;
     overrides = _final: prev: {
-      emacsWithPackages = packages:
+      emacsWithPackages =
+        packages:
         (prev.emacsWithPackages packages).overrideAttrs (old: {
           deps = old.deps.overrideAttrs (depsOld: {
             # Emacs master also displays leftover native compilation arguments.
-            buildCommand = builtins.replaceStrings
-              [ "-f batch-native-compile" ]
-              [ "--eval \"(advice-add 'batch-native-compile :after (lambda (&rest _) (setq command-line-args-left nil)))\" -f batch-native-compile" ]
-              depsOld.buildCommand;
+            buildCommand =
+              builtins.replaceStrings
+                [ "-f batch-native-compile" ]
+                [
+                  "--eval \"(advice-add 'batch-native-compile :after (lambda (&rest _) (setq command-line-args-left nil)))\" -f batch-native-compile"
+                ]
+                depsOld.buildCommand;
           });
         });
     };

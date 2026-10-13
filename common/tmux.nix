@@ -16,6 +16,8 @@
     resizeAmount = 5;
 
     extraConfig = ''
+      set -g extended-keys on
+      set -g extended-keys-format csi-u
       # Secondary prefix
       set -g prefix2 C-b
       bind -N "Send prefix" C-Space send-prefix
