@@ -33,9 +33,6 @@
         end
       end
 
-      local bar = wezterm.plugin.require("https://github.com/adriankarlen/bar.wezterm")
-      bar.apply_to_config(config)
-
       if wezterm.target_triple == "x86_64-pc-windows-msvc" then
         config.color_scheme = scheme_for_appearance(wezterm.gui.get_appearance())
         config.default_prog = {
@@ -64,6 +61,31 @@
         config.term = "xterm-kitty"
         config.color_scheme = "Catppuccin Mocha"
         config.font_size = 12
+      end
+
+      -- Let the bar see the initial scheme before it derives tab colors.
+      local bar = wezterm.plugin.require("https://github.com/adriankarlen/bar.wezterm")
+      bar.apply_to_config(config)
+
+      if wezterm.target_triple == "aarch64-apple-darwin"
+        or wezterm.target_triple == "x86_64-pc-windows-msvc" then
+        local function sync_appearance(window)
+          local scheme = scheme_for_appearance(window:get_appearance())
+          local overrides = window:get_config_overrides() or {}
+          if overrides.color_scheme == scheme then
+            return
+          end
+          overrides.color_scheme = scheme
+          -- bar.wezterm stores a full resolved palette here. Keeping it would
+          -- mask the new scheme; let its reload handler rebuild it instead.
+          overrides.colors = nil
+          window:set_config_overrides(overrides)
+        end
+
+        -- Native appearance notifications; the equality guard avoids reload loops.
+        wezterm.on("window-config-reloaded", sync_appearance)
+        -- Lightweight fallback for a missed notification; no shell/subprocess.
+        wezterm.on("update-status", sync_appearance)
       end
     '';
   };
