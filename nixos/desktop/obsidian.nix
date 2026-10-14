@@ -56,6 +56,33 @@ let
       rcodesign sign "$out/Applications/Obsidian.app"
     '';
   });
+  selectionIndexManifest = pkgs.writeText "selection-index-manifest.json" (
+    builtins.toJSON {
+      id = "selection-index";
+      name = "Selection Index";
+      version = "1.0.0";
+      minAppVersion = "1.5.0";
+      description = "Append selected text as a precise source link to another note, without moving the original.";
+      author = "Local Nix configuration";
+      isDesktopOnly = false;
+    }
+  );
+  selectionIndex =
+    pkgs.runCommand "obsidian-selection-index-1.0.0"
+      {
+        nativeBuildInputs = [
+          pkgs.nodejs
+          pkgs.esbuild
+        ];
+        passthru.manifestId = "selection-index";
+      }
+      ''
+        node --test ${./obsidian-index}/anchors.test.js
+        mkdir -p "$out"
+        esbuild ${./obsidian-index}/main.js --bundle --platform=browser \
+          --format=cjs --external:obsidian --outfile="$out/main.js"
+        cp ${selectionIndexManifest} "$out/manifest.json"
+      '';
   catppuccin =
     pkgs.runCommand "obsidian-catppuccin-0.4.51"
       {
@@ -86,7 +113,17 @@ in
         monospaceFontFamily = "MonoLisa Nasy, SFMono-Regular, monospace";
       };
       themes = [ catppuccin ];
-      # Keep core/community plugins, editor settings and workspace state mutable.
+      communityPlugins = [ selectionIndex ];
+      hotkeys."selection-index:append-selection" = [
+        {
+          modifiers = [
+            "Mod"
+            "Shift"
+          ];
+          key = "E";
+        }
+      ];
+      # Keep core plugins, editor settings and workspace state mutable.
       # HM generates appearance.json and enabledCssSnippets itself.
       cssSnippets = [
         {
