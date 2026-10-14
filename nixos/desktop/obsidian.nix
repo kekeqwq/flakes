@@ -83,6 +83,27 @@ let
           --format=cjs --external:obsidian --outfile="$out/main.js"
         cp ${selectionIndexManifest} "$out/manifest.json"
       '';
+  bottomNavigationManifest = pkgs.writeText "bottom-navigation-manifest.json" (
+    builtins.toJSON {
+      id = "bottom-navigation";
+      name = "Bottom Navigation";
+      version = "1.0.0";
+      minAppVersion = "1.5.0";
+      description = "Move the current tab's native back and forward buttons into the bottom tab bar.";
+      author = "Local Nix configuration";
+      isDesktopOnly = true;
+    }
+  );
+  bottomNavigation =
+    pkgs.runCommand "obsidian-bottom-navigation-1.0.0"
+      {
+        passthru.manifestId = "bottom-navigation";
+      }
+      ''
+        mkdir -p "$out"
+        cp ${./obsidian-navigation/main.js} "$out/main.js"
+        cp ${bottomNavigationManifest} "$out/manifest.json"
+      '';
   catppuccin =
     pkgs.runCommand "obsidian-catppuccin-0.4.51"
       {
@@ -113,7 +134,10 @@ in
         monospaceFontFamily = "MonoLisa Nasy, SFMono-Regular, monospace";
       };
       themes = [ catppuccin ];
-      communityPlugins = [ selectionIndex ];
+      communityPlugins = [
+        selectionIndex
+        bottomNavigation
+      ];
       hotkeys."selection-index:append-selection" = [
         {
           modifiers = [
@@ -212,6 +236,41 @@ in
         {
           name = "bottom-tabs";
           text = ''
+            /* Native history buttons, moved by the local bottom-navigation
+               plugin; Obsidian owns history, disabled state and click handlers. */
+            body:not(.is-mobile) .mod-root .workspace-tab-header-container > .bottom-tab-navigation {
+              display: flex;
+              align-items: center;
+              flex: 0 0 auto;
+              gap: 4px;
+              margin: 0 12px 0 0;
+              padding: 0;
+            }
+            body:not(.is-mobile) .mod-root .bottom-tab-navigation button {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              width: 20px;
+              height: 24px;
+              padding: 0;
+              border: 0;
+              box-shadow: none;
+              background: transparent;
+              color: rgb(var(--ctp-subtext0));
+              font: inherit;
+              opacity: 1;
+              -webkit-app-region: no-drag;
+            }
+            body:not(.is-mobile) .mod-root .bottom-tab-navigation button svg { display: none; }
+            body:not(.is-mobile) .mod-root .bottom-tab-navigation button:first-child::before { content: "←"; }
+            body:not(.is-mobile) .mod-root .bottom-tab-navigation button:last-child::before { content: "→"; }
+            body:not(.is-mobile) .mod-root .bottom-tab-navigation button[aria-disabled="true"] {
+              color: rgb(var(--ctp-overlay0));
+              cursor: default;
+            }
+            body:not(.is-mobile) .mod-root .bottom-tab-navigation button:not([aria-disabled="true"]):hover {
+              color: rgb(var(--ctp-lavender));
+            }
             /* Native bottom tabs: text/symbols only, existing click handlers. */
             body:not(.is-mobile) .mod-root .workspace-tab-header-container {
               display: flex !important;
