@@ -22,23 +22,30 @@
     btop
     zip
     stylua
-    (texliveSmall.withPackages (
+    # XeLaTeX + packages used by resume-master/keke_cv.tex (including local moderncv).
+    # Avoid broad collections: their closure exceeds macOS Seatbelt's profile limit.
+    (texliveBasic.withPackages (
       ps: with ps; [
-        scheme-basic
-        collection-bibtexextra
-        collection-binextra
-        collection-fontutils
-        collection-formatsextra
-        collection-humanities
-        collection-langchinese
-        collection-langcjk
-        collection-langenglish
-        collection-latexextra
-        collection-latexrecommended
-        collection-mathscience
-        collection-plaingeneric
-        collection-pstricks
-        collection-xetex
+        latex-bin
+        xetex
+        latexmk
+        fontspec
+        xunicode
+        xecjk
+        ctex
+        etoolbox
+        fancyhdr
+        geometry
+        hyperref
+        microtype
+        pgf
+        marvosym
+        colortbl
+        xcolor
+        lm
+        tipa
+        zapfding
+        greek-fontenc
       ]
     ))
     android-tools

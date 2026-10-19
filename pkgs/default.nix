@@ -10,12 +10,12 @@ self: super: {
 
   emacs-head = super.emacs.overrideAttrs (old: {
     pname = "emacs-head";
-    version = "2026-10-13";
+    version = "2026-10-19";
     src = super.fetchFromGitHub {
       owner = "emacs-mirror";
       repo = "emacs";
-      rev = "73e530ce886fc23076bd82c08624fb8734a25fd7";
-      hash = "sha256-vAYOZxq3brRU8j/0qYz0HkvDQxg0eawU2o0lqKPKK+o=";
+      rev = "06f3da3e675c87fd85feb888c46e181faddd337e";
+      hash = "sha256-tkoIDDdmdYMx1GchFZv+wNCxeACJAcHhsMigu+xZLXs=";
     };
     patches =
       builtins.filter (
@@ -23,12 +23,16 @@ self: super: {
         let
           name = if builtins.isAttrs p && p ? name then p.name else baseNameOf (toString p);
         in
-        !(super.lib.hasInfix "CVE-2024-53920" name)
+        # These release-branch security fixes are already present in master.
+        !(builtins.any (cve: super.lib.hasInfix cve name) [
+          "CVE-2024-53920"
+          "CVE-2026-108976"
+        ])
       ) (old.patches or [ ])
       ++ super.lib.optionals super.stdenv.hostPlatform.isDarwin [
         (super.fetchpatch {
-          url = "https://raw.githubusercontent.com/d12frosted/homebrew-emacs-plus/b7b77a8978cdfa9bbb67a8b93830813dab308a27/patches/emacs-31/round-undecorated-frame.patch";
-          hash = "sha256-KCMEvJzN1OkwFYoMLpZghvdeoO1Ckcxk3Mo19YAf850=";
+          url = "https://raw.githubusercontent.com/ryankask/homebrew-emacs-plus/d4e7cfe69322651794dfc10c09b2f6510caf6cd6/patches/emacs-32/round-undecorated-frame.patch";
+          hash = "sha256-5/XyOD2ter4syVDSKnIqR2nvqeMbtXy4SKvMZqmCums=";
         })
         (super.fetchpatch {
           url = "https://raw.githubusercontent.com/d12frosted/homebrew-emacs-plus/b7b77a8978cdfa9bbb67a8b93830813dab308a27/patches/emacs-31/system-appearance.patch";
@@ -38,10 +42,6 @@ self: super: {
     postPatch =
       (old.postPatch or "")
       + super.lib.optionalString super.stdenv.hostPlatform.isDarwin ''
-        # Keep the enum aligned with the round-undecorated-frame parameter table.
-        # https://github.com/d12frosted/homebrew-emacs-plus/issues/1028
-        substituteInPlace src/frame.c \
-          --replace-fail '  UNDECORATED,' $'  UNDECORATED,\n  UNDECORATED_ROUND,'
         substituteInPlace lisp/gnus/smime.el \
           --replace-fail '(car (gnutls-trustfiles))' '"/etc/ssl/cert.pem"'
       '';
