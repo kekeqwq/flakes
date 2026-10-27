@@ -113,6 +113,7 @@ in
       }
     ];
     casks = [
+      "dingtalk"
       "anki"
       "baidunetdisk"
       "calibre"
@@ -121,7 +122,6 @@ in
       "karabiner-elements"
       "marginnote"
       "pikpak"
-      "qq"
       "surge"
       "tinycast"
       "wechat"
@@ -183,7 +183,6 @@ in
     clang
     scrcpy
     cinny-desktop
-    telegram-desktop
     ffmpeg
     wezterm
     mpv
