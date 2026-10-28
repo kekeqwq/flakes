@@ -133,7 +133,6 @@ in
     launchctl asuser "$(${pkgs.coreutils}/bin/id -u ${config.myuser.name})" sudo -u ${config.myuser.name} --set-home ${pkgs.duti}/bin/duti ${dutiConfig}
   '';
   fonts.packages = with pkgs; [
-    nerd-fonts.symbols-only
     # Org Modern's folding triangles U+2BC6 / U+2BC8 are absent from macOS fonts.
     (noto-fonts.override { variants = [ "Noto Sans Symbols 2" ]; })
   ];

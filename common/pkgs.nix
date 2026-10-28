@@ -94,6 +94,7 @@ in
         redis
         pyexecjs
         lxml
+        pyquery
       ]
     ))
     basedpyright
