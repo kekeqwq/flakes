@@ -113,6 +113,7 @@ in
       }
     ];
     casks = [
+      "chatgpt"
       "dingtalk"
       "anki"
       "baidunetdisk"

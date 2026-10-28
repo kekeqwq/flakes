@@ -44,6 +44,7 @@ in
     btop
     zip
     stylua
+    prettier # Manual HTML/JSON whole-buffer formatting in Emacs.
     # XeLaTeX + packages used by resume-master/keke_cv.tex (including local moderncv).
     # Avoid broad collections: their closure exceeds macOS Seatbelt's profile limit.
     (texliveBasic.withPackages (
@@ -92,6 +93,7 @@ in
         pymongo
         redis
         pyexecjs
+        lxml
       ]
     ))
     basedpyright
