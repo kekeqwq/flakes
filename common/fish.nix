@@ -25,11 +25,11 @@
             end
 
             if grep -qE '^[[:space:]]*off[[:space:]]*$' $deck
-                sed -i 's/^[[:space:]]*off[[:space:]]*$/        \/\/ off/' $deck
-                echo "eDP-1 disabled"
-            else if grep -qE '^[[:space:]]*//[[:space:]]*off[[:space:]]*$' $deck
-                sed -i 's/^[[:space:]]*\/\/[[:space:]]*off[[:space:]]*$/        off/' $deck
+                sed -i --follow-symlinks 's/^[[:space:]]*off[[:space:]]*$/        \/\/ off/' $deck
                 echo "eDP-1 enabled"
+            else if grep -qE '^[[:space:]]*//[[:space:]]*off[[:space:]]*$' $deck
+                sed -i --follow-symlinks 's/^[[:space:]]*\/\/[[:space:]]*off[[:space:]]*$/        off/' $deck
+                echo "eDP-1 disabled"
             else
                 echo "Cannot find eDP-1 off entry in deck.kdl"
                 return 1

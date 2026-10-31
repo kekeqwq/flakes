@@ -13,7 +13,8 @@ in
     package = pkgs.yazi;
     shellWrapperName = "y";
     theme.flavor = {
-      dark = "catppuccin-macchiato";
+      dark = "catppuccin-mocha";
+      light = "catppuccin-latte";
     };
     settings = {
       mgr = {
@@ -70,6 +71,8 @@ in
       ];
     };
   };
-  myuser.hm.xdg.configFile."yazi/flavors/catppuccin-macchiato.yazi".source =
-    "${yazi-flavors}/catppuccin-macchiato.yazi";
+  myuser.hm.xdg.configFile = {
+    "yazi/flavors/catppuccin-mocha.yazi".source = "${yazi-flavors}/catppuccin-mocha.yazi";
+    "yazi/flavors/catppuccin-latte.yazi".source = "${yazi-flavors}/catppuccin-latte.yazi";
+  };
 }

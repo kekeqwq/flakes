@@ -5,12 +5,20 @@
   ...
 }:
 let
-  rofi-theme = pkgs.fetchFromGitHub {
-    owner = "kekeqwq";
-    repo = "rofi";
-    rev = "b4f6e1d7a06986954beed4d1ba327d862c7dac6f";
-    hash = "sha256-8/uqYUEEI5Tyz4padRLuqA9xC6g0hphE8R9NMavtQnU=";
-  };
+  home = config.home-manager.users.${config.myuser.name}.home.homeDirectory;
+  outputFile = "${home}/Downloads/${config.networking.hostName}.kdl";
+  outputDefaults =
+    if config.networking.hostName == "deck" then ../../hosts/deck/outputs.kdl else ./niri/outputs.kdl;
+  wallpaper = ./wallpapers/mocha-mountains.png;
+  niriConfig = pkgs.writeText "niri-unchecked.kdl" (
+    builtins.replaceStrings [ "@outputs@" ] [ outputFile ] (builtins.readFile ./niri/config.kdl)
+  );
+  # Validate the FULL configuration at build time, using the tracked output defaults.
+  checkedNiriConfig = pkgs.runCommand "niri-config.kdl" { nativeBuildInputs = [ pkgs.niri ]; } ''
+    substitute ${niriConfig} check.kdl --replace-fail '${outputFile}' '${outputDefaults}'
+    niri validate -c "$PWD/check.kdl"
+    cp ${niriConfig} "$out"
+  '';
 in
 {
   systemd.services.kikibridge-rx = {
@@ -30,10 +38,10 @@ in
   myuser.hm.programs.rofi = {
     enable = true;
     package = pkgs.rofi;
-    extraConfig = {
+    settings = {
       modi = "drun";
       show-icons = true;
-      icon-theme = "Fluent";
+      icon-theme = "Papirus-Dark";
       matching = "fuzzy";
       sort = true;
       drun-display-format = "{name}";
@@ -43,149 +51,41 @@ in
       display-run = "Run";
       display-window = "Windows";
     };
-    theme = "${rofi-theme}/catppuccin-default.rasi";
+    theme = ./rofi-mocha.rasi;
   };
 
   security.polkit.enable = true;
 
   programs.niri.enable = true;
-  myuser.hm.home.file.".config/niri/config.kdl".text = ''
-    include "/home/keke/Downloads/deck.kdl"
-    input {
-        mod-key "Alt"
-    }
-    layout {
-        gaps 14
-        center-focused-column "never"
-        always-center-single-column
-        default-column-display "tabbed"
-        preset-column-widths {
-            proportion 0.33333
-            proportion 0.5
-            proportion 0.66667
-        }
-        default-column-width {
-            proportion 0.5
-        }
-        preset-window-heights {
-            proportion 0.33333
-            proportion 0.5
-            proportion 0.66667
-        }
-        focus-ring {
-            width 3
-            active-color "#d8dee9"
-            inactive-color "rgba(0,0,0,0)"
-        }
-        shadow {
-            on
-            softness 10
-            spread 10
-            offset x=0 y=5
-        }
-        tab-indicator {
-            off
-        }
-        insert-hint {
-            color "#ffc87f80"
-        }
-    }
-    spawn-at-startup "fcitx5"
-    spawn-at-startup "swaybg" "-i" "/home/keke/Downloads/wall.jpg" "-m" "fill"
-    prefer-no-csd
-    layer-rule {
-        match namespace="waybar"
-        match namespace="rofi"
-        match at-startup=true
-        opacity 0.8
-        shadow {
-            on
-            softness 10
-            spread 10
-            offset x=0 y=5
-        }
-        geometry-corner-radius 10
-    }
-    window-rule {
-        geometry-corner-radius 6
-        clip-to-geometry true
-        draw-border-with-background false
-    }
-    binds {
-        Mod+Return {
-            spawn "wezterm"
-        }
-        Mod+D {
-            spawn "rofi" "-show"
-        }
-        XF86AudioRaiseVolume allow-when-locked=true {
-            spawn "wpctl" "set-volume" "@DEFAULT_AUDIO_SINK@" "0.1+"
-        }
-        XF86AudioLowerVolume allow-when-locked=true {
-            spawn "wpctl" "set-volume" "@DEFAULT_AUDIO_SINK@" "0.1-"
-        }
-        Mod+M {
-            maximize-column
-        }
-        Mod+Q {
-            close-window
-        }
-        Mod+1 {
-            focus-workspace 1
-        }
-        Mod+2 {
-            focus-workspace 2
-        }
-        Mod+3 {
-            focus-workspace 3
-        }
-        Mod+4 {
-            focus-workspace 4
-        }
-        Mod+5 {
-            focus-workspace 5
-        }
-        Mod+6 {
-            focus-workspace 6
-        }
-        Mod+7 {
-            focus-workspace 7
-        }
-        Mod+8 {
-            focus-workspace 8
-        }
-        Mod+9 {
-            focus-workspace 9
-        }
-        Mod+Ctrl+1 {
-            move-column-to-workspace 1
-        }
-        Mod+Ctrl+2 {
-            move-column-to-workspace 2
-        }
-        Mod+Ctrl+3 {
-            move-column-to-workspace 3
-        }
-        Mod+Ctrl+4 {
-            move-column-to-workspace 4
-        }
-        Mod+Ctrl+5 {
-            move-column-to-workspace 5
-        }
-        Mod+Ctrl+6 {
-            move-column-to-workspace 6
-        }
-        Mod+Ctrl+7 {
-            move-column-to-workspace 7
-        }
-        Mod+Ctrl+8 {
-            move-column-to-workspace 8
-        }
-        Mod+Ctrl+9 {
-            move-column-to-workspace 9
-        }
-    }
-  '';
+  # Also validate the actual mutable include before Home Manager changes any files.
+  myuser.hm.home.activation.validateNiriConfig = {
+    after = [ ];
+    before = [
+      "checkLinkTargets"
+      "writeBoundary"
+    ];
+    data = ''
+      ${pkgs.niri}/bin/niri validate -c ${niriConfig}
+    '';
+  };
+  myuser.hm.xdg.configFile = {
+    "niri/config.kdl" = {
+      source = checkedNiriConfig;
+      force = true; # Replace the old hand-edited file with the Nix-managed symlink.
+    };
+  };
+  myuser.hm.systemd.user.services.wallpaper = {
+    Unit = {
+      Description = "Catppuccin Mocha wallpaper";
+      PartOf = [ "graphical-session.target" ];
+      After = [ "graphical-session.target" ];
+    };
+    Service = {
+      ExecStart = "${pkgs.swaybg}/bin/swaybg -i ${wallpaper} -m fill";
+      Restart = "on-failure";
+    };
+    Install.WantedBy = [ "graphical-session.target" ];
+  };
 
   programs.wayfire = {
     enable = false;
@@ -228,8 +128,8 @@ in
         spacing = 0;
         margin-top = 12;
         margin-bottom = 5;
-        margin-left = 200;
-        margin-right = 200;
+        margin-left = 12;
+        margin-right = 12;
         modules-left = [
           "niri/workspaces"
           "niri/window"
@@ -257,7 +157,7 @@ in
           format = "{capacity}% 󱊣";
           format-charging = "{capacity}% 󰂄";
           interval = 1;
-          on-click = "/home/keke/.config/rofi/power.sh";
+          on-click = "${pkgs.rofi}/bin/rofi -show run";
         };
       };
     };
@@ -266,7 +166,9 @@ in
           font-size: 15px;
       }
       window#waybar {
-          border-bottom: 1px solid #181825;
+          background: rgba(30, 30, 46, 0.95);
+          color: #cdd6f4;
+          border: 1px solid #45475a;
           border-radius: 10px;
       }
 
@@ -302,17 +204,18 @@ in
       }
 
       #workspaces button:hover {
-          background-color: rgba(50, 50, 50, 0.5);
-          color: #ffffff;
+          background-color: #45475a;
+          color: #cdd6f4;
       }
 
       #workspaces button.active {
-          background: #5e81ac;
+          background: #cba6f7;
+          color: #1e1e2e;
       }
 
       #workspaces button.urgent {
-          background-color: #fb4934;
-          animation: urgentBlink 1s linear infinite alternate;
+          background-color: #f38ba8;
+          color: #1e1e2e;
       }
 
       #clock{
@@ -324,14 +227,14 @@ in
       }
 
       #backlight {
-          color: #8fbcbb;
+          color: #f9e2af;
       }
       #pulseaudio {
-          color: #88c0d0;
+          color: #89dceb;
       }
 
       #battery {
-          color: #81a1c1;
+          color: #a6e3a1;
       }
 
 

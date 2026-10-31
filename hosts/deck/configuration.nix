@@ -1,6 +1,12 @@
 { config, pkgs, ... }:
 
 {
+  # Avoid memory/thread exhaustion when building the desktop stack on the Deck.
+  nix.settings = {
+    max-jobs = 2;
+    cores = 4;
+  };
+
   # Core
   jovian.devices.steamdeck.enable = true;
   programs.steam.enable = true;

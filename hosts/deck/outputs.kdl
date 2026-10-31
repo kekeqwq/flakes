@@ -1,0 +1,16 @@
+// Editable without rebuilding: included by ~/.config/niri/config.kdl.
+// Capture-safe mode. Keep the built-in display to the right.
+output "DP-1" {
+    mode "1920x1080@60.000"
+    scale 1
+    transform "normal"
+    position x=0 y=0
+}
+
+output "eDP-1" {
+    // off
+    mode "800x1280@59.999"
+    scale 1.5
+    transform "270"
+    position x=1920 y=0
+}
