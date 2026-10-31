@@ -1,0 +1,4 @@
+# Enable nixpkgs rime-ice's upstream default.yaml
+# (packaged as rime_ice_suggestion.yaml so it does not clobber other schemas).
+patch:
+  __include: rime_ice_suggestion:/

@@ -128,6 +128,7 @@ in
       "marginnote"
       "pikpak"
       "surge"
+      "squirrel-app"
       "telegram"
       "tinycast"
       "wechat"
