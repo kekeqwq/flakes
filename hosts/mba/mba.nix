@@ -120,10 +120,12 @@ in
       "calibre"
       "discord"
       "google-chrome"
+      "heptabase"
       "karabiner-elements"
       "marginnote"
       "pikpak"
       "surge"
+      "telegram"
       "tinycast"
       "wechat"
     ];
@@ -133,7 +135,8 @@ in
     launchctl asuser "$(${pkgs.coreutils}/bin/id -u ${config.myuser.name})" sudo -u ${config.myuser.name} --set-home ${pkgs.duti}/bin/duti ${dutiConfig}
   '';
   fonts.packages = with pkgs; [
-    lxgw-wenkai # LXGW WenKai Mono for Org CJK and 2:1-width bilingual tables.
+    lxgw-wenkai # Org-only monospaced Chinese, keeping the original text size.
+    nerd-fonts.symbols-only # Symbols Nerd Font Mono for stock Doom Modeline icons.
     # Org Modern's folding triangles U+2BC6 / U+2BC8 are absent from macOS fonts.
     (noto-fonts.override { variants = [ "Noto Sans Symbols 2" ]; })
   ];
