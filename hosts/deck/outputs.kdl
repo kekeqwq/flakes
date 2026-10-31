@@ -1,5 +1,14 @@
 // Merged into the main Nix-managed niri config at build time.
-// External devices share DP-1: match EDID identity, not the connector alone.
+// Keep every replacement external display at the streaming origin, even when
+// its EDID is new. Otherwise niri auto-places it past eDP-1, changing input offsets.
+output "DP-1" {
+    mode "1920x1080@60.000"
+    scale 1
+    transform "normal"
+    position x=0 y=0
+}
+
+// Known EDID profiles below retain their explicit capture-safe settings.
 output "A/Vaux Electronics AVT GC553PRO Unknown" {
     mode "1920x1080@60.000"
     scale 1

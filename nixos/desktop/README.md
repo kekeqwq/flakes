@@ -2,7 +2,7 @@
 
 - `niri/config.kdl` is the main template. Home Manager installs a read-only store symlink at `~/.config/niri/config.kdl` and replaces older hand-edited copies.
 - `hosts/deck/outputs.kdl` is concatenated into the main configuration at build time: there are **no runtime includes**. The old `~/Downloads/deck.kdl` is no longer used and is left untouched as a backup.
-- The AVerMedia capture card and PNP(LTM) LCD are matched by EDID identity because both use DP-1. Both use 1920×1080 at 60 Hz. The internal LCD uses `transform "normal"` and scale 1.5: the kernel's built-in 270° panel orientation already makes it landscape. Copying the effective transform reported by `niri msg outputs` back into the configuration would rotate it twice.
+- The AVerMedia capture card and PNP(LTM) LCD have EDID-specific profiles. A DP-1 fallback keeps replacement displays (including Ugreen/SAMZHE) at `(0,0)`, 1920×1080 at 60 Hz, so hotplug does not shift Sunshine's input coordinates. The internal LCD uses `transform "normal"` and scale 1.5: the kernel's built-in 270° panel orientation already makes it landscape. Copying the effective transform reported by `niri msg outputs` back into the configuration would rotate it twice.
 - The exact complete installed configuration is validated during the build and again before Home Manager activation. Invalid keybindings stop activation before files are replaced.
 - Change permanent display settings in `hosts/deck/outputs.kdl` and rebuild. `switchscreen` only toggles eDP-1 at runtime through niri IPC; it never edits the managed configuration.
 - Waybar and swaybg are started **only by user systemd services**. Do not additionally start them from niri, a shell, or XDG autostart. The default niri fallback configuration starts another Waybar if the main configuration cannot load.
@@ -15,6 +15,7 @@
 - Uses KMS capture of DP-1 with VA-API encoding, not the desktop portal. No screen-selection dialog is needed.
 - Moonlight device pairing and portal screen consent are independent. The official client requires a pinned server certificate, so disabling pairing only on Sunshine is insufficient.
 - Trusted clients remain in the private `~/.config/sunshine/sunshine_state.json`; certificates and keys must never be committed to Nix/Git. Exactly one enabled record per client certificate is required by the pinned Sunshine version.
+- On the Mac, Moonlight defaults to relative/captured mouse mode. Its historical preference key is `mouseacceleration` (false); this key actually controls absolute remote-desktop mouse mode. Use Ctrl+Option+Shift+Z to release captured input, and click in the stream to capture again.
 - LAN Web UI access is allowed; UPnP is disabled. Device trust is provisioned separately, not disabled. Additional clients must be provisioned once before they can connect.
 
 ## Deck deployment

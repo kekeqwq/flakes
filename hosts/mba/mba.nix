@@ -75,6 +75,9 @@ in
   system.stateVersion = 6;
   system.primaryUser = "keke";
   system.defaults = {
+    # Moonlight's historical "mouseacceleration" key means absolute desktop
+    # mouse mode, NOT pointer acceleration. Relative mode keeps input captured.
+    CustomUserPreferences."com.moonlight-stream.Moonlight".mouseacceleration = false;
     screencapture = {
       location = "/tmp";
     };
