@@ -5,18 +5,16 @@
   ...
 }:
 let
-  home = config.home-manager.users.${config.myuser.name}.home.homeDirectory;
-  outputFile = "${home}/Downloads/${config.networking.hostName}.kdl";
-  outputDefaults =
-    if config.networking.hostName == "deck" then ../../hosts/deck/outputs.kdl else ./niri/outputs.kdl;
   wallpaper = ./wallpapers/mocha-mountains.png;
   niriConfig = pkgs.writeText "niri-unchecked.kdl" (
-    builtins.replaceStrings [ "@outputs@" ] [ outputFile ] (builtins.readFile ./niri/config.kdl)
+    lib.optionalString (config.networking.hostName == "deck") (
+      builtins.readFile ../../hosts/deck/outputs.kdl
+    )
+    + builtins.readFile ./niri/config.kdl
   );
-  # Validate the FULL configuration at build time, using the tracked output defaults.
+  # Validate the exact complete configuration installed by Home Manager.
   checkedNiriConfig = pkgs.runCommand "niri-config.kdl" { nativeBuildInputs = [ pkgs.niri ]; } ''
-    substitute ${niriConfig} check.kdl --replace-fail '${outputFile}' '${outputDefaults}'
-    niri validate -c "$PWD/check.kdl"
+    niri validate -c ${niriConfig}
     cp ${niriConfig} "$out"
   '';
 in
@@ -57,7 +55,7 @@ in
   security.polkit.enable = true;
 
   programs.niri.enable = true;
-  # Also validate the actual mutable include before Home Manager changes any files.
+  # Validate again before Home Manager changes any files.
   myuser.hm.home.activation.validateNiriConfig = {
     after = [ ];
     before = [

@@ -56,6 +56,23 @@
     desktopSession = "niri";
   };
 
+  # Capture DP-1 directly through DRM/KMS: no portal picker/restore token required.
+  services.sunshine.settings = {
+    sunshine_name = "deck";
+    capture = "kms";
+    encoder = "vaapi";
+    adapter_name = "/dev/dri/renderD128";
+    output_name = "DP-1";
+    hevc_mode = 1;
+    av1_mode = 1; # Vangogh has no AV1 encoder; do not probe/advertise it.
+    controller = "disabled";
+    stream_audio = "disabled";
+    origin_web_ui_allowed = "lan";
+    upnp = "disabled";
+    file_state = "/home/keke/.config/sunshine/sunshine_state.json";
+    credentials_file = "/home/keke/.config/sunshine/sunshine_state.json";
+  };
+
   #TODO: fix sound issue in minimal system
   environment.pathsToLink = [ "/share/alsa/ucm2" ];
 

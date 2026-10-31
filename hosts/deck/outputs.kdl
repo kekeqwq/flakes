@@ -1,16 +1,25 @@
-// Editable without rebuilding: included by ~/.config/niri/config.kdl.
-// Capture-safe mode. Keep the built-in display to the right.
-output "DP-1" {
+// Merged into the main Nix-managed niri config at build time.
+// External devices share DP-1: match EDID identity, not the connector alone.
+output "A/Vaux Electronics AVT GC553PRO Unknown" {
     mode "1920x1080@60.000"
     scale 1
     transform "normal"
     position x=0 y=0
 }
 
+// New external display; Sunshine captures its DP-1 connector.
+output "PNP(LTM) LCD 0x01010101" {
+    mode "1920x1080@60.000"
+    scale 1
+    transform "normal"
+    position x=0 y=0
+}
+
+// The kernel already reports the panel's 270-degree mounting orientation.
+// niri composes this transform with that orientation: do NOT apply it twice.
 output "eDP-1" {
-    // off
     mode "800x1280@59.999"
     scale 1.5
-    transform "270"
+    transform "normal"
     position x=1920 y=0
 }

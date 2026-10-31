@@ -17,22 +17,17 @@
         alias sc="screen /dev/cu.usbmodem5B162124901 9600"
 
         function switchscreen
-            set deck "$HOME/Downloads/deck.kdl"
-
-            if not test -f $deck
-                echo "deck.kdl not found: $deck"
+            # Runtime toggle only: never mutate the Nix-managed configuration.
+            set -l outputs (niri msg --json outputs)
+            or return 1
+            if not printf '%s' "$outputs" | ${pkgs.jq}/bin/jq -e 'has("eDP-1")' >/dev/null
+                echo "eDP-1 not found"
                 return 1
             end
-
-            if grep -qE '^[[:space:]]*off[[:space:]]*$' $deck
-                sed -i --follow-symlinks 's/^[[:space:]]*off[[:space:]]*$/        \/\/ off/' $deck
-                echo "eDP-1 enabled"
-            else if grep -qE '^[[:space:]]*//[[:space:]]*off[[:space:]]*$' $deck
-                sed -i --follow-symlinks 's/^[[:space:]]*\/\/[[:space:]]*off[[:space:]]*$/        off/' $deck
-                echo "eDP-1 disabled"
+            if printf '%s' "$outputs" | ${pkgs.jq}/bin/jq -e '."eDP-1".current_mode != null' >/dev/null
+                niri msg output eDP-1 off
             else
-                echo "Cannot find eDP-1 off entry in deck.kdl"
-                return 1
+                niri msg output eDP-1 on
             end
         end
       '';

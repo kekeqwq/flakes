@@ -1,4 +1,3 @@
-include "@outputs@"
 input {
     mod-key "Alt"
 }
