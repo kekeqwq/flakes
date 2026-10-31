@@ -6,6 +6,7 @@
 - The exact complete installed configuration is validated during the build and again before Home Manager activation. Invalid keybindings stop activation before files are replaced.
 - Change permanent display settings in `hosts/deck/outputs.kdl` and rebuild. `switchscreen` only toggles eDP-1 at runtime through niri IPC; it never edits the managed configuration.
 - Waybar and swaybg are started **only by user systemd services**. Do not additionally start them from niri, a shell, or XDG autostart. The default niri fallback configuration starts another Waybar if the main configuration cannot load.
+- Icons use Papirus-Dark with the official Catppuccin Mocha/Mauve folder adaptation. Waybar explicitly overrides qBittorrent/Sunshine pixmaps with Papirus panel glyphs; Telegram keeps its dynamic attention/mute icons. Sunshine uses Papirus's screen-recording glyph because the theme has no dedicated Sunshine icon.
 - Linux uses fixed Mocha (mauve accent); WezTerm retains native Mocha/Latte appearance switching on macOS/Windows. Emacs remains in the shared external dotfiles checkout.
 - `wallpapers/generate.py` regenerates the seeded 4K Mocha mountain wallpaper without third-party dependencies.
 

@@ -18,7 +18,10 @@ in
       };
       iconTheme = {
         name = "Papirus-Dark";
-        package = pkgs.papirus-icon-theme;
+        package = pkgs.catppuccin-papirus-folders.override {
+          flavor = "mocha";
+          accent = "mauve";
+        };
       };
       gtk3.extraConfig.gtk-application-prefer-dark-theme = true;
       gtk4.theme = null;

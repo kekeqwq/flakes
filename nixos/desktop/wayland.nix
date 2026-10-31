@@ -6,6 +6,9 @@
 }:
 let
   wallpaper = ./wallpapers/mocha-mountains.png;
+  trayIcons = "${
+    config.home-manager.users.${config.myuser.name}.gtk.iconTheme.package
+  }/share/icons/Papirus-Dark/22x22/panel";
   niriConfig = pkgs.writeText "niri-unchecked.kdl" (
     lib.optionalString (config.networking.hostName == "deck") (
       builtins.readFile ../../hosts/deck/outputs.kdl
@@ -149,7 +152,14 @@ in
           format = "{percent}% 󰌵";
         };
         tray = {
-          spacing = 12;
+          icon-size = 20;
+          spacing = 10;
+          # These apps publish pixmaps instead of themed icon names. Override by
+          # their actual StatusNotifierItem IDs; keep Telegram's dynamic states.
+          icons = {
+            qBittorrent = "${trayIcons}/qbittorrent-tray.svg";
+            Sunshine = "${trayIcons}/simplescreenrecorder-panel.svg";
+          };
         };
         battery = {
           format = "{capacity}% 󱊣";

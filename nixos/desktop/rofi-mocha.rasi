@@ -23,4 +23,4 @@ element { padding: 10px; spacing: 10px; border-radius: 8px; }
 element-icon { size: 28px; background-color: transparent; }
 element-text { vertical-align: 0.5; background-color: transparent; }
 element selected.normal { background-color: @accent; text-color: @bg; }
-element selected.normal element-text { text-color: inherit; }
+element-text selected.normal, element-icon selected.normal { text-color: @bg; }
