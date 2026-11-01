@@ -1,6 +1,11 @@
 # 适用于【鼠须管】0.9.13+（请注意Squirrel 1.0 的 Breaking Changes）
 # 位置：~/Library/Rime/squirrel.custom.yaml
 patch:
+  # Emacs owns composition internally; never let the outer frontend compose too.
+  app_options:
+    org.gnu.Emacs:
+      ascii_mode: true
+
   #us_keyboard_layout: true                         # 键盘选项：应用美式键盘布局
   #show_notifications_when: growl_is_running        # 状态通知，默认装有Growl时显示，全开(always)/全关(never)
 

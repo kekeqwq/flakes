@@ -1,0 +1,89 @@
+{
+  "profiles" : [
+    {
+      "devices" : [
+        {
+          "identifiers" : {
+            "product_id" : 22,
+            "is_keyboard" : true,
+            "is_pointing_device" : true,
+            "vendor_id" : 1278
+          },
+          "disable_built_in_keyboard_if_exists" : true,
+          "ignore" : false,
+          "mouse_flip_horizontal_wheel" : true
+        },
+        {
+          "identifiers" : {
+            "product_id" : 6873,
+            "is_keyboard" : true,
+            "is_pointing_device" : true,
+            "vendor_id" : 2821
+          },
+          "mouse_flip_vertical_wheel" : true,
+          "ignore" : false
+        }
+      ],
+      "complex_modifications" : {
+        "rules" : [
+          {
+            "manipulators" : [
+              {
+                "to" : [
+                  {
+                    "key_code" : "left_command"
+                  }
+                ],
+                "type" : "basic",
+                "conditions" : [
+                  {
+                    "type" : "variable_if",
+                    "name" : "kikibridge",
+                    "value" : 1
+                  }
+                ],
+                "from" : {
+                  "key_code" : "left_command",
+                  "modifiers" : {
+                    "optional" : [
+                      "any"
+                    ]
+                  }
+                }
+              },
+              {
+                "to" : [
+                  {
+                    "key_code" : "right_command"
+                  }
+                ],
+                "type" : "basic",
+                "conditions" : [
+                  {
+                    "type" : "variable_if",
+                    "name" : "kikibridge",
+                    "value" : 1
+                  }
+                ],
+                "from" : {
+                  "key_code" : "right_command",
+                  "modifiers" : {
+                    "optional" : [
+                      "any"
+                    ]
+                  }
+                }
+              }
+            ],
+            "description" : "KikiBridge: Command 只当 Command"
+          }
+        ]
+      },
+      "virtual_hid_keyboard" : {
+        "keyboard_type_v2" : "ansi"
+      },
+      "selected" : true,
+      "name" : "Default profile"
+    }
+  ]
+}

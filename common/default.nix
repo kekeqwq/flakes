@@ -11,6 +11,7 @@ _: {
     ./pi.nix
     ./pi-learn.nix
     ./rime-squirrel.nix
+    ./emacs-rime.nix
   ];
   home-manager.useGlobalPkgs = true;
   home-manager.useUserPackages = true;
