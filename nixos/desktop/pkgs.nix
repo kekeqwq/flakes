@@ -46,11 +46,9 @@
     f2fs-tools
     qbittorrent
     discord
-    mpv
     prismlauncher
     telegram-desktop
     pinentry-curses
-    scrcpy
     (pkgs.google-chrome.override {
       commandLineArgs = "--password-store=basic";
     })

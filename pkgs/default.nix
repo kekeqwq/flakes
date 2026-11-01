@@ -1,8 +1,4 @@
 self: super: {
-  kikieye = super.callPackage ./kikieye { };
-  kikibridge = super.callPackage ./kikibridge { };
-  kikibridge-rx = super.callPackage ./kikibridge-rx { };
-  kikinavmap = super.callPackage ./kikinavmap { };
   xrock = super.callPackage ./xrock { };
 
   # PR: https://github.com/NixOS/nixpkgs/pull/552646 (待 PR 合并后删除)
@@ -10,12 +6,12 @@ self: super: {
 
   emacs-head = super.emacs.overrideAttrs (old: {
     pname = "emacs-head";
-    version = "2026-10-19";
+    version = "2026-11-01";
     src = super.fetchFromGitHub {
       owner = "emacs-mirror";
       repo = "emacs";
-      rev = "06f3da3e675c87fd85feb888c46e181faddd337e";
-      hash = "sha256-tkoIDDdmdYMx1GchFZv+wNCxeACJAcHhsMigu+xZLXs=";
+      rev = "9008bf64c3375f63620d9d6f6dc31908b68bf0a0";
+      hash = "sha256-SrgYJJcVwd3ZQC5s2RhP1UQNTOqGDJRX3274Dkhq15o=";
     };
     patches =
       builtins.filter (

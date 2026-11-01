@@ -67,7 +67,6 @@ let
   '';
 in
 {
-  nix.settings.sandbox = "relaxed";
   myuser.name = "keke";
   myuser.users.home = /Users/keke;
   myuser.hm.home.stateVersion = "25.11";
@@ -183,19 +182,13 @@ in
   };
   environment.systemPackages = with pkgs; [
     _7zz
-    kikibridge
-    kikieye
-    kikinavmap
     iina
     mihomo
     typst
     git
     clang
-    scrcpy
     cinny-desktop
     ffmpeg
-    wezterm
-    mpv
     moonlight-qt
     duti
     # PR: https://github.com/NixOS/nixpkgs/pull/552646 (待 PR 合并后删除)
