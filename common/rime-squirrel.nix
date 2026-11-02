@@ -6,7 +6,32 @@
 }:
 
 let
-  rimeIceData = "${pkgs.rime-ice}/share/rime-data";
+  rimeIceData = pkgs.runCommand "rime-ice-pi-chinese" {
+    nativeBuildInputs = [ pkgs.python3 pkgs.lua ];
+  } ''
+    lua ${./rime/pi_chinese_lock.test.lua} ${./rime/pi_chinese_lock.lua}
+    mkdir -p "$out"
+    cp -rs ${pkgs.rime-ice}/share/rime-data/. "$out/"
+    python3 - "$out" <<'PY'
+    import pathlib, sys
+    root = pathlib.Path(sys.argv[1])
+    count = 0
+    for schema in root.glob('*.schema.yaml'):
+        text = schema.read_text()
+        marker = '  processors:\n'
+        if marker not in text:
+            continue
+        assert text.count(marker) == 1, schema
+        text = text.replace(marker, marker + '    - lua_processor@*pi_chinese_lock\n', 1)
+        schema.unlink()
+        schema.write_text(text)
+        count += 1
+    assert count > 0
+    print(f'Installed Pi Chinese guard in {count} schemas')
+    PY
+    chmod u+w "$out/lua"
+    cp ${./rime/pi_chinese_lock.lua} "$out/lua/pi_chinese_lock.lua"
+  '';
   squirrelCustom = ./rime/squirrel.custom.yaml;
   # WenKai contains monochrome 🀄/🈚️ glyphs. Strip those cmap entries so
   # Squirrel can fall back to Apple Color Emoji without putting emoji first
@@ -43,7 +68,7 @@ in
             "$HOME/Library/Fonts/LXGWWenKaiIME-Medium.ttf"
           # Schema and dictionaries follow nixpkgs. User-trained data stays local:
           # *.userdb, user.yaml, installation.yaml, build/, and sync/.
-          find "$src" -type f -print0 | while IFS= read -r -d "" f; do
+          find -L "$src" -type f -print0 | while IFS= read -r -d "" f; do
             rel="''${f#"$src"/}"
             case "$rel" in
               AGENTS.md|LICENSE|recipe.yaml|weasel.yaml|build/*) continue ;;
@@ -58,6 +83,7 @@ in
           # Copy (do not symlink) so mtime is now; Rime skips rebuilds on 1970 store files.
           rm -f "$dest/squirrel.custom.yaml" "$dest/default.custom.yaml"
           cp -f ${squirrelCustom} "$dest/squirrel.custom.yaml"
+          cp -f ${./rime/default.custom.yaml} "$dest/default.custom.yaml"
           squirrel="/Library/Input Methods/Squirrel.app/Contents/MacOS/Squirrel"
           if [ -x "$squirrel" ]; then
             rm -f "$dest/build/squirrel.yaml"

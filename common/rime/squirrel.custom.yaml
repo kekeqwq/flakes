@@ -1,13 +1,12 @@
 # 适用于【鼠须管】0.9.13+（请注意Squirrel 1.0 的 Breaking Changes）
 # 位置：~/Library/Rime/squirrel.custom.yaml
 patch:
-  # Emacs owns composition internally; never let the outer frontend compose too.
-  app_options:
-    org.gnu.Emacs:
-      ascii_mode: true
-    # Tinycast's launcher has no internal IME; keep Squirrel in English there too.
-    com.tinycast.app:
-      ascii_mode: true
+  # Hammerspoon alone selects the macOS source. When it chooses Squirrel for
+  # Pi, its WezTerm session must really compose Chinese, not retain ASCII mode.
+  # This native session flag does not affect any other application's session.
+  app_options/com.github.wez.wezterm:
+    ascii_mode: false
+    _pi_chinese_lock: true
 
   #us_keyboard_layout: true                         # 键盘选项：应用美式键盘布局
   #show_notifications_when: growl_is_running        # 状态通知，默认装有Growl时显示，全开(always)/全关(never)

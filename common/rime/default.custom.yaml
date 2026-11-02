@@ -1,0 +1,3 @@
+# System source selection is owned by Hammerspoon.
+# Pi Chinese mode is enforced natively by pi_chinese_lock.lua, not hotkeys.
+patch: {}
