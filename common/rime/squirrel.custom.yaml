@@ -5,6 +5,9 @@ patch:
   app_options:
     org.gnu.Emacs:
       ascii_mode: true
+    # Tinycast's launcher has no internal IME; keep Squirrel in English there too.
+    com.tinycast.app:
+      ascii_mode: true
 
   #us_keyboard_layout: true                         # 键盘选项：应用美式键盘布局
   #show_notifications_when: growl_is_running        # 状态通知，默认装有Growl时显示，全开(always)/全关(never)

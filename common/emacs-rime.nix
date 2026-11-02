@@ -31,7 +31,6 @@ let
   };
 in
 {
-  environment.systemPackages = lib.optionals pkgs.stdenv.hostPlatform.isDarwin [ pkgs.macism ];
   myuser.hm = lib.mkMerge [
     { home.file.".local/share/emacs-rime-native".source = native; }
     (lib.mkIf pkgs.stdenv.hostPlatform.isDarwin {
