@@ -7,7 +7,11 @@ import { execFile } from "node:child_process";
 export function isChineseEditor(focused: boolean, _inlineSuggestions: boolean, text: string): boolean {
   // Inline suggestions still belong to the text editor. Changing IME when
   // that popup blinks on/off interrupts composition. Full selectors lose focus.
-  return focused && !/^[!/]/.test(text.trimStart());
+  const input = text.trimStart();
+  // Dropped absolute paths (/var/.../image.png) are prompt text, not
+  // slash commands. Keep command prefixes/arguments ABC, but allow paths.
+  const slashCommand = /^\/[^\s/\\.]*(?:\s|$)/.test(input);
+  return focused && !input.startsWith("!") && !slashCommand;
 }
 
 export function hasCustomTextFocus(lines: string[], initialFakeCursor: boolean): boolean {

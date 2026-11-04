@@ -14,6 +14,19 @@ test('Chinese only for focused plain-text editor', () => {
   assert.equal(mod.isChineseEditor(true, false, '!ls'), false);
   assert.equal(mod.isChineseEditor(true, false, ''), true);
 });
+test('dropped absolute image paths stay Chinese, slash commands stay ABC', () => {
+  for (const text of [
+    '/var/folders/4d/temp/Screenshot\\ 2026-11-03.png ',
+    '/Users/keke/Pictures/test.png 请分析',
+    '/tmp/image.png', '/image.png', ' /tmp/a.png\n说明',
+  ]) {
+    assert.equal(mod.isChineseEditor(true, false, text), true, text);
+    assert.equal(mod.isChineseEditor(false, false, text), false, text);
+  }
+  for (const text of ['/', '/mo', '/model', '/model gpt', '/reload', '!ls']) {
+    assert.equal(mod.isChineseEditor(true, false, text), false, text);
+  }
+});
 test('custom text focus distinguishes Other answers and quiz notes from menus', () => {
   const fake = '\x1b_pi:fc\x07 \x1b_pi:/fc\x07';
   const focused = '\x1b_pi:c\x07' + fake;
