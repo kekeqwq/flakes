@@ -51,6 +51,9 @@ in
     (texliveBasic.withPackages (
       ps: with ps; [
         latex-bin
+        dvisvgm # Org LaTeX SVG previews (ordinary Org and Python notebooks).
+        amsmath
+        amsfonts
         xetex
         latexmk
         fontspec

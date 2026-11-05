@@ -22,6 +22,15 @@
           },
           "mouse_flip_vertical_wheel" : true,
           "ignore" : false
+        },
+        {
+          "identifiers" : {
+            "product_id" : 43532,
+            "is_keyboard" : true,
+            "is_pointing_device" : true,
+            "vendor_id" : 43670
+          },
+          "ignore" : false
         }
       ],
       "complex_modifications" : {
