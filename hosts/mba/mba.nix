@@ -136,6 +136,8 @@ in
   system.activationScripts.postActivation.text = ''
     echo "Configuring default application handlers via duti..." >&2
     launchctl asuser "$(${pkgs.coreutils}/bin/id -u ${config.myuser.name})" sudo -u ${config.myuser.name} --set-home ${pkgs.duti}/bin/duti ${dutiConfig}
+    # keke is not a nix-darwin-created user, so users.users.shell is not applied.
+    dscl . -create /Users/${config.myuser.name} UserShell /run/current-system/sw/bin/fish
   '';
   fonts.packages = with pkgs; [
     lxgw-wenkai # Org-only monospaced Chinese, keeping the original text size.

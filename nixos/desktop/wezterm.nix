@@ -54,6 +54,7 @@
       if wezterm.target_triple == "aarch64-apple-darwin" then
         config.color_scheme = scheme_for_appearance(wezterm.gui.get_appearance())
         config.font_size = 16
+        config.default_prog = { "/run/current-system/sw/bin/fish", "-l" }
       end
 
       if wezterm.target_triple == "x86_64-unknown-linux-gnu" then
