@@ -89,6 +89,7 @@ in
     nodejs # JavaScript runtime for PyExecJS.
     (python3.withPackages (
       ps: with ps; [
+        httpx
         jsonpath
         curl-cffi
         beautifulsoup4
