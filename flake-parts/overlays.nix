@@ -1,4 +1,7 @@
-{ self, inputs, ... }:
+{ inputs, ... }:
 {
-  flake.overlays.default = import ../pkgs;
+  flake.overlays.default = inputs.nixpkgs.lib.composeManyExtensions [
+    (import ../pkgs)
+    inputs.kikieye.overlays.default
+  ];
 }

@@ -1,6 +1,8 @@
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable-small";
+    # Keep the app's tested Swift/SDK toolchain pinned independently.
+    kikieye.url = "github:kekeqwq/kikieye";
     flake-parts = {
       url = "github:hercules-ci/flake-parts";
       inputs.nixpkgs-lib.follows = "nixpkgs";

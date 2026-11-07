@@ -183,6 +183,7 @@ in
     ];
   };
   environment.systemPackages = with pkgs; [
+    kikieye
     _7zz
     iina
     mihomo

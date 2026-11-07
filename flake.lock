@@ -224,6 +224,24 @@
         "type": "github"
       }
     },
+    "kikieye": {
+      "inputs": {
+        "nixpkgs": "nixpkgs"
+      },
+      "locked": {
+        "lastModified": 1794064254,
+        "narHash": "sha256-LSi5TNxj4meSEZLq/l58xTHqL3SPNqRf40A93s3MQvc=",
+        "owner": "kekeqwq",
+        "repo": "kikieye",
+        "rev": "a3e182b344c7d1e4d85c0b665b0ab879a9273534",
+        "type": "github"
+      },
+      "original": {
+        "owner": "kekeqwq",
+        "repo": "kikieye",
+        "type": "github"
+      }
+    },
     "nix-github-actions": {
       "inputs": {
         "nixpkgs": [
@@ -265,11 +283,11 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1793989132,
-        "narHash": "sha256-P3+Io/gmeNKY+dFxPX9nZpkHBpHwUVePnE1gkNJJQ7E=",
+        "lastModified": 1794041552,
+        "narHash": "sha256-MVSrPp7q0OSbEsr2N8NWHrc0+MfIQS1r9TgFxnd3jXM=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "0dea955d867a80bdea211f4e5d8db5222d945613",
+        "rev": "085af13c1607f4f73ab1e7a51071faf6577a7e87",
         "type": "github"
       },
       "original": {
@@ -291,6 +309,22 @@
       "original": {
         "owner": "nixos",
         "ref": "nixpkgs-26.05-darwin",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "nixpkgs_2": {
+      "locked": {
+        "lastModified": 1793989132,
+        "narHash": "sha256-P3+Io/gmeNKY+dFxPX9nZpkHBpHwUVePnE1gkNJJQ7E=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "0dea955d867a80bdea211f4e5d8db5222d945613",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixos-unstable-small",
         "repo": "nixpkgs",
         "type": "github"
       }
@@ -331,8 +365,9 @@
         "flake-parts": "flake-parts",
         "home-manager": "home-manager",
         "jovian": "jovian",
+        "kikieye": "kikieye",
         "nix-homebrew": "nix-homebrew",
-        "nixpkgs": "nixpkgs",
+        "nixpkgs": "nixpkgs_2",
         "pi": "pi",
         "treefmt-nix": "treefmt-nix_3"
       }
