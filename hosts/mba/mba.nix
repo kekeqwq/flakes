@@ -184,6 +184,7 @@ in
   };
   environment.systemPackages = with pkgs; [
     kikieye
+    kikinavmap
     _7zz
     iina
     mihomo

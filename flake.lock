@@ -242,6 +242,24 @@
         "type": "github"
       }
     },
+    "kikinavmap": {
+      "inputs": {
+        "nixpkgs": "nixpkgs_2"
+      },
+      "locked": {
+        "lastModified": 1794065577,
+        "narHash": "sha256-w8Yp7jcJcq2y1hMmc9p5HtI6UHUzzzHnyWMWGoxounA=",
+        "owner": "kekeqwq",
+        "repo": "KikiNavMap",
+        "rev": "a9c8a73d48add7dbeff647a576102e00949dd8d9",
+        "type": "github"
+      },
+      "original": {
+        "owner": "kekeqwq",
+        "repo": "KikiNavMap",
+        "type": "github"
+      }
+    },
     "nix-github-actions": {
       "inputs": {
         "nixpkgs": [
@@ -315,6 +333,22 @@
     },
     "nixpkgs_2": {
       "locked": {
+        "lastModified": 1794041552,
+        "narHash": "sha256-MVSrPp7q0OSbEsr2N8NWHrc0+MfIQS1r9TgFxnd3jXM=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "085af13c1607f4f73ab1e7a51071faf6577a7e87",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixos-unstable-small",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "nixpkgs_3": {
+      "locked": {
         "lastModified": 1793989132,
         "narHash": "sha256-P3+Io/gmeNKY+dFxPX9nZpkHBpHwUVePnE1gkNJJQ7E=",
         "owner": "NixOS",
@@ -366,8 +400,9 @@
         "home-manager": "home-manager",
         "jovian": "jovian",
         "kikieye": "kikieye",
+        "kikinavmap": "kikinavmap",
         "nix-homebrew": "nix-homebrew",
-        "nixpkgs": "nixpkgs_2",
+        "nixpkgs": "nixpkgs_3",
         "pi": "pi",
         "treefmt-nix": "treefmt-nix_3"
       }
