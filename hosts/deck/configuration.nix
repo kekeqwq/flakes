@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ config, ... }:
 
 {
   # Avoid memory/thread exhaustion when building the desktop stack on the Deck.
@@ -7,9 +7,12 @@
     cores = 4;
   };
 
-  # Core
+  my.desktop.enable = true;
+  my.desktop.niri.extraConfig = builtins.readFile ./outputs.kdl;
+
+  # Jovian owns the login/session launcher on this hardware.
+  services.greetd.enable = false;
   jovian.devices.steamdeck.enable = true;
-  programs.steam.enable = true;
   boot.zfs.devNodes = "/dev/disk/by-id/nvme-WD_PC_SN740_SDDPTQD-1T00_230255456613-part2";
   ## If only one sensitive zvol is encrypted, then this option prevents automatic decryption on boot.
   boot.zfs.requestEncryptionCredentials = false;
@@ -18,21 +21,8 @@
   # Network
   networking.hostName = "deck";
   networking.hostId = "00bab10d";
-  networking.networkmanager.enable = true;
   networking.firewall.enable = false;
 
-  myuser.name = "keke";
-  myuser.users = {
-    isNormalUser = true;
-    extraGroups = [
-      "wheel"
-      "networkmanager"
-      "video"
-      "audio"
-      "render"
-      "input"
-    ];
-  };
   services = {
     logind.settings.Login = {
       HandlePowerKey = "ignore";
@@ -73,9 +63,5 @@
     credentials_file = "/home/keke/.config/sunshine/sunshine_state.json";
   };
 
-  #TODO: fix sound issue in minimal system
-  environment.pathsToLink = [ "/share/alsa/ucm2" ];
-
-  myuser.hm.home.stateVersion = "24.11";
   system.stateVersion = "24.11";
 }

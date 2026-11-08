@@ -1,9 +1,6 @@
 _: {
-  imports = [
-    ./mba.nix
-    ./input-method.nix
-    ../../nixos/desktop/apps.nix
-    ../../nixos/desktop/wezterm.nix
-    ../../nixos/desktop/obsidian.nix
-  ];
+  myuser.users.home = "/Users/keke";
+  myuser.hm.home.stateVersion = "25.11";
+  networking.hostName = "mba";
+  system.stateVersion = 6;
 }

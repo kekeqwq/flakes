@@ -52,13 +52,14 @@ self: super: {
   });
 
   qbittorrent = super.qbittorrent.overrideAttrs (o: {
-    version = "5.12.1.10";
-    pname = "qbittorrent-enhamced";
+    version = "5.2.4.10-unstable-2026-10-10";
+    pname = "qbittorrent-enhanced";
     src = super.fetchFromGitHub {
       repo = "qBittorrent-Enhanced-Edition";
       owner = "c0re100";
-      rev = "4f3a99a526f461fe49d8dc29f164600eb239eeb6";
-      sha256 = "sha256-Q3gipRgZCzihKUQZZmETT65AUSEUfgj9dFxZFybq258=";
+      # Upstream's active default branch is v5_2_x, not the abandoned master.
+      rev = "e883083b1154cfbb9022bdee66b119518eef6b4e";
+      hash = "sha256-Hx4VNxP0D3LMtkaHspGbcGlusqVwT0ze/zOizxv9HxI=";
     };
   });
 

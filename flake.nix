@@ -4,10 +4,6 @@
     # Keep the app's tested Swift/SDK toolchain pinned independently.
     kikieye.url = "github:kekeqwq/kikieye";
     kikinavmap.url = "github:kekeqwq/KikiNavMap";
-    flake-parts = {
-      url = "github:hercules-ci/flake-parts";
-      inputs.nixpkgs-lib.follows = "nixpkgs";
-    };
     home-manager = {
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -32,7 +28,6 @@
     pi = {
       url = "github:lukasl-dev/pi.nix";
       inputs.nixpkgs.follows = "nixpkgs";
-      inputs.flake-parts.follows = "flake-parts";
     };
     # Eero Alvar's current learning system. These repos have no flake.nix.
     # Revisions are the verified HEADs of 2026-08-25; flake.lock pins them.
@@ -51,12 +46,91 @@
   };
 
   outputs =
-    inputs@{ flake-parts, ... }:
-    flake-parts.lib.mkFlake { inherit inputs; } {
+    inputs@{ self, nixpkgs, ... }:
+    let
+      lib = nixpkgs.lib;
       systems = [
         "x86_64-linux"
         "aarch64-darwin"
       ];
-      imports = [ ./flake-parts ];
+      forAllSystems = lib.genAttrs systems;
+      pkgsFor = forAllSystems (system: import nixpkgs { inherit system; });
+      treefmtFor = forAllSystems (
+        system: inputs.treefmt-nix.lib.evalModule pkgsFor.${system} ./treefmt.nix
+      );
+
+      mkNixos =
+        {
+          system ? "x86_64-linux",
+          modules ? [ ],
+        }:
+        lib.nixosSystem {
+          inherit system;
+          specialArgs = { inherit inputs; };
+          modules = [ self.nixosModules.default ] ++ modules;
+        };
+      mkDarwin =
+        {
+          system ? "aarch64-darwin",
+          modules ? [ ],
+        }:
+        inputs.darwin.lib.darwinSystem {
+          inherit system;
+          pkgs = import nixpkgs {
+            inherit system;
+            config.allowUnfree = true;
+            overlays = [ self.overlays.default ];
+          };
+          specialArgs = { inherit inputs; };
+          modules = [
+            inputs.home-manager.darwinModules.home-manager
+            inputs.nix-homebrew.darwinModules.nix-homebrew
+            ./macOS/private
+          ]
+          ++ modules;
+        };
+    in
+    {
+      overlays.default = lib.composeManyExtensions [
+        (import ./pkgs)
+        inputs.kikieye.overlays.default
+        inputs.kikinavmap.overlays.default
+        inputs.spotx-nix.overlays.default
+      ];
+
+      nixosModules = {
+        default = {
+          _module.args.inputs = inputs;
+          imports = [
+            inputs.home-manager.nixosModules.home-manager
+            ./NixOS
+          ];
+          nixpkgs = {
+            config.allowUnfree = true;
+            overlays = [ self.overlays.default ];
+          };
+        };
+        desktop = ./NixOS/desktop;
+        server = ./NixOS/server;
+      };
+
+      nixosConfigurations.deck = mkNixos { modules = [ ./hosts/deck ]; };
+      darwinConfigurations.mba = mkDarwin { modules = [ ./hosts/mba ]; };
+
+      formatter = forAllSystems (system: treefmtFor.${system}.config.build.wrapper);
+      checks = forAllSystems (
+        system:
+        {
+          treefmt = treefmtFor.${system}.config.build.check self;
+        }
+        // lib.optionalAttrs (system == "x86_64-linux") {
+          desktop-boundaries = import ./tests/desktop.nix {
+            inherit inputs;
+            pkgs = pkgsFor.${system};
+            baseModule = self.nixosModules.default;
+            deck = self.nixosConfigurations.deck;
+          };
+        }
+      );
     };
 }
