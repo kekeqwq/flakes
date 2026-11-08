@@ -82,6 +82,10 @@
   3. 涉及共享层/路径移动时，对 macOS 配置进行求值检查。
   4. 检查 Deck 的系统包、Home Manager 包、磁盘、内核、用户、Niri
      和 Sunshine 等未意外丢失。
+- 当前锁定的 nix-darwin 的 `darwin-rebuild check` 不是安全 dry-run：
+  激活脚本的 `env -i` shebang 会清除 `checkActivation`，导致真实激活。
+  禁止将它当只读检查；按 `macOS/private/README.md` 显式调用 Bash 并保留
+  `checkActivation=1`。仅在明确需要激活时使用 `switch`。
 - `build`、`test`、`switch` 的结果必须区分。求值成功不代表构建成功；
   外部下载失败不代表已修复。未经确认，不进行破坏性磁盘操作或自动
   切换桌面会话。只有用户明确要求后再进行虚拟机复现测试。
