@@ -4,5 +4,6 @@
     (import ../pkgs)
     inputs.kikieye.overlays.default
     inputs.kikinavmap.overlays.default
+    inputs.spotx-nix.overlays.default
   ];
 }

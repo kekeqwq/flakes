@@ -1,17 +1,14 @@
 self: super: {
   xrock = super.callPackage ./xrock { };
 
-  # PR: https://github.com/NixOS/nixpkgs/pull/552646 (待 PR 合并后删除)
-  localsend-cli = super.callPackage ./localsend-cli { };
-
   emacs-head = super.emacs.overrideAttrs (old: {
     pname = "emacs-head";
-    version = "2026-11-01";
+    version = "2026-11-07";
     src = super.fetchFromGitHub {
       owner = "emacs-mirror";
       repo = "emacs";
-      rev = "9008bf64c3375f63620d9d6f6dc31908b68bf0a0";
-      hash = "sha256-SrgYJJcVwd3ZQC5s2RhP1UQNTOqGDJRX3274Dkhq15o=";
+      rev = "2f9a4fdea39a17f2f76bcd0759d8368e7275d8a0";
+      hash = "sha256-s9crR6mCD8q8+H1SktkYfNI06BkpHCzQnnb047mY8r8=";
     };
     patches =
       builtins.filter (

@@ -25,9 +25,9 @@ let
       asar extract "$resources/obsidian.asar" obsidian-src
       substituteInPlace obsidian-src/main.js \
         --replace-fail 'backgroundColor:"#00000000"' 'transparent:!0,backgroundColor:"#00000000"' \
-        --replace-fail 'Y[t]=f;' 'f.setWindowButtonVisibility(!1),Y[t]=f;'
+        --replace-fail 'X[t]=b;' 'b.setWindowButtonVisibility(!1),X[t]=b;'
       substituteInPlace obsidian-src/app.js \
-        --replace-fail 't?e.setVibrancy("sidebar"):e.setVibrancy(null)' 'e.setVibrancy(null)'
+        --replace-fail 't?o.setVibrancy("sidebar"):o.setVibrancy(null)' 'o.setVibrancy(null)'
       asar pack obsidian-src "$resources/obsidian.asar"
 
       # Cached self-updates must not bypass the Nix-patched app.

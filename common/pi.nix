@@ -17,8 +17,8 @@ let
   # launched with --no-extensions must keep their restricted loadout. This
   # package publishes loopback account routes for those children itself.
   multiAccountSrc = pkgs.fetchzip {
-    url = "https://registry.npmjs.org/pi-multi-account/-/pi-multi-account-1.26.0.tgz";
-    hash = "sha256-+WAfwuqRK23BQF2xraasEPGbyrsB72ysxpAYz4ezLXg=";
+    url = "https://registry.npmjs.org/pi-multi-account/-/pi-multi-account-1.28.1.tgz";
+    hash = "sha256-TUjGG5hi83voCw/pek2NzvD/z4zKbChl4Rbv16MDDFg=";
   };
   multiAccountNpmSrc = pkgs.runCommand "pi-multi-account-npm-src" { } ''
     mkdir $out
@@ -27,11 +27,11 @@ let
   '';
   multiAccountNpmDeps = pkgs.fetchNpmDeps {
     src = multiAccountNpmSrc;
-    hash = "sha256-bk80QzBagPIkXsceer1CDvC4D6um/W/93cOpx3Zil4I=";
+    hash = "sha256-qhrOjH2KfaHYlLJ4uR68HhJyiIw514we/4iveoox18E=";
   };
   multiAccount = pkgs.stdenv.mkDerivation {
     pname = "pi-multi-account";
-    version = "1.26.0";
+    version = "1.28.1";
     src = multiAccountSrc;
     nativeBuildInputs = [
       pkgs.nodejs

@@ -6,5 +6,7 @@
   environment.systemPackages = with pkgs; [
     mpv
     scrcpy
+    # Builds Spotify, then applies SpotX. No existing install is required.
+    spotify-spotx
   ];
 }
