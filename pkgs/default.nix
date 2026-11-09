@@ -3,12 +3,12 @@ self: super: {
 
   emacs-head = super.emacs.overrideAttrs (old: {
     pname = "emacs-head";
-    version = "2026-11-07";
+    version = "2026-11-08";
     src = super.fetchFromGitHub {
       owner = "emacs-mirror";
       repo = "emacs";
-      rev = "2f9a4fdea39a17f2f76bcd0759d8368e7275d8a0";
-      hash = "sha256-s9crR6mCD8q8+H1SktkYfNI06BkpHCzQnnb047mY8r8=";
+      rev = "4e520d63f9d6e148f0c3fd5d5e2448dd9c4334f2";
+      hash = "sha256-n/auZ0sexvPCoU1dhtn4Zsb9O2lraLyIYfHVLr19xE8=";
     };
     patches =
       builtins.filter (

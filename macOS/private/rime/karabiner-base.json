@@ -1,98 +1,94 @@
 {
-  "profiles" : [
+  "profiles": [
     {
-      "devices" : [
+      "devices": [
         {
-          "identifiers" : {
-            "product_id" : 22,
-            "is_keyboard" : true,
-            "is_pointing_device" : true,
-            "vendor_id" : 1278
+          "identifiers": {
+            "product_id": 22,
+            "is_keyboard": true,
+            "is_pointing_device": true,
+            "vendor_id": 1278
           },
-          "disable_built_in_keyboard_if_exists" : true,
-          "ignore" : false,
-          "mouse_flip_horizontal_wheel" : true
+          "disable_built_in_keyboard_if_exists": true,
+          "ignore": false,
+          "mouse_flip_horizontal_wheel": true
         },
         {
-          "identifiers" : {
-            "product_id" : 6873,
-            "is_keyboard" : true,
-            "is_pointing_device" : true,
-            "vendor_id" : 2821
+          "identifiers": {
+            "product_id": 6873,
+            "is_keyboard": true,
+            "is_pointing_device": true,
+            "vendor_id": 2821
           },
-          "mouse_flip_vertical_wheel" : true,
-          "ignore" : false
+          "mouse_flip_vertical_wheel": true,
+          "ignore": false
         },
         {
-          "identifiers" : {
-            "product_id" : 43532,
-            "is_keyboard" : true,
-            "is_pointing_device" : true,
-            "vendor_id" : 43670
+          "identifiers": {
+            "product_id": 43532,
+            "is_keyboard": true,
+            "is_pointing_device": true,
+            "vendor_id": 43670
           },
-          "ignore" : false
+          "ignore": false
         }
       ],
-      "complex_modifications" : {
-        "rules" : [
+      "complex_modifications": {
+        "rules": [
           {
-            "manipulators" : [
+            "manipulators": [
               {
-                "to" : [
+                "to": [
                   {
-                    "key_code" : "left_command"
+                    "key_code": "left_command"
                   }
                 ],
-                "type" : "basic",
-                "conditions" : [
+                "type": "basic",
+                "conditions": [
                   {
-                    "type" : "variable_if",
-                    "name" : "kikibridge",
-                    "value" : 1
+                    "type": "variable_if",
+                    "name": "kikibridge",
+                    "value": 1
                   }
                 ],
-                "from" : {
-                  "key_code" : "left_command",
-                  "modifiers" : {
-                    "optional" : [
-                      "any"
-                    ]
+                "from": {
+                  "key_code": "left_command",
+                  "modifiers": {
+                    "optional": ["any"]
                   }
                 }
               },
               {
-                "to" : [
+                "to": [
                   {
-                    "key_code" : "right_command"
+                    "key_code": "right_command"
                   }
                 ],
-                "type" : "basic",
-                "conditions" : [
+                "type": "basic",
+                "conditions": [
                   {
-                    "type" : "variable_if",
-                    "name" : "kikibridge",
-                    "value" : 1
+                    "type": "variable_if",
+                    "name": "kikibridge",
+                    "value": 1
                   }
                 ],
-                "from" : {
-                  "key_code" : "right_command",
-                  "modifiers" : {
-                    "optional" : [
-                      "any"
-                    ]
+                "from": {
+                  "key_code": "right_command",
+                  "modifiers": {
+                    "optional": ["any"]
                   }
                 }
               }
             ],
-            "description" : "KikiBridge: Command 只当 Command"
+            "description": "KikiBridge: Command 只当 Command"
           }
         ]
       },
-      "virtual_hid_keyboard" : {
-        "keyboard_type_v2" : "ansi"
+      "virtual_hid_keyboard": {
+        "keyboard_type_v2": "ansi"
       },
-      "selected" : true,
-      "name" : "Default profile"
+      "selected": true,
+      "name": "Default profile"
     }
   ]
 }

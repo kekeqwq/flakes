@@ -1,10 +1,17 @@
-import { CustomEditor, type ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import {
+  CustomEditor,
+  type ExtensionAPI,
+} from "@earendil-works/pi-coding-agent";
 import { mkdirSync, renameSync, unlinkSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { execFile } from "node:child_process";
 
-export function isChineseEditor(focused: boolean, _inlineSuggestions: boolean, text: string): boolean {
+export function isChineseEditor(
+  focused: boolean,
+  _inlineSuggestions: boolean,
+  text: string,
+): boolean {
   // Inline suggestions still belong to the text editor. Changing IME when
   // that popup blinks on/off interrupts composition. Full selectors lose focus.
   const input = text.trimStart();
@@ -14,9 +21,15 @@ export function isChineseEditor(focused: boolean, _inlineSuggestions: boolean, t
   return focused && !input.startsWith("!") && !slashCommand;
 }
 
-export function hasCustomTextFocus(lines: string[], initialFakeCursor: boolean): boolean {
-  return lines.some(line => line.includes("\x1b_pi:c\x07") ||
-    (!initialFakeCursor && line.includes("\x1b_pi:fc\x07")));
+export function hasCustomTextFocus(
+  lines: string[],
+  initialFakeCursor: boolean,
+): boolean {
+  return lines.some(
+    (line) =>
+      line.includes("\x1b_pi:c\x07") ||
+      (!initialFakeCursor && line.includes("\x1b_pi:fc\x07")),
+  );
 }
 
 // Report UI state, never change the system input source here. Only metadata is
@@ -38,22 +51,42 @@ export default function inputMethod(pi: ExtensionAPI) {
 
   function report(force = false) {
     if (!enabled) return;
-    const editing = !tuiStopped && (textDialogs > 0 || customTextEditors.size > 0 || (!!editor && !suspended &&
-      isChineseEditor(editor.focused, editor.isShowingAutocomplete(), editor.getText())));
+    const editing =
+      !tuiStopped &&
+      (textDialogs > 0 ||
+        customTextEditors.size > 0 ||
+        (!!editor &&
+          !suspended &&
+          isChineseEditor(
+            editor.focused,
+            editor.isShowingAutocomplete(),
+            editor.getText(),
+          )));
     if (!force && last === String(editing)) return;
     last = String(editing);
     try {
       mkdirSync(directory, { recursive: true, mode: 0o700 });
-      writeFileSync(temporary, JSON.stringify({ version: 1, pid: process.pid,
-        editing, updated: Date.now() / 1000,
-        weztermPane: process.env.WEZTERM_PANE ?? null,
-        tmuxPane: process.env.TMUX_PANE ?? null,
-        socket: process.env.TMUX?.split(",")[0] ?? null }), { mode: 0o600 });
+      writeFileSync(
+        temporary,
+        JSON.stringify({
+          version: 1,
+          pid: process.pid,
+          editing,
+          updated: Date.now() / 1000,
+          weztermPane: process.env.WEZTERM_PANE ?? null,
+          tmuxPane: process.env.TMUX_PANE ?? null,
+          socket: process.env.TMUX?.split(",")[0] ?? null,
+        }),
+        { mode: 0o600 },
+      );
       renameSync(temporary, file);
-    } catch { /* An absent/unavailable manager must never break the editor. */ }
+    } catch {
+      /* An absent/unavailable manager must never break the editor. */
+    }
   }
   function refreshTmux() {
-    if (process.env.TMUX) execFile("input-method-tmux-update", [], { timeout: 1500 }, () => {});
+    if (process.env.TMUX)
+      execFile("input-method-tmux-update", [], { timeout: 1500 }, () => {});
   }
   function cleanup() {
     enabled = false;
@@ -65,14 +98,26 @@ export default function inputMethod(pi: ExtensionAPI) {
     customTextEditors.clear();
     if (timer) clearInterval(timer);
     timer = undefined;
-    for (const path of [file, temporary]) { try { unlinkSync(path); } catch {} }
+    for (const path of [file, temporary]) {
+      try {
+        unlinkSync(path);
+      } catch {}
+    }
     refreshTmux();
   }
 
   pi.on("session_start", (_event, ctx) => {
-    if (process.platform !== "darwin" || ctx.mode !== "tui" || !ctx.hasUI ||
-        (!process.env.WEZTERM_PANE && !process.env.TMUX)) return;
-    if (enabled) { process.removeListener("exit", cleanup); cleanup(); }
+    if (
+      process.platform !== "darwin" ||
+      ctx.mode !== "tui" ||
+      !ctx.hasUI ||
+      (!process.env.WEZTERM_PANE && !process.env.TMUX)
+    )
+      return;
+    if (enabled) {
+      process.removeListener("exit", cleanup);
+      cleanup();
+    }
     enabled = true;
     suspended = false;
     last = "";
@@ -83,14 +128,24 @@ export default function inputMethod(pi: ExtensionAPI) {
     const oldInput = ui.input;
     const oldCustom = ui.custom;
     const dialogEditor: typeof ui.editor = async (...args) => {
-      textDialogs++; report();
-      try { return await oldEditor.apply(ui, args); }
-      finally { textDialogs--; report(); }
+      textDialogs++;
+      report();
+      try {
+        return await oldEditor.apply(ui, args);
+      } finally {
+        textDialogs--;
+        report();
+      }
     };
     const dialogInput: typeof ui.input = async (...args) => {
-      textDialogs++; report();
-      try { return await oldInput.apply(ui, args); }
-      finally { textDialogs--; report(); }
+      textDialogs++;
+      report();
+      try {
+        return await oldInput.apply(ui, args);
+      } finally {
+        textDialogs--;
+        report();
+      }
     };
     const dialogCustom: typeof ui.custom = async (factory, options) => {
       let component: Awaited<ReturnType<typeof factory>> | undefined;
@@ -101,12 +156,14 @@ export default function inputMethod(pi: ExtensionAPI) {
           component = element;
           const originalRender = element.render;
           let initialFakeCursor: boolean | undefined;
-          element.render = function(width: number) {
+          element.render = function (width: number) {
             const lines = originalRender.call(element, width);
             // Public cursor marker covers properly focused fields (quiz notes).
             // Older widgets omit Editor.focused: their newly appearing fake
             // cursor still identifies entering Other/custom-answer mode.
-            const fakeCursor = lines.some(line => line.includes("\x1b_pi:fc\x07"));
+            const fakeCursor = lines.some((line) =>
+              line.includes("\x1b_pi:fc\x07"),
+            );
             initialFakeCursor ??= fakeCursor;
             const textFocus = hasCustomTextFocus(lines, initialFakeCursor);
             if (textFocus) customTextEditors.add(element);
@@ -114,7 +171,9 @@ export default function inputMethod(pi: ExtensionAPI) {
             report();
             return lines;
           };
-          restoreRender = () => { element.render = originalRender; };
+          restoreRender = () => {
+            element.render = originalRender;
+          };
           return element;
         }, options);
       } finally {
@@ -137,10 +196,15 @@ export default function inputMethod(pi: ExtensionAPI) {
       const oldStop = tui.stop;
       const oldStart = tui.start;
       const stop: typeof tui.stop = (...args) => {
-        tuiStopped = true; report(); return oldStop.apply(tui, args);
+        tuiStopped = true;
+        report();
+        return oldStop.apply(tui, args);
       };
       const start: typeof tui.start = (...args) => {
-        const value = oldStart.apply(tui, args); tuiStopped = false; report(); return value;
+        const value = oldStart.apply(tui, args);
+        tuiStopped = false;
+        report();
+        return value;
       };
       tui.stop = stop;
       tui.start = start;
@@ -155,7 +219,10 @@ export default function inputMethod(pi: ExtensionAPI) {
           Object.defineProperty(this, "focused", {
             configurable: true,
             get: () => focus,
-            set: (value: boolean) => { focus = value; report(); },
+            set: (value: boolean) => {
+              focus = value;
+              report();
+            },
           });
         }
         render(width: number) {
@@ -184,5 +251,8 @@ export default function inputMethod(pi: ExtensionAPI) {
     timer.unref();
     process.once("exit", cleanup);
   });
-  pi.on("session_shutdown", () => { process.removeListener("exit", cleanup); cleanup(); });
+  pi.on("session_shutdown", () => {
+    process.removeListener("exit", cleanup);
+    cleanup();
+  });
 }
