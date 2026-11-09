@@ -1,8 +1,11 @@
 {
   lib,
+  pkgs,
   ...
 }:
 {
+  fonts.packages = [ pkgs.dejavu_fonts ];
+
   myuser.hm.programs.wezterm = {
     enable = true;
 
@@ -13,6 +16,8 @@
       font = lib.generators.mkLuaInline ''
         wezterm.font_with_fallback({
                 "MonoLisa Nasy",
+                -- Shared Nix-managed fallback for Starship arrows and symbols.
+                "DejaVu Sans Mono",
                 "LXGW WenKai Mono",
               })'';
       window_background_opacity = 0.8;
