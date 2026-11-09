@@ -1,6 +1,41 @@
 { pkgs, ... }:
-
+let
+  applyTheme = pkgs.writeShellScript "tmux-apply-catppuccin" ''
+    set -e
+    export PATH="${pkgs.tmux}/bin:/usr/bin:/bin:$PATH"
+    mode=''${1:-}
+    if [ -z "$mode" ]; then
+      if [ "$(uname)" = Darwin ]; then
+        mode=$(defaults read -g AppleInterfaceStyle 2>/dev/null || printf Light)
+      else
+        mode=Dark
+      fi
+    fi
+    case "$mode" in
+      [Dd]ark|dark)
+        blue=#89b4fa
+        on_blue=#1e1e2e
+        ;;
+      *)
+        blue=#7287fd
+        on_blue=#eff1f5
+        ;;
+    esac
+    tmux set -g status-style "bg=default,fg=default"
+    tmux set -g status-left "#[fg=$on_blue,bg=$blue,bold] #S #[bg=default] "
+    tmux set -g status-right "#[fg=$blue]"'#{?pane_in_mode,COPY ,}#{?client_prefix,PREFIX ,}#{?window_zoomed_flag,ZOOM ,}'"#[fg=brightblack]#h "
+    tmux set -g window-status-format "#[fg=brightblack] #I:#W "
+    tmux set -g window-status-current-format "#[fg=$blue,bold] #I:#W "
+    tmux set -g pane-border-style "fg=brightblack"
+    tmux set -g pane-active-border-style "fg=$blue"
+    tmux set -g message-style "bg=default,fg=$blue"
+    tmux set -g message-command-style "bg=default,fg=$blue"
+    tmux set -g mode-style "bg=$blue,fg=$on_blue"
+    tmux set -g clock-mode-colour "$blue" || true
+  '';
+in
 {
+  myuser.hm.xdg.configFile."tmux/apply-theme".source = applyTheme;
   myuser.hm.programs.tmux = {
     enable = true;
     shell = "${pkgs.fish}/bin/fish";
@@ -97,18 +132,10 @@
       set -g set-titles on
       set -g set-titles-string '#h:#W'
 
-      # Omarchy Theme
-      set -g status-style "bg=default,fg=default"
-      set -g status-left "#[fg=black,bg=blue,bold] #S #[bg=default] "
-      set -g status-right "#[fg=blue]#{?pane_in_mode,COPY ,}#{?client_prefix,PREFIX ,}#{?window_zoomed_flag,ZOOM ,}#[fg=brightblack]#h "
-      set -g window-status-format "#[fg=brightblack] #I:#W "
-      set -g window-status-current-format "#[fg=blue,bold] #I:#W "
-      set -g pane-border-style "fg=brightblack"
-      set -g pane-active-border-style "fg=blue"
-      set -g message-style "bg=default,fg=blue"
-      set -g message-command-style "bg=default,fg=blue"
-      set -g mode-style "bg=blue,fg=black"
-      setw -g clock-mode-colour blue
+      # Named theme colours do not follow `theme light`: tmux only uses the
+      # light palette when the client reports a light background, which WezTerm
+      # does not. Apply explicit Catppuccin hex instead.
+      run-shell ${applyTheme}
     '';
   };
 }

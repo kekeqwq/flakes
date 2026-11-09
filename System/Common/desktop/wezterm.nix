@@ -10,7 +10,11 @@
     settings = {
       initial_cols = 120;
       initial_rows = 28;
-      font = lib.generators.mkLuaInline ''wezterm.font("MonoLisa Nasy")'';
+      font = lib.generators.mkLuaInline ''
+        wezterm.font_with_fallback({
+                "MonoLisa Nasy",
+                "LXGW WenKai Mono",
+              })'';
       window_background_opacity = 0.8;
       window_decorations = "RESIZE";
       window_close_confirmation = "NeverPrompt";
@@ -70,17 +74,37 @@
 
       if wezterm.target_triple == "aarch64-apple-darwin"
         or wezterm.target_triple == "x86_64-pc-windows-msvc" then
-        local function sync_appearance(window)
-          local scheme = scheme_for_appearance(window:get_appearance())
-          local overrides = window:get_config_overrides() or {}
-          if overrides.color_scheme == scheme then
+        local last_tmux_theme = nil
+        local last_tmux_sync = 0
+        local function sync_tmux_theme(appearance)
+          if wezterm.target_triple ~= "aarch64-apple-darwin" then return end
+          local theme = appearance:find("Dark") and "dark" or "light"
+          local now = os.time()
+          if now - last_tmux_sync < 5 then
             return
           end
-          overrides.color_scheme = scheme
-          -- bar.wezterm stores a full resolved palette here. Keeping it would
-          -- mask the new scheme; let its reload handler rebuild it instead.
-          overrides.colors = nil
-          window:set_config_overrides(overrides)
+          last_tmux_sync = now
+          local ok, success = pcall(wezterm.run_child_process, {
+            wezterm.home_dir .. "/.config/tmux/apply-theme",
+            theme,
+          })
+          if ok and success then
+            last_tmux_theme = theme
+          end
+        end
+
+        local function sync_appearance(window)
+          local appearance = window:get_appearance()
+          local scheme = scheme_for_appearance(appearance)
+          local overrides = window:get_config_overrides() or {}
+          if overrides.color_scheme ~= scheme or overrides.colors ~= nil then
+            overrides.color_scheme = scheme
+            -- bar.wezterm stores a full resolved palette here. Keeping it would
+            -- mask the new scheme; let its reload handler rebuild it instead.
+            overrides.colors = nil
+            window:set_config_overrides(overrides)
+          end
+          sync_tmux_theme(appearance)
         end
 
         -- Native appearance notifications; the equality guard avoids reload loops.
