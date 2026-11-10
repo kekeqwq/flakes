@@ -91,6 +91,7 @@ in
       ps: with ps; [
         httpx
         jsonpath
+        jsonpath-ng
         curl-cffi
         beautifulsoup4
         openpyxl
