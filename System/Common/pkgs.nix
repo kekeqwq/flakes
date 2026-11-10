@@ -44,8 +44,11 @@ in
     btop
     zip
     stylua
-    prettier # Manual HTML/JSON whole-buffer formatting in Emacs.
-    ruff # Manual Python / Org notebook cell formatting in Emacs.
+    prettier # Emacs: HTML/JSON/JS/TS/CSS/YAML/Markdown formatting.
+    ruff # Emacs: Python / Org notebook cell formatting.
+    shfmt # Emacs: Bash/Shell formatting, including bash-ts-mode.
+    nixfmt # Emacs: Nix formatting.
+    typstyle # Emacs: Typst formatting.
     # XeLaTeX + packages used by resume-master/keke_cv.tex (including local moderncv).
     # Avoid broad collections: their closure exceeds macOS Seatbelt's profile limit.
     (texliveBasic.withPackages (
