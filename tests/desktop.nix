@@ -57,6 +57,10 @@ assert !off.home-manager.users.keke.programs.wezterm.enable;
 assert !off.home-manager.users.keke.programs.obsidian.enable;
 assert !(off.home-manager.users.keke.home.file ? ".local/share/emacs-rime-native");
 assert c.my.desktop.niri.extraConfig == "";
+assert lib.all
+  (font: builtins.elem (toString font) (map toString c.fonts.packages))
+  [ enabled.pkgs.dejavu_fonts enabled.pkgs.lxgw-wenkai enabled.pkgs.nerd-fonts.symbols-only ];
+assert !(builtins.elem (toString disabled.pkgs.lxgw-wenkai) (map toString off.fonts.packages));
 assert lib.all (package: builtins.elem package genericPackages) (homePackages deck);
 pkgs.runCommand "desktop-module-boundaries"
   {

@@ -1,11 +1,8 @@
 {
   lib,
-  pkgs,
   ...
 }:
 {
-  fonts.packages = [ pkgs.dejavu_fonts ];
-
   myuser.hm.programs.wezterm = {
     enable = true;
 
@@ -18,6 +15,8 @@
                 "MonoLisa Nasy",
                 -- Shared Nix-managed fallback for Starship arrows and symbols.
                 "DejaVu Sans Mono",
+                "Symbols Nerd Font Mono",
+                "Noto Sans Symbols 2",
                 "LXGW WenKai Mono",
               })'';
       window_background_opacity = 0.8;

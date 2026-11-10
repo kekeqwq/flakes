@@ -19,6 +19,7 @@
         }
       )
       [
+        ./fonts.nix
         ./apps.nix
         ./emacs.nix
         ./emacs-rime.nix

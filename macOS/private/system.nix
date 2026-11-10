@@ -135,12 +135,6 @@ in
     # keke is not a nix-darwin-created user, so users.users.shell is not applied.
     dscl . -create /Users/${config.myuser.name} UserShell /run/current-system/sw/bin/fish
   '';
-  fonts.packages = with pkgs; [
-    lxgw-wenkai # Org-only monospaced Chinese, keeping the original text size.
-    nerd-fonts.symbols-only # Symbols Nerd Font Mono for stock Doom Modeline icons.
-    # Org Modern's folding triangles U+2BC6 / U+2BC8 are absent from macOS fonts.
-    (noto-fonts.override { variants = [ "Noto Sans Symbols 2" ]; })
-  ];
   environment.systemPackages = with pkgs; [
     kikieye
     kikinavmap

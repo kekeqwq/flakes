@@ -39,8 +39,11 @@ can be reproduced on a fresh host. The following still need separate work:
 
 - `~/.local/share/fonts/` contains manually installed MonoLisa Nasy (normal and
   italic), PingFang, Hiragino Maru Gothic ProN, Source Han Serif SC, and
-  仓耳今楷. Only the declared Noto emoji / Nerd Font symbols are in the desktop's
-  font package list. Fontconfig and WezTerm request the unmanaged fonts today.
+  仓耳今楷. Shared Nix-managed fonts (DejaVu, LXGW WenKai, Nerd Font symbols
+  and Noto Sans Symbols 2) are declared in `System/Common/desktop/fonts.nix`;
+  Linux additionally declares Noto emoji. WezTerm prefers the privately installed
+  MonoLisa Nasy but has explicit shared Nix-managed fallbacks. Fontconfig still
+  requests unmanaged fonts today.
   Audit licensing and package suitable sources before copying them into Nix;
   proprietary font files must not be committed blindly.
 - WezTerm downloads `adriankarlen/bar.wezterm` at runtime; it is not pinned in
