@@ -6,7 +6,7 @@
 
 本文件是长期审计、用户决策与验收记录，不是“已全部修复”的声明。
 
-- 当前范围：整个 flakes 仓库 + macOS 本机；Deck 本地检查待开机。
+- 当前范围：整个 flakes 仓库 + macOS 本机 + Deck 只读审计。macOS 接受系统限制，不追求完全复现；重点为 Deck。
 - 当前状态：首轮盘点中，尚未完成全量深查。下文区分已确认问题和待查项。
 - 配置由 Nix 生成，不代表其字体、插件、脚本、外部服务或用户数据全部可复现。
 - 存在普通配置文件，不等于其中全部是用户定制；需区分默认值、缓存、历史和主动修改。
@@ -219,7 +219,109 @@
 - [ ] 在 Deck 执行 `nix build .#checks.x86_64-linux.desktop-boundaries --no-link`，记录完整结果。
 - [ ] 按用户批准范围完成 Deck 全系统构建/重建并核对包、内核、磁盘、用户、Niri、Sunshine；不擅自切换桌面。
 
-## 5. 每项关闭记录模板
+## 5. Deck 实机首轮结果（2026-11-11）
+
+只读审计，没有安装、重建、删除或同步 Deck 仓库；没有读取 Wi-Fi 密码、私钥、认证令牌或应用数据库内容。两台机器的配置版本不同，必须先区分“旧部署现象”和“当前方案缺陷”。
+
+### D-00 基线与已核实边界
+
+- [x] 已连接 Deck，仓库 `e96ef89` 且工作区干净；Mac 仓库为 `2aad373`。Deck 尚未包含本轮 bar/mpv/MonoLisa 与 Fontconfig 修改，不属于新方案验收。
+- [x] 当前系统 `/nix/store/7hm5nly5av6q277p74y86whvrcf91gjg-nixos-system-deck-26.11.20261110.62c4d39`，内核 `7.2.10-valve1`；系统和用户 `--failed` 均为 0。
+- [x] 扫描 `/etc/systemd/system`：470 个 store 文件/链接、13 个 mask，无普通本地单元；`/etc/systemd/user`：115 个 store 文件/链接，无普通本地单元；用户 `~/.config/systemd/user`：8 个 store 链接。仅表示这些目录未发现外置单元，不保证单元调用链全部可复现。
+- [x] Niri、Waybar、壁纸服务、rofi、GTK/Kvantum、WezTerm、Yazi、tmux 入口指向 Nix store；不能因此略过其外部依赖。
+- [x] 用户/root 的 `nix profile list --json` 均为空 elements；未发现当前 PATH 中的 Flatpak/Brew 安装器；本地仍有旧 flatpak 目录，不据此认定仍装有 Flatpak 应用。
+- [ ] 当前配置同步、完整 Linux build、边界检查与激活尚未执行；仍不能关闭 SCOPE-06。
+
+### D-01 qimgv：已失效的 mpv 路径与本地脚本
+
+- [ ] 状态：已确认，待用户决定。
+- 证据：`~/.config/qimgv/qimgv.conf:36` 的 `mpvBinary` 固定为旧 `/nix/store/dazqdlqksm989z58pf5mwskjqpnrh7aq-mpv-with-scripts-0.41.0/bin/mpv`；实机检查不存在。当前 PATH 另有受管 mpv，但这项设置仍引用旧版本。
+- 同文件还定义调用 `localsend_app` 的脚本；当前命令存在，但脚本和关联快捷键没有声明。主题配置在本地 `theme.conf`。
+- 候选处理：只纳管真正自定义项，下载器/播放器用稳定入口或当前 derivation；不把保存的窗口/浏览状态一并固定。
+- 验收：图片浏览/视频播放与发送脚本均不依赖旧 store 目录，新机器配置可生成。
+
+### D-02 PrismLauncher：已失效的 Java 路径
+
+- [ ] 状态：已确认，待用户决定是否属于复现目标。
+- 证据：`~/.local/share/PrismLauncher/prismlauncher.cfg` 的 `JavaPath` 为 `/nix/store/k4877vrvzk3pf4k44g1r6k454vjs8f17-openjdk-17.0.13+11/bin/java`；实机不存在，当前 shell PATH 也无 java。
+- Launcher 程序受管，但 Java 选择、instances、模组、资源和版本元数据在本地。
+- 候选处理：纳管 Java 运行时及选择规则；游戏实例另行定义固定版本/私有备份；或按用户决定排除整个游戏工作流。
+
+### D-03 Fcitx5 / Rime：程序与词库受管，用户方案外置
+
+- [ ] 状态：已确认，待用户决定。
+- 实际运行 fcitx5；插件/雾凇来源由 `NixOS/desktop/pkgs.nix` 提供。
+- `~/.local/share/fcitx5/rime/default.custom.yaml` 是本地文件：包含 `rime_ice_suggestion:/` 并选择 `double_pinyin_flypy`。若只重建现有系统声明，不会自动恢复这一小鹤双拼选择。
+- `~/.config/fcitx5/config`、`profile`、`conf/classicui.conf` 是本地文件；候选界面选 Catppuccin，但选项本身未声明。当前磁盘 profile 只列 keyboard-us；这不等于已经证明正在运行的内存状态也没有 Rime，需要交互验证。
+- `build/` 是可重建缓存；`rime_ice.userdb`、installation/user 状态是私有训练数据，不公开提交。
+- 候选处理：纳管方案、输入法列表与必要快捷键/候选设置；训练词库单独私有备份。
+
+### D-04 Fastfetch 自定义外置
+
+- [ ] 状态：已确认，待用户决定。
+- `~/.config/fastfetch/config.jsonc` 与 `ascii.txt` 为普通文件，配置直接引用 `~/.config/fastfetch/ascii.txt`，标注 FastCat 来源。
+- 程序受管，新机器会缺失当前展示内容。JSON schema 的网络地址不等于 Fastfetch 每次执行会下载它，不能误报为运行时下载依赖。
+- 候选处理：将配置和 ASCII 图纳管；或接受默认展示。
+
+### D-05 Fish 升级迁移文件
+
+- [ ] 状态：已确认存在，是否保留待用户决定；不是已证实的手工定制。
+- `~/.config/fish/conf.d/fish_frozen_theme.fish` 固定了语法高亮颜色；`fish_frozen_key_bindings.fish` 由 Fish 4.3 升级迁移生成。
+- `config.fish` 本身受管；两个迁移文件不是 Nix 管理。新 home 的表现可能与沿用旧 home 不同。
+- universal 变量中四项 WLR/WAYLAND 设置已在 `hosts/deck/configuration.nix` 声明，不重复算作未纳管依赖。
+- 候选处理：确认当前高亮是否要保留后，再纳管必要变量或使用新版默认值；不擅自删除迁移文件。
+
+### D-06 桌面默认应用关联
+
+- [ ] 状态：已确认，待用户决定。
+- `~/.config/mimeapps.list` 为普通文件，HTTP/HTML 部分指向 Chrome，但 XHTML 和若干关联仍指向 firefox-nightly。
+- 不是 Yazi 的 opener 设置；新机器不会从当前 flake 恢复这份桌面级默认关联。
+- 候选处理：选择明确默认浏览器、图片、视频、PDF 应用后，用 HM mimeApps 声明；不原样保留历史重复项。
+
+### D-07 Dconf 光标偏好与受管值不同
+
+- [ ] 状态：已确认差异，待决定是否处理。
+- 实际 dconf `/org/gnome/desktop/interface/cursor-theme` 为 `Bibata-Original-Ice`，而受管 `~/.icons/default/index.theme` 指向 `Bibata-Modern-Ice`。
+- GTK/Kvantum、图标与暗色设置的受管值已能找到，未设置额外 GNOME font-name。
+- 候选处理：明确所需光标后统一声明；不把 Dconf 整个数据库提交。
+
+### D-08 浏览器插件和学习工作流
+
+- [ ] 状态：已确认扩展本地安装，配置/字典/脚本待脱敏深查。
+- Chrome 检出 Yomitan、asbplayer、Migaku Early Access、Tampermonkey BETA、uBlock Origin Lite、DuckDuckGo、User-Agent Switcher、Google Docs Offline 等；未由当前 flake 完整声明。
+- 程序安装不保证扩展设置、Yomitan 字典、用户脚本和本地音频/API 服务可恢复。账户令牌、站点资料和浏览器数据库不公开纳管。
+- 候选处理：用户决定需保留哪些扩展/配置，再采用固定插件、策略安装、导出配置或私有备份；不复制整个 Chrome profile。
+
+### D-09 `/kk/center` 网页内容外置
+
+- [ ] 状态：实机确认，关联 F-10。
+- 目录存在，含本地 `index.html`（6581 字节），未由当前 flake 提供。原生服务声明只指定 nginx root。
+- 新部署没有这个文件就不会得到当前首页；局域网反向代理还依赖具体设备。
+- 候选处理：用户批准后纳管静态网页，网络地址留在 Deck 主机层。
+
+### D-10 OpenList / Sunshine / 网络的私有恢复
+
+- [ ] **OpenList**：服务 active，工作目录 `/home/keke`，User 未指定（默认 root）；状态实际位于 root 所有的 `~/data/config.json`、`data.db`。未读取内容。账户、挂载和数据库需私有备份，静态配置可另拆。
+- [ ] **Sunshine**：实际运行的是 `/etc/systemd/user/sunshine.service`，使用 store 中生成的 sunshine.conf；不能将 `~/.config/sunshine/sunshine.conf` 当成实际服务配置。用户目录另有 apps.json、配对状态、portal token 和备份；需区分使用中的静态 app 定义、旧配置与私有证书。
+- [ ] **NetworkManager**：sudo 仅盘点文件，发现 2 个连接 profile；未读密码。此前非 root 目录扫描的 0 不代表没有 profile。新机器上网前提需私有恢复或重新连接。
+- [ ] **其他秘密**：`.ssh`、`.gnupg`、`.password-store`、keyrings、Git 凭据、Pi auth/provider 文件存在；这里只记类别，不读取或复制秘密值。
+
+### D-11 游戏、硬件与其他本地状态（待范围决定）
+
+- [ ] **Steam 游戏**：本地有 Steam 运行时、Proton 和游戏的生成 desktop 项；程序启用不等于游戏、存档、Steam 设置和插件自动恢复。用户决定是否排除，不盲目固定下载缓存。
+- [ ] **SteamOS/CEC/Gamescope**：本地 cecd 设置、steamos-manager 状态、gamescope edid.bin 存在；modes.cfg 为空。先查上游服务是否自动生成，不能仅因普通文件就认定需要纳管。
+- [ ] **Weylus**：程序受管，本地 `weylus.toml` 存在，需在用户选择纳管前脱敏检查；访问口令不提交。
+- [ ] **htop / Qt / 文件选择器**：存在本地设置，但未全部确认是用户定制；低优先级盘点，不直接把自动保存状态当缺陷。
+- [ ] **`/opt/containerd`**：root 路径下有 bin/lib 目录，当前 PATH 无 docker/containerd，所扫描 systemd 目录无本地单元。是否残留、是否被其他脚本调用尚未确认；不删除。
+- [ ] **旧备份/目录**：旧 Niri 配置、Downloads/deck.kdl、ranger、旧 Flatpak/Firefox 等目录存在。当前 Niri 加载的是 store 配置；残留文件本身不是复现阻断，不擅自清理。
+
+### D-12 当前字体结果不能代表新方案
+
+- [ ] 旧系统实际以 `/home/keke/.local/share/fonts/MonoLisaNasyNormal.ttf` 渲染西文；`sans-serif:charset=4e2d` 和 `:charset=9ad4` 都匹配用户目录 PingFang；等宽中文匹配 Nix 的 Noto CJK KR。
+- `lang=zh-*` 单独查询仍可能返回不含目标汉字的西文字体；本轮改用 charset 验证，避免将语言偏好查询当作字符覆盖证明。
+- 新 flake 的 MonoLisa/文楷方案未部署；未来要验证“去掉旧字体目录的影响后”仍然正确，而不只是看到相同 family 名。不得为验证擅自删除用户字体。
+
+## 6. 每项关闭记录模板
 
 ```text
 ID：
@@ -234,7 +336,7 @@ Linux 验证：求值 / 构建 / 激活 / 实际行为
 关闭依据：
 ```
 
-## 6. 本轮操作记录
+## 7. 本轮操作记录
 
 - 初始阶段：只读检查仓库引用、macOS 应用/cask 名单、部分配置/字体/插件和启动项目录；创建本 checklist。
 - 用户批准后：修改 bar.wezterm 为固定源码本地加载、将 mpv 配置移入共享层、删除 Zellij；尚未将配置修改等同于激活验收。
