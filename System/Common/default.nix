@@ -5,7 +5,6 @@ _: {
     ./options.nix
     ./git.nix
     ./tmux.nix
-    # ./zellij.nix
     ./yazi.nix
     # ./codex.nix
     ./pi.nix

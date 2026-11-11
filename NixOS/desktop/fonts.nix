@@ -1,14 +1,23 @@
 { pkgs, ... }:
 {
-  fonts.packages = with pkgs; [
-    noto-fonts-color-emoji
-  ];
+  fonts.packages = [ pkgs.noto-fonts-color-emoji ];
   fonts.fontconfig = {
     enable = true;
     defaultFonts = {
-      sansSerif = [ "MonoLisa Nasy" ];
-      monospace = [ "MonoLisa Nasy" ];
+      # MonoLisa supplies Latin; LXGW supplies simplified/traditional Chinese.
+      sansSerif = [
+        "MonoLisa Nasy"
+        "LXGW WenKai"
+      ];
+      serif = [
+        "MonoLisa Nasy"
+        "LXGW WenKai"
+      ];
+      monospace = [
+        "MonoLisa Nasy"
+        "LXGW WenKai Mono"
+      ];
+      emoji = [ "Noto Color Emoji" ];
     };
-    localConf = builtins.readFile ./fontconfig.xml;
   };
 }

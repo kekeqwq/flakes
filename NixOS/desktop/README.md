@@ -37,18 +37,17 @@ user's password/SSH credentials separately; do not commit secrets. No VM or
 A successful Nix build does **not** yet mean the whole current home directory
 can be reproduced on a fresh host. The following still need separate work:
 
-- `~/.local/share/fonts/` contains manually installed MonoLisa Nasy (normal and
-  italic), PingFang, Hiragino Maru Gothic ProN, Source Han Serif SC, and
-  仓耳今楷. Shared Nix-managed fonts (DejaVu, LXGW WenKai, Nerd Font symbols
-  and Noto Sans Symbols 2) are declared in `System/Common/desktop/fonts.nix`;
-  Linux additionally declares Noto emoji. WezTerm prefers the privately installed
-  MonoLisa Nasy but has explicit shared Nix-managed fallbacks. Fontconfig still
-  requests unmanaged fonts today.
-  Audit licensing and package suitable sources before copying them into Nix;
-  proprietary font files must not be committed blindly.
-- WezTerm downloads `adriankarlen/bar.wezterm` at runtime; it is not pinned in
-  this flake. The shared external Emacs dotfiles/Elpaca state are also outside
-  this repository's complete control.
+- Shared fonts are declared in `System/Common/desktop/fonts.nix`. MonoLisa Nasy
+  normal/italic are user-supplied files under `pkgs/monolisa-nasy/`; confirm
+  redistribution rights before publishing these proprietary files or caches.
+  Linux defaults are MonoLisa for Latin and LXGW WenKai for simplified/traditional
+  Chinese (WenKai Mono for monospace). Old PingFang/Hiragino aliases were removed;
+  no Japanese font policy is requested. Other manually installed fonts such as
+  Source Han Serif SC and 仓耳今楷 may still be used by out-of-scope user programs.
+- WezTerm's bar plugin is now pinned and deployed locally by Nix, including a
+  loader adaptation that removes its mutable plugin-cache dependency. GUI
+  activation/behavior still needs verification. External Emacs dotfiles/Elpaca
+  are independently managed by the user and excluded from this audit's goals.
 - Deck's `/kk/center` web content and Sunshine client state/certificates are
   external data. They remain Deck-only; client trust must be provisioned
   privately rather than placed in the public store.

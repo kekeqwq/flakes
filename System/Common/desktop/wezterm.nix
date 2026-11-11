@@ -1,8 +1,41 @@
 {
   lib,
+  pkgs,
   ...
 }:
+let
+  # Keep the currently used version; updating the plugin is a separate change.
+  barSrc = pkgs.fetchFromGitHub {
+    owner = "adriankarlen";
+    repo = "bar.wezterm";
+    rev = "af6642a004942d6b58b777d002cb7ee82ca94872";
+    hash = "sha256-7FJfDV3X3Xi799dRXO7zT+Zid5EBfLMVIFmB3g013cU=";
+  };
+  barPlugin =
+    pkgs.runCommand "wezterm-bar-af6642a"
+      {
+        nativeBuildInputs = [ pkgs.python3 ];
+      }
+      ''
+        mkdir -p "$out"
+        cp -r ${barSrc}/plugin/. "$out/"
+        cp ${barSrc}/LICENSE "$out/LICENSE"
+        chmod -R u+w "$out"
+        # Upstream discovers modules through the mutable plugin cache. Replace
+        # that loader only; modules are now next to init.lua, supplied by Nix.
+        python3 - "$out/init.lua" <<'PY'
+        import pathlib, sys
+        path = pathlib.Path(sys.argv[1])
+        text = path.read_text()
+        start = text.index('local separator =')
+        end = text.index('local utilities = require "bar.utilities"', start)
+        path.write_text(text[:start] + text[end:])
+        PY
+      '';
+in
 {
+  myuser.hm.xdg.configFile."wezterm/bar".source = barPlugin;
+
   myuser.hm.programs.wezterm = {
     enable = true;
 
@@ -73,7 +106,9 @@
       end
 
       -- Let the bar see the initial scheme before it derives tab colors.
-      local bar = wezterm.plugin.require("https://github.com/adriankarlen/bar.wezterm")
+      local bar_dir = wezterm.config_dir .. "/bar"
+      package.path = bar_dir .. "/?.lua;" .. package.path
+      local bar = dofile(bar_dir .. "/init.lua")
       bar.apply_to_config(config)
 
       if wezterm.target_triple == "aarch64-apple-darwin"
