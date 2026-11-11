@@ -35,6 +35,7 @@ in
       color-scheme = "prefer-dark";
       gtk-theme = "catppuccin-mocha-mauve-standard+rimless";
       icon-theme = "Papirus-Dark";
+      cursor-theme = "Bibata-Modern-Ice";
     };
     qt = {
       enable = true;

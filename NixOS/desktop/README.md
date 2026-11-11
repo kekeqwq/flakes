@@ -48,12 +48,24 @@ can be reproduced on a fresh host. The following still need separate work:
   loader adaptation that removes its mutable plugin-cache dependency. GUI
   activation/behavior still needs verification. External Emacs dotfiles/Elpaca
   are independently managed by the user and excluded from this audit's goals.
-- Deck's `/kk/center` web content and Sunshine client state/certificates are
-  external data. They remain Deck-only; client trust must be provisioned
-  privately rather than placed in the public store.
-- OpenList uses mutable state in `/home/keke`; the disabled sing-box service
-  refers to an external configuration. Browser/app accounts and other user
-  data are not supplied by enabling the desktop.
+- Deck's homepage is tracked at `hosts/deck/center/index.html` and served from
+  Nix store; `/kk/center` is no longer an installation prerequisite. Sunshine
+  client state/certificates remain private instance data, not public store data.
+- OpenList installation/service belong only to `hosts/deck/openlist.nix`.
+  Its existing `/home/keke/data` configuration/database and per-disk mounts are
+  private instance state, not part of the generic server or desktop. The
+  disabled sing-box service also refers to external configuration.
+- Fcitx5's static profile, toggle key (Ctrl+Shift+Space), Catppuccin candidate
+  theme and Rime-Ice 小鹤双拼 selection are declared in `input-method.nix`.
+  Each instance trains its own userdb; build caches can be regenerated. Neither
+  userdb nor installation/user state is copied into Git or Nix store.
+- Yazi uses qimgv for images and mpv for videos. Use `O` → LocalSend, or `g s`,
+  to send selected local files of any type. qimgv's own saved GUI preferences
+  are not managed. Chrome is the declared browser; extensions are restored by
+  the user's Google account, not copied from an existing Chrome profile.
+- Fastfetch's configuration and ASCII art are tracked in Common. Fish removes
+  only recognized Fish 4.3 auto-migration files, keeping the declared defaults.
+  The cursor is consistently Bibata-Modern-Ice, including Dconf.
 
 The wallpaper, Niri base/display profiles, Rofi theme, GTK/Qt themes, Rime
 configuration and local Obsidian plugin sources are already tracked or fetched
@@ -78,6 +90,13 @@ with fixed hashes. Audit remaining runtime dependencies before the VM test.
 - Trusted clients remain in the private `~/.config/sunshine/sunshine_state.json`; certificates and keys must never be committed to Nix/Git. Exactly one enabled record per client certificate is required by the pinned Sunshine version.
 - On the Mac, Moonlight defaults to relative/captured mouse mode. Its historical preference key is `mouseacceleration` (false); this key actually controls absolute remote-desktop mouse mode. Use Ctrl+Option+Shift+Z to release captured input, and click in the stream to capture again.
 - LAN Web UI access is allowed; UPnP is disabled. Device trust is provisioned separately, not disabled. Additional clients must be provisioned once before they can connect.
+- Deck's tracked homepage links to `http://<deck-host>:8282/`, nginx's proxy to
+  `https://127.0.0.1:47990/`. This allows remote initialization/login/PIN pairing
+  without a local browser. Authentication remains enabled (an unauthenticated
+  configured instance returns HTTP 401). The LAN-facing proxy uses HTTP:
+  do not expose it on the public Internet; use an SSH tunnel on untrusted
+  networks. A bare server still does not enable Sunshine: it belongs to the
+  desktop layer and needs a usable graphical capture target.
 
 ## Deck deployment
 

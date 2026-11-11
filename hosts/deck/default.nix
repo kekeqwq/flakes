@@ -5,6 +5,7 @@
     ./configuration.nix
     ./hardware.nix
     ./center.nix
+    ./openlist.nix
     ./shell.nix
   ];
 }

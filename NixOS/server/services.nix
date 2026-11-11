@@ -4,7 +4,6 @@
     xrock
     rkdeveloptool
     kitty.terminfo
-    openlist
     usbutils
     f2fs-tools
     pinentry-curses
@@ -26,17 +25,6 @@
       WorkingDirectory = "/home/${config.myuser.name}/.config/sing-box";
       Restart = "on-failure";
       RestartSec = 10;
-    };
-  };
-
-  systemd.services.openlist = {
-    enable = true;
-    wantedBy = [ "multi-user.target" ];
-    after = [ "network.target" ];
-    serviceConfig = {
-      ExecStart = "${pkgs.openlist}/bin/OpenList server";
-      WorkingDirectory = "/home/${config.myuser.name}";
-      Restart = "on-failure";
     };
   };
 

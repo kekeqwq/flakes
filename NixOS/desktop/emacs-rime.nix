@@ -30,10 +30,10 @@ in
     "input"
     "uinput"
   ];
-  environment.systemPackages = [
-    mapper
-    pkgs.fcitx5
-  ];
+  # The input-method module installs fcitx5-with-addons, including remote.
+  # Installing bare fcitx5 here shadows its wrapper/autostart entry and loses
+  # the Rime addon search paths.
+  environment.systemPackages = [ mapper ];
   myuser.hm.systemd.user.services.emacs-rime-shift = {
     Unit = {
       Description = "Emacs-only left Shift tap bridge (Niri)";

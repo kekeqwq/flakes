@@ -14,6 +14,23 @@
   myuser.hm = {
     home.packages = [ pkgs.starship ];
 
+    # Fish 4.3 can freeze old defaults into unmanaged conf.d files. Keep the
+    # declared setup, removing only files identified as that auto-migration.
+    # Never erase fish_variables, history or user-authored conf.d scripts.
+    home.activation.removeFishFrozenDefaults = {
+      after = [ "writeBoundary" ];
+      before = [ ];
+      data = ''
+        for name in fish_frozen_theme.fish fish_frozen_key_bindings.fish; do
+          file="$HOME/.config/fish/conf.d/$name"
+          if [ -f "$file" ] && [ ! -L "$file" ] && \
+            ${pkgs.gnugrep}/bin/grep -q 'This file was created by fish when upgrading to version 4.3' "$file"; then
+            rm -- "$file"
+          fi
+        done
+      '';
+    };
+
     home.sessionVariables = {
       OPENCODEX_API_AUTH_TOKEN = "1";
     };

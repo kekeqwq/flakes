@@ -75,6 +75,26 @@ assert
     "MonoLisa Nasy"
     "LXGW WenKai Mono"
   ];
+assert !(c.systemd.services ? openlist) && !(off.systemd.services ? openlist);
+assert deck.config.systemd.services.openlist.enable;
+assert deck.config.systemd.services.openlist.serviceConfig.WorkingDirectory == "/home/keke";
+assert c.i18n.inputMethod.enable && c.i18n.inputMethod.type == "fcitx5";
+assert !c.i18n.inputMethod.fcitx5.ignoreUserConfig;
+# Bare fcitx5 shadows the wrapped binary and XDG autostart entry.
+assert !(builtins.elem (toString enabled.pkgs.fcitx5) (map toString c.environment.systemPackages));
+assert lib.hasInfix "DefaultIM=rime" c.home-manager.users.keke.xdg.configFile."fcitx5/profile".text;
+assert lib.hasInfix "double_pinyin_flypy"
+  c.home-manager.users.keke.xdg.dataFile."fcitx5/rime/default.custom.yaml".text;
+assert !(off.home-manager.users.keke.xdg.dataFile ? "fcitx5/rime/default.custom.yaml");
+assert
+  c.home-manager.users.keke.xdg.mimeApps.defaultApplications."text/html"
+  == [ "google-chrome.desktop" ];
+assert
+  c.home-manager.users.keke.dconf.settings."org/gnome/desktop/interface".cursor-theme
+  == "Bibata-Modern-Ice";
+assert lib.all (
+  rule: rule ? mime && lib.hasPrefix "vfs/" rule.mime || builtins.elem "send" rule.use
+) c.home-manager.users.keke.programs.yazi.settings.open.rules;
 assert lib.all (package: builtins.elem package genericPackages) (homePackages deck);
 pkgs.runCommand "desktop-module-boundaries"
   {
@@ -82,10 +102,25 @@ pkgs.runCommand "desktop-module-boundaries"
     genericSystem = builtins.unsafeDiscardStringContext c.system.build.toplevel.drvPath;
     headlessSystem = builtins.unsafeDiscardStringContext off.system.build.toplevel.drvPath;
     niriConfig = c.home-manager.users.keke.xdg.configFile."niri/config.kdl".source;
+    nativeBuildInputs = [ pkgs.librime ];
+    rimeData = builtins.head (
+      builtins.filter (p: (p.pname or "") == "fcitx5-rime") c.i18n.inputMethod.fcitx5.addons
+    );
+    rimeCustom =
+      pkgs.writeText "rime-default.custom.yaml"
+        c.home-manager.users.keke.xdg.dataFile."fcitx5/rime/default.custom.yaml".text;
   }
   ''
     test -n "$genericSystem"
     test -n "$headlessSystem"
     test -s "$niriConfig"
+    # Prove a new instance can build the selected schema without copying any
+    # existing user's training database or generated Rime caches.
+    export HOME="$TMPDIR/home"
+    mkdir -p "$HOME" user/build
+    cp "$rimeCustom" user/default.custom.yaml
+    rime_deployer --build "$PWD/user" "$rimeData/share/rime-data" "$PWD/user/build"
+    test -s user/build/double_pinyin_flypy.schema.yaml
+    test -s user/build/double_pinyin_flypy.prism.bin
     touch "$out"
   ''

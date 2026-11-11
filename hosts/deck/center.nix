@@ -52,7 +52,10 @@
           port = 80;
         }
       ];
-      root = "/kk/center";
+      root = pkgs.runCommand "deck-center" { } ''
+        mkdir -p "$out"
+        cp ${./center/index.html} "$out/index.html"
+      '';
       locations."/" = {
         index = "index.html";
       };

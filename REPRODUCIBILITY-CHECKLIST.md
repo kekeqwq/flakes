@@ -29,6 +29,13 @@
 - Fontconfig：用户已决定废弃旧规则，简繁中文用 LXGW，日文无需求；西文用本机 MonoLisa，明确要求复制文件进 flakes 纳管。
 - MonoLisa 属专有字体；按用户要求复制，但发布仓库或二进制缓存前需确认分发授权，不能把“用户要求纳管”等同于已获得公开再分发权。
 - bar.wezterm 改为 Nix 固定源码部署，保留当前缓存所用提交，避免顺便升级行为。
+- Deck 后续决定：qimgv 不纳管其自动保存的 GUI 偏好；只保证 Yazi 图片默认 qimgv、视频默认 mpv，所有本地文件可选 `localsend_app` 发送。
+- 排除 PrismLauncher、浏览器扩展（Google 账户同步）、Weylus/htop/Steam 游戏/CEC 等第 10 类本地状态；不再以它们作为未完成缺陷。
+- Linux 首次部署必须有小鹤双拼＋雾凇；训练数据由每个实例独立生成，不复制、不恢复其他实例 userdb。
+- 纳管 Fastfetch 配置及 ASCII 图、Deck 首页；Linux 默认浏览器 Chrome；Fish 只保留 Nix 声明设置；光标统一 Modern。
+- OpenList 服务仅属于 `hosts/deck/`，不得继续从通用 server 安装/启用；数据库和具体硬盘挂载仍为实例私有状态。
+- Sunshine 保留 Deck 首页的后台反向代理入口，允许远程初始化/登录/配对；不绕过认证、不复制配对凭据。
+- NetworkManager 只保证通用服务启用，用户自行联网；不复现连接 profile 或网络密码。
 
 ## 0. 总验收门槛
 
@@ -36,7 +43,7 @@
 - [ ] **SCOPE-02 macOS 本地覆盖**：核对安装的软件、配置目录、偏好、插件、启动项及本地脚本；不能只看 flake 包表。
 - [ ] **SCOPE-03 Deck 本地覆盖**：开机后只读盘点 Linux 的实际软件、配置、字体、服务及与仓库的偏差。
 - [ ] **SCOPE-04 外部依赖闭环**：每个受管程序引用的命令、字体、插件、路径和外部服务都有来源或恢复说明。
-- [ ] **SCOPE-05 私有恢复闭环**：每类必需私有状态都有备份范围、恢复顺序与权限说明，不提交内容。
+- [ ] **SCOPE-05 私有状态边界**：明确哪些状态应由实例自行创建，哪些在目标范围内需要私有备份/恢复；不把用户排除的账户同步、网络密码或实例训练数据当作复现缺陷。
 - [ ] **SCOPE-06 平台验证**：macOS 完整求值/构建；Deck 完整系统求值/rebuild；Linux `desktop-boundaries` 检查；保留无头层边界。
 - [ ] **SCOPE-07 无旧 home 依赖验证**：在用户批准的干净用户目录/机器验证静态配置可恢复。未批准前不启动 VM、不切桌面会话、不破坏旧 home。
 - [ ] **SCOPE-08 最终决策完成**：所有发现均有用户决定；被接受的非可复现部分明确列为例外，不悄悄当作完成。
@@ -45,9 +52,9 @@
 
 ### F-01 Linux Fontconfig 与私有字体
 
-- [ ] 状态：用户已决定并完成配置修改，待激活与实际匹配验收。
+- [x] 状态：本轮 Deck 构建与 switch 成功，实际中文匹配文楷；隔离 fontconfig 只加载声明的两个字体包时，西文 MonoLisa、简繁文楷、等宽中文文楷等宽均匹配 store 文件。Mac 包构建/配置求值通过，本轮未做 Mac 激活（不属于本轮重点）。
 - 新实现：删除旧 `NixOS/desktop/fontconfig.xml`；`NixOS/desktop/fonts.nix` 为 sans/serif 指定 MonoLisa Nasy → LXGW WenKai，monospace 指定 MonoLisa Nasy → LXGW WenKai Mono；不新增日文字体策略。
-- MonoLisa 正体/斜体已从本机复制到 `pkgs/monolisa-nasy/fonts/`，与原文件 SHA-256 一致；共享 `fonts.nix` 两平台安装，不再依赖旧 home。包构建成功，Mac/Deck 完整系统及边界检查 derivation 求值通过。尚未完成 Linux 构建/激活及实际 `fc-match`。
+- MonoLisa 正体/斜体已从本机复制到 `pkgs/monolisa-nasy/fonts/`，与原文件 SHA-256 一致；共享 `fonts.nix` 两平台安装，不再依赖旧 home。包构建成功，Mac/Deck 完整系统求值通过；之后 Deck 完整构建、激活、边界检查和隔离字体匹配均已完成。
 - macOS 无等同 Fontconfig 的统一系统字体替换；本仓库安装字体供应用使用，WezTerm 显式选择 MonoLisa/共享回退。macOS 系统 UI 字体未替换。
 - 以下为改动前历史发现：
 - 原位置：`NixOS/desktop/fontconfig.xml`、`NixOS/desktop/fonts.nix`。
@@ -60,7 +67,7 @@
 
 ### F-02 WezTerm 运行时插件
 
-- [ ] 状态：已获批准并完成配置修改；插件 Nix 构建成功，WezTerm 独立配置本地加载检查退出 0；macOS / Deck 完整系统 derivation 求值成功。待实际激活、GUI 行为及 Deck 构建验收，暂不勾选。
+- [x] 状态：插件 Nix 构建成功，Mac 独立加载检查退出 0；Deck 完整构建和 switch 成功，实际托管 bar 路径已核对，新 WezTerm 配置加载/字体检查退出 0。已消除运行时下载依赖；GUI 视觉效果仍可由用户反馈，但不再依赖旧插件缓存。
 - 位置：`System/Common/desktop/wezterm.nix`。已改为固定提交 `af6642a004942d6b58b777d002cb7ee82ca94872` 与 SHA-256，由 Nix 部署到 `~/.config/wezterm/bar`，本地加载；仅替换上游依赖插件缓存的模块发现代码。
 - 原位置使用 `wezterm.plugin.require("https://github.com/adriankarlen/bar.wezterm")`。
 - Lua 配置受管，但 bar 插件运行时下载且未由本仓库固定提交和哈希；旧插件缓存可能掩盖问题。
@@ -111,10 +118,11 @@
 - 决策：声明安装 / 更换默认程序 / 将其列为手工安装前提。
 - 验收：干净机器的默认图片关联能找到已安装的应用。
 
-### F-08 Linux OpenList 状态与启动目录
+### F-08 OpenList 仅限 Deck 实例
 
-- [ ] 状态：已确认，待定义私有恢复方式。
-- 位置：`NixOS/server/services.nix`，以用户 home 为工作目录启动 OpenList。
+- [x] 状态：服务和安装已移入 `hosts/deck/openlist.nix`，通用 server 不再启用；边界检查验证普通桌面/无头不启用、Deck 保留；switch 后服务 active，工作目录保持 `/home/keke`。
+- 当前保留工作目录 `/home/keke` 和原数据所有权，不迁移或提交 `data/`；新实例按自己的磁盘配置。
+- 原位置：`NixOS/server/services.nix`，以用户 home 为工作目录启动 OpenList。
 - 服务定义受管；实际配置、数据库、挂载源与登录状态不由该定义恢复。
 - 决策：静态参数纳管；数据库/凭据私有备份，明确运行用户与文件位置。
 - 验收：新机器能按步骤恢复预期挂载，而不仅是启动空白服务。
@@ -128,8 +136,8 @@
 
 ### F-10 Deck 局域网网页与外部设备
 
-- [ ] 状态：仓库引用已确认，Deck 实际文件待查。
-- 位置：`hosts/deck/center.nix`，网页根目录 `/kk/center`；反向代理另依赖局域网设备地址。
+- [x] 状态：首页已复制纳管至 `hosts/deck/center/index.html`，nginx 使用 Nix 输出；switch 后 HTTP 200，内容与受管 HTML 逐字节相同；8282 后台转发返回需登录的 401。
+- 位置：`hosts/deck/center.nix`；旧网页根目录 `/kk/center` 已不再是运行时依赖，反向代理另依赖局域网设备地址。
 - 网页内容不随当前 flake 自动提供；网络拓扑也不会被 rebuild 创建。
 - 决策：网页纳管或固定资源；局域网地址/服务作为明确部署输入。
 - 验收：新 Deck 部署得到网页内容；无目标设备时有明确限制说明。
@@ -230,11 +238,14 @@
 - [x] 扫描 `/etc/systemd/system`：470 个 store 文件/链接、13 个 mask，无普通本地单元；`/etc/systemd/user`：115 个 store 文件/链接，无普通本地单元；用户 `~/.config/systemd/user`：8 个 store 链接。仅表示这些目录未发现外置单元，不保证单元调用链全部可复现。
 - [x] Niri、Waybar、壁纸服务、rofi、GTK/Kvantum、WezTerm、Yazi、tmux 入口指向 Nix store；不能因此略过其外部依赖。
 - [x] 用户/root 的 `nix profile list --json` 均为空 elements；未发现当前 PATH 中的 Flatpak/Brew 安装器；本地仍有旧 flatpak 目录，不据此认定仍装有 Flatpak 应用。
-- [ ] 当前配置同步、完整 Linux build、边界检查与激活尚未执行；仍不能关闭 SCOPE-06。
+- [x] 之后已将 Deck fast-forward 到 `734d6ca` 并同步本轮配置补丁。增强版 `desktop-boundaries`（含全新 Rime 部署及裸 Fcitx 回归断言）构建退出 0；最终完整 switch 退出 0。最终系统 `/nix/store/bkf9wq80p08crj66s4qibw46zdvqviyl-nixos-system-deck-26.11.20261110.a9cb3b1`；Home Manager success，系统/用户失败单元均为 0。
 
-### D-01 qimgv：已失效的 mpv 路径与本地脚本
+### D-01 Yazi 打开/发送规则（qimgv 偏好不纳管）
 
-- [ ] 状态：已确认，待用户决定。
+- [ ] 状态：Yazi 配置已修改并通过 switch 部署，已核对实际生成 opener 与 keymap。用户实际打开/发送文件的交互验收待确认，不为测试擅自发送私人文件。
+- 备注：SSH 无 TTY 的 `yazi --debug` 返回 ioctl 错误，不将其记为配置解析失败或交互成功。
+- 实现：图片默认 qimgv、视频默认 mpv；各本地 MIME 与兜底规则均包含 LocalSend；`O` 选择发送，另有 `g s` 直接发送所选文件。不会修改 qimgv 自动保存的 GUI 配置。
+- 以下为旧机器盘点证据，不再作为 qimgv 用户定制迁移任务：
 - 证据：`~/.config/qimgv/qimgv.conf:36` 的 `mpvBinary` 固定为旧 `/nix/store/dazqdlqksm989z58pf5mwskjqpnrh7aq-mpv-with-scripts-0.41.0/bin/mpv`；实机检查不存在。当前 PATH 另有受管 mpv，但这项设置仍引用旧版本。
 - 同文件还定义调用 `localsend_app` 的脚本；当前命令存在，但脚本和关联快捷键没有声明。主题配置在本地 `theme.conf`。
 - 候选处理：只纳管真正自定义项，下载器/播放器用稳定入口或当前 derivation；不把保存的窗口/浏览状态一并固定。
@@ -242,84 +253,95 @@
 
 ### D-02 PrismLauncher：已失效的 Java 路径
 
-- [ ] 状态：已确认，待用户决定是否属于复现目标。
+- [x] 状态：用户明确排除 PrismLauncher；不迁移或修复其游戏工作流。以下为历史发现。
 - 证据：`~/.local/share/PrismLauncher/prismlauncher.cfg` 的 `JavaPath` 为 `/nix/store/k4877vrvzk3pf4k44g1r6k454vjs8f17-openjdk-17.0.13+11/bin/java`；实机不存在，当前 shell PATH 也无 java。
 - Launcher 程序受管，但 Java 选择、instances、模组、资源和版本元数据在本地。
 - 候选处理：纳管 Java 运行时及选择规则；游戏实例另行定义固定版本/私有备份；或按用户决定排除整个游戏工作流。
 
-### D-03 Fcitx5 / Rime：程序与词库受管，用户方案外置
+### D-03 Fcitx5 / Rime：首次部署直接获得小鹤双拼＋雾凇
 
-- [ ] 状态：已确认，待用户决定。
+- [ ] 状态：switch 后输入法列表已通过 D-Bus 确认同时包含 keyboard-us/rime，`AddonForIM rime` 返回 rime；Ctrl+Shift+Space 实际打字效果仍待用户交互确认。
+- 实机修复：`emacs-rime.nix` 原额外安装的裸 `pkgs.fcitx5` 遮蔽带插件 wrapper，导致 Rime 被判无效；已删除重复裸包，并添加测试禁止回归。重建后自动启动使用 fcitx5-with-addons；仅重启了 Fcitx5，没有重启桌面或切换用户输入状态。
+- 新实现：`NixOS/desktop/input-method.nix` 配置 Rime addon、keyboard-us/rime 列表、Ctrl+Shift+Space、Catppuccin 候选主题与 `double_pinyin_flypy` 方案。只纳管单个静态文件，不接管 userdb/installation/user 状态，不启用 ignoreUserConfig。
+- 已验证：Deck 全新临时 user 目录成功部署生成 `double_pinyin_flypy.schema.yaml` 和 prism；没有读取/复制旧训练词库。临时测试 `/tmp/flake-rime-fresh.Cdu2d4`；Linux 边界检查通过。
+- 以下为迁移前历史发现：
 - 实际运行 fcitx5；插件/雾凇来源由 `NixOS/desktop/pkgs.nix` 提供。
 - `~/.local/share/fcitx5/rime/default.custom.yaml` 是本地文件：包含 `rime_ice_suggestion:/` 并选择 `double_pinyin_flypy`。若只重建现有系统声明，不会自动恢复这一小鹤双拼选择。
 - `~/.config/fcitx5/config`、`profile`、`conf/classicui.conf` 是本地文件；候选界面选 Catppuccin，但选项本身未声明。当前磁盘 profile 只列 keyboard-us；这不等于已经证明正在运行的内存状态也没有 Rime，需要交互验证。
 - `build/` 是可重建缓存；`rime_ice.userdb`、installation/user 状态是私有训练数据，不公开提交。
 - 候选处理：纳管方案、输入法列表与必要快捷键/候选设置；训练词库单独私有备份。
 
-### D-04 Fastfetch 自定义外置
+### D-04 Fastfetch 配置及资源纳管
 
-- [ ] 状态：已确认，待用户决定。
+- [x] 状态：Deck 配置/ASCII 图已复制到 `System/Common/fastfetch/`，由 `fastfetch.nix` 声明 Mac/Linux 部署；Deck switch 成功，Fastfetch 执行退出 0。当前 ASCII 是与声明源逐字节相同的普通文件（HM 对同内容保留），不是实际观察到的 store 链接；新 home 的资源来源已纳管。
+- 以下为迁移前历史发现：
 - `~/.config/fastfetch/config.jsonc` 与 `ascii.txt` 为普通文件，配置直接引用 `~/.config/fastfetch/ascii.txt`，标注 FastCat 来源。
 - 程序受管，新机器会缺失当前展示内容。JSON schema 的网络地址不等于 Fastfetch 每次执行会下载它，不能误报为运行时下载依赖。
 - 候选处理：将配置和 ASCII 图纳管；或接受默认展示。
 
-### D-05 Fish 升级迁移文件
+### D-05 Fish 只保留声明配置
 
-- [ ] 状态：已确认存在，是否保留待用户决定；不是已证实的手工定制。
+- [x] 状态：受管激活迁移已运行，实机确认两个官方 frozen 迁移文件均不再存在，未删除 fish_variables/历史；保留 Nix 声明。
+- 只删除带 Fish 4.3 官方自动迁移标记的两个普通 frozen 文件；不删自写脚本、fish_variables 或历史；新的 home 不需要旧迁移文件。
+- 以下为迁移前历史发现：
 - `~/.config/fish/conf.d/fish_frozen_theme.fish` 固定了语法高亮颜色；`fish_frozen_key_bindings.fish` 由 Fish 4.3 升级迁移生成。
 - `config.fish` 本身受管；两个迁移文件不是 Nix 管理。新 home 的表现可能与沿用旧 home 不同。
 - universal 变量中四项 WLR/WAYLAND 设置已在 `hosts/deck/configuration.nix` 声明，不重复算作未纳管依赖。
 - 候选处理：确认当前高亮是否要保留后，再纳管必要变量或使用新版默认值；不擅自删除迁移文件。
 
-### D-06 桌面默认应用关联
+### D-06 桌面默认浏览器 Chrome
 
-- [ ] 状态：已确认，待用户决定。
+- [x] 状态：Chrome 的 HTML/HTTP/HTTPS 及旧浏览器关联类型已声明并激活；xdg-mime 查询 text/html 与 HTTPS 均为 google-chrome.desktop，桌面文件存在。修复了 HM 的旧 `.local/share/applications/mimeapps.list` 空文件冲突，两条 MIME 配置路径均由 HM 管理。
+- 以下为迁移前历史发现：
 - `~/.config/mimeapps.list` 为普通文件，HTTP/HTML 部分指向 Chrome，但 XHTML 和若干关联仍指向 firefox-nightly。
 - 不是 Yazi 的 opener 设置；新机器不会从当前 flake 恢复这份桌面级默认关联。
 - 候选处理：选择明确默认浏览器、图片、视频、PDF 应用后，用 HM mimeApps 声明；不原样保留历史重复项。
 
-### D-07 Dconf 光标偏好与受管值不同
+### D-07 光标统一 Bibata-Modern-Ice
 
-- [ ] 状态：已确认差异，待决定是否处理。
+- [x] 状态：受管 Dconf cursor-theme 已激活，实机查询为 Bibata-Modern-Ice，与 pointerCursor 一致。
+- 以下为迁移前历史发现：
 - 实际 dconf `/org/gnome/desktop/interface/cursor-theme` 为 `Bibata-Original-Ice`，而受管 `~/.icons/default/index.theme` 指向 `Bibata-Modern-Ice`。
 - GTK/Kvantum、图标与暗色设置的受管值已能找到，未设置额外 GNOME font-name。
 - 候选处理：明确所需光标后统一声明；不把 Dconf 整个数据库提交。
 
 ### D-08 浏览器插件和学习工作流
 
-- [ ] 状态：已确认扩展本地安装，配置/字典/脚本待脱敏深查。
+- [x] 状态：用户明确排除，由 Google 账户自行同步，不进一步迁移扩展/浏览器数据。
 - Chrome 检出 Yomitan、asbplayer、Migaku Early Access、Tampermonkey BETA、uBlock Origin Lite、DuckDuckGo、User-Agent Switcher、Google Docs Offline 等；未由当前 flake 完整声明。
 - 程序安装不保证扩展设置、Yomitan 字典、用户脚本和本地音频/API 服务可恢复。账户令牌、站点资料和浏览器数据库不公开纳管。
 - 候选处理：用户决定需保留哪些扩展/配置，再采用固定插件、策略安装、导出配置或私有备份；不复制整个 Chrome profile。
 
-### D-09 `/kk/center` 网页内容外置
+### D-09 Deck 首页纳管
 
-- [ ] 状态：实机确认，关联 F-10。
+- [x] 状态：原首页已复制到 `hosts/deck/center/index.html`，nginx root 为 Nix 输出；HTTP 200 且与跟踪的 HTML 逐字节一致，不再依赖 `/kk/center`。
+- 保留 8282 → 本地 HTTPS 47990 的 Sunshine 反向代理，保留登录认证。改动前实测首页 200、代理后台 401、本地后台 401；401 表示需登录，不是不可达。
+- 以下为迁移前历史发现，关联 F-10：
 - 目录存在，含本地 `index.html`（6581 字节），未由当前 flake 提供。原生服务声明只指定 nginx root。
 - 新部署没有这个文件就不会得到当前首页；局域网反向代理还依赖具体设备。
 - 候选处理：用户批准后纳管静态网页，网络地址留在 Deck 主机层。
 
 ### D-10 OpenList / Sunshine / 网络的私有恢复
 
-- [ ] **OpenList**：服务 active，工作目录 `/home/keke`，User 未指定（默认 root）；状态实际位于 root 所有的 `~/data/config.json`、`data.db`。未读取内容。账户、挂载和数据库需私有备份，静态配置可另拆。
+- [x] **OpenList**：已移到 `hosts/deck/openlist.nix`（服务和安装），从通用 server 删除；switch 后 active，保留工作目录和数据所有权，不读取或搬运数据库。迁移前服务 active，工作目录 `/home/keke`，User 未指定（默认 root）；状态实际位于 root 所有的 `~/data/config.json`、`data.db`。未读取内容。账户、挂载和数据库需私有备份，静态配置可另拆。
 - [ ] **Sunshine**：实际运行的是 `/etc/systemd/user/sunshine.service`，使用 store 中生成的 sunshine.conf；不能将 `~/.config/sunshine/sunshine.conf` 当成实际服务配置。用户目录另有 apps.json、配对状态、portal token 和备份；需区分使用中的静态 app 定义、旧配置与私有证书。
-- [ ] **NetworkManager**：sudo 仅盘点文件，发现 2 个连接 profile；未读密码。此前非 root 目录扫描的 0 不代表没有 profile。新机器上网前提需私有恢复或重新连接。
+- [x] **NetworkManager**：用户决定只启服务、自行连接网络，不纳管连接与密码。sudo 仅盘点到 2 个 profile，未读密码。此前非 root 目录扫描的 0 不代表没有 profile。
 - [ ] **其他秘密**：`.ssh`、`.gnupg`、`.password-store`、keyrings、Git 凭据、Pi auth/provider 文件存在；这里只记类别，不读取或复制秘密值。
 
 ### D-11 游戏、硬件与其他本地状态（待范围决定）
 
-- [ ] **Steam 游戏**：本地有 Steam 运行时、Proton 和游戏的生成 desktop 项；程序启用不等于游戏、存档、Steam 设置和插件自动恢复。用户决定是否排除，不盲目固定下载缓存。
-- [ ] **SteamOS/CEC/Gamescope**：本地 cecd 设置、steamos-manager 状态、gamescope edid.bin 存在；modes.cfg 为空。先查上游服务是否自动生成，不能仅因普通文件就认定需要纳管。
-- [ ] **Weylus**：程序受管，本地 `weylus.toml` 存在，需在用户选择纳管前脱敏检查；访问口令不提交。
-- [ ] **htop / Qt / 文件选择器**：存在本地设置，但未全部确认是用户定制；低优先级盘点，不直接把自动保存状态当缺陷。
+- [x] **Steam 游戏（用户排除）**：本地有 Steam 运行时、Proton 和游戏的生成 desktop 项；程序启用不等于游戏、存档、Steam 设置和插件自动恢复。用户决定是否排除，不盲目固定下载缓存。
+- [x] **SteamOS/CEC/Gamescope 状态（用户排除）**：本地 cecd 设置、steamos-manager 状态、gamescope edid.bin 存在；modes.cfg 为空。先查上游服务是否自动生成，不能仅因普通文件就认定需要纳管。
+- [x] **Weylus（用户排除）**：程序受管，本地 `weylus.toml` 存在，需在用户选择纳管前脱敏检查；访问口令不提交。
+- [x] **htop / Qt / 文件选择器（用户排除）**：存在本地设置，但未全部确认是用户定制；低优先级盘点，不直接把自动保存状态当缺陷。
 - [ ] **`/opt/containerd`**：root 路径下有 bin/lib 目录，当前 PATH 无 docker/containerd，所扫描 systemd 目录无本地单元。是否残留、是否被其他脚本调用尚未确认；不删除。
 - [ ] **旧备份/目录**：旧 Niri 配置、Downloads/deck.kdl、ranger、旧 Flatpak/Firefox 等目录存在。当前 Niri 加载的是 store 配置；残留文件本身不是复现阻断，不擅自清理。
 
-### D-12 当前字体结果不能代表新方案
+### D-12 字体验收：旧部署与新方案已分开核对
 
-- [ ] 旧系统实际以 `/home/keke/.local/share/fonts/MonoLisaNasyNormal.ttf` 渲染西文；`sans-serif:charset=4e2d` 和 `:charset=9ad4` 都匹配用户目录 PingFang；等宽中文匹配 Nix 的 Noto CJK KR。
+- [x] 旧系统实际以 `/home/keke/.local/share/fonts/MonoLisaNasyNormal.ttf` 渲染西文；`sans-serif:charset=4e2d` 和 `:charset=9ad4` 都匹配用户目录 PingFang；等宽中文匹配 Nix 的 Noto CJK KR。
 - `lang=zh-*` 单独查询仍可能返回不含目标汉字的西文字体；本轮改用 charset 验证，避免将语言偏好查询当作字符覆盖证明。
-- 新 flake 的 MonoLisa/文楷方案未部署；未来要验证“去掉旧字体目录的影响后”仍然正确，而不只是看到相同 family 名。不得为验证擅自删除用户字体。
+- [x] 新方案已部署，另外创建隔离 Fontconfig，只包含 Nix 管理的 MonoLisa/文楷目录，四项字符匹配均正确；旧目录正/斜体文件与纳管包逐字节一致。没有删除或搬动用户字体。
 
 ## 6. 每项关闭记录模板
 
@@ -341,7 +363,10 @@ Linux 验证：求值 / 构建 / 激活 / 实际行为
 - 初始阶段：只读检查仓库引用、macOS 应用/cask 名单、部分配置/字体/插件和启动项目录；创建本 checklist。
 - 用户批准后：修改 bar.wezterm 为固定源码本地加载、将 mpv 配置移入共享层、删除 Zellij；尚未将配置修改等同于激活验收。
 - 已验证：bar 插件单独 `nix build` 成功；独立 WezTerm 配置从 Nix 输出加载插件成功；macOS / Deck 完整系统 derivation 求值成功；mpv 生成文本包含两项预期设置；配置树除本追踪文档外无 Zellij / zjstatus 引用；`git diff --check` 通过。
-- 尚未验证：本轮修改未激活；Deck 尚未做本轮完整构建与边界检查。
+- Deck 后续：已 fast-forward 并同步配置；Linux 增强版 `desktop-boundaries` 构建通过（含空 userdir Rime schema/prism 生成）。Mac 完整配置求值通过，未执行本轮 Mac 激活。
+- 首次完整 switch 构建完成但 HM 失败（exit=4）：旧兼容 MIME 路径有空普通文件。补充声明后 switch 成功；随后查到并移除裸 Fcitx 遮蔽 wrapper 的重复安装，再次边界检查与 switch 均成功。
+- 最终日志：`/tmp/deck-repro-fcitx-switch.log`；Home Manager Result=success/ExecMainStatus=0，系统/用户失败单元均为 0，nginx/OpenList/Sunshine active。
+- 字体额外验收：未删旧字体，比较 MonoLisa 正/斜体与受管包内容相同；用隔离 Fontconfig（不包含用户字体目录）验证四项西文/简中/繁中/等宽中文匹配均成功。
 - 未做：未安装应用、未删除用户数据；未部署尚未批准的审计建议。
 - 未读取/未复制：认证文件的秘密内容、私钥、密码、订阅凭据、应用账户数据库内容。
-- 子检查的结果尚未全部汇总；后续将补充证据位置及新发现，不把等待中的结果当已完成。
+- 后续以本文件的用户范围决定与实机证据为准；不把任何等待中的子检查或后台命令当作已完成。

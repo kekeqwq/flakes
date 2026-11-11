@@ -1,6 +1,7 @@
 _: {
   imports = [
     ./fish.nix
+    ./fastfetch.nix
     ./pkgs.nix
     ./options.nix
     ./git.nix

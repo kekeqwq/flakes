@@ -31,6 +31,8 @@
         ./fonts.nix
         ./theme.nix
         ./pkgs.nix
+        ./input-method.nix
+        ./mimeapps.nix
         ./emacs-rime.nix
         ./wayland.nix
         ./sunshine.nix
