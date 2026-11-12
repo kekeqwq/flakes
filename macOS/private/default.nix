@@ -5,7 +5,6 @@ _: {
     ./input-method.nix
     ./emacs-rime.nix
     ./rime-squirrel.nix
-    ./pi-learn.nix
     ./shell.nix
     ./yazi.nix
   ];

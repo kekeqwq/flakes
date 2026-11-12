@@ -48,10 +48,6 @@ let
       cp -a . $out/
     '';
   };
-  pi-session-kit = pkgs.fetchzip {
-    url = "https://registry.npmjs.org/pi-session-kit/-/pi-session-kit-0.1.2.tgz";
-    hash = "sha256-KCuNAkTw8mEVpyiaCjF+qvihAbxUC/pq9W8LOdNW34A=";
-  };
 in
 {
   nix.settings = {
@@ -73,9 +69,7 @@ in
     programs.pi.coding-agent = {
       enable = true;
       package = livePi;
-      extensions = [
-        "${pi-session-kit}/session-kit.ts"
-      ];
+      extensions = [ ];
     };
   };
 }

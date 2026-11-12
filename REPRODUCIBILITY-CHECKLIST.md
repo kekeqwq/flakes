@@ -121,11 +121,9 @@
 
 ### F-09 Pi 插件
 
-- [x] Pi flake、multi-account tarball/lock/npmDeps、session-kit tarball 均固定来源；主题补丁及测试在仓库。
-- [x] session-kit 仅需 Pi 宿主 API/Node 内建模块及 zip/unzip；共享包表已有命令。可选 Codex/Claude 会话导入不是必须部署那些程序的理由。
-- [x] Mac 学习扩展固定 Eero 输入：web-fetch 使用固定 npmDeps，图像工具有 mmdc/librsvg/ImageMagick，PDF 有 PyMuPDF Python；输入法 reporter 的 tmux/python/原生执行器来源受管。
-- [x] Mac 学习私有工作流不擅自装到 Linux；Linux 当前公共插件集合按已有声明复现。
-- [x] models、provider、failover、session-kit 设置、auth、sessions 与搜索 API key 属每实例/运行状态，不要求从旧机器复制。
+- [x] 受管 Pi 插件只剩 multi-account、主题补丁和 macOS 输入法。session-kit、web-search、pdf-reader 及 Eero 学习扩展已移除。
+- [x] 输入法 reporter 的 tmux/python/原生执行器来源受管。
+- [x] models、provider、failover、auth 与 sessions 属每实例/运行状态，不要求从旧机器复制。
 - 限制：这是固定版本的依赖入口审计，不是对第三方全部源码进行安全证明；升级插件仍需重查依赖。
 
 ### F-10 Obsidian/其他受管 GUI 资源
