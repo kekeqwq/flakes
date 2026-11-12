@@ -13,7 +13,7 @@ The desktop is disabled by default. `NixOS/server/` always imports
 layer, without importing Linux modules. See `AGENTS.md` for mandatory boundaries.
 
 The desktop includes Niri, the application/package lists, themes, fonts,
-input methods, Emacs, WezTerm, Waybar, wallpaper, audio, Steam, Sunshine,
+input methods, Emacs, WezTerm, Waybar, wallpaper, audio, Steam,
 NetworkManager, Bluetooth, removable-disk support and firmware updates.
 Ordinary hosts use greetd/tuigreet to launch `niri-session`. Deck disables greetd
 and uses Jovian's Steam/Niri session selector.
@@ -83,6 +83,29 @@ with fixed hashes. Audit remaining runtime dependencies before the VM test.
 - Linux uses fixed Mocha (mauve accent); WezTerm retains native Mocha/Latte appearance switching on macOS/Windows. Emacs remains in the shared external dotfiles checkout.
 - `wallpapers/generate.py` regenerates the seeded 4K Mocha mountain wallpaper without third-party dependencies.
 
+## Public configuration versus instance inputs
+
+Partitioning/filesystem creation is manual at installation time. Each host owns
+its disk layout, mounts and hardware identifiers; rebuild is not expected to
+replicate another machine's partition table. Do not run destructive disk tools
+as a reproducibility check.
+
+Sunshine is entirely host-private. A desktop host does not install it, open
+its ports, or proxy its web UI. Each host that wants streaming enables the
+service and owns capture, GPU permissions, outputs, and any management proxy.
+No capture defaults are copied from Deck into other hosts.
+
+The optional server module configures qBittorrent Enhanced-nox when an instance
+enables `services.qbittorrent`. Deck enables WebUI 8080 and its own download
+directory `/var/lib/qBittorrent/downloads`. Public tracker URL policy is merged
+without replacing private WebUI credentials. No old GUI torrent tasks/profile
+are migrated. Set a private password during first deployment; use the HTTP UI
+only on a trusted LAN or over SSH/TLS. Authentication protection remains on.
+The service is independent of a graphical login.
+
+Pi reproducibility covers installed plugins/dependencies, not account/model/
+provider/failover state. Codex CLI and Zsh configuration are retired.
+
 ## Sunshine on Deck
 
 - Uses KMS capture of DP-1 with VA-API encoding, not the desktop portal. No screen-selection dialog is needed.
@@ -95,8 +118,8 @@ with fixed hashes. Audit remaining runtime dependencies before the VM test.
   without a local browser. Authentication remains enabled (an unauthenticated
   configured instance returns HTTP 401). The LAN-facing proxy uses HTTP:
   do not expose it on the public Internet; use an SSH tunnel on untrusted
-  networks. A bare server still does not enable Sunshine: it belongs to the
-  desktop layer and needs a usable graphical capture target.
+  networks. Enabling the desktop does not enable Sunshine. Only a host that
+  explicitly enables it, and has a usable capture target, can stream.
 
 ## Deck deployment
 

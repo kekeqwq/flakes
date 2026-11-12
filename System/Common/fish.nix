@@ -31,10 +31,6 @@
       '';
     };
 
-    home.sessionVariables = {
-      OPENCODEX_API_AUTH_TOKEN = "1";
-    };
-
     programs.fish = {
       enable = true;
 

@@ -51,15 +51,16 @@ self: super: {
     };
   });
 
-  qbittorrent = super.qbittorrent.overrideAttrs (o: {
-    version = "5.2.4.10-unstable-2026-10-10";
-    pname = "qbittorrent-enhanced";
+  # Official Enhanced release, built without the Qt GUI. Do not override the
+  # generic qbittorrent package or keep a second development-branch source.
+  qbittorrent-enhanced-nox = super.qbittorrent-enhanced-nox.overrideAttrs (_: {
+    version = "5.2.4.10";
     src = super.fetchFromGitHub {
-      repo = "qBittorrent-Enhanced-Edition";
       owner = "c0re100";
-      # Upstream's active default branch is v5_2_x, not the abandoned master.
-      rev = "e883083b1154cfbb9022bdee66b119518eef6b4e";
-      hash = "sha256-Hx4VNxP0D3LMtkaHspGbcGlusqVwT0ze/zOizxv9HxI=";
+      repo = "qBittorrent-Enhanced-Edition";
+      # release-5.2.4.10, resolved to an immutable commit.
+      rev = "ec66016a20d4dc7ba0f5bf4587b9d0577f2f886c";
+      hash = "sha256-3eGwURv0kGcuAzUUTaMkplXXgKgi1C/0qcutt3l8mxA=";
     };
   });
 

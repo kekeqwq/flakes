@@ -9,7 +9,6 @@
 
   environment.systemPackages = with pkgs; [
     localsend
-    qbittorrent
     discord
     prismlauncher
     telegram-desktop

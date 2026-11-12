@@ -4,6 +4,7 @@
     ../../System/Common
     ./sys.nix
     ./services.nix
+    ./qbittorrent.nix
   ];
 
   # Linux-specific, non-graphical account defaults. Shell/editor/Git/Pi and

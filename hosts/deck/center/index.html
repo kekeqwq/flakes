@@ -1,203 +1,210 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>DECK 酱的控制中心 🌸</title>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
-        }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Helvetica Neue", sans-serif;
+      }
 
-        body {
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background: linear-gradient(135deg, #fff0f5 0%, #ffdeeb 50%, #fa84a8 100%);
-            padding: 30px 20px;
-        }
+      body {
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: linear-gradient(
+          135deg,
+          #fff0f5 0%,
+          #ffdeeb 50%,
+          #fa84a8 100%
+        );
+        padding: 30px 20px;
+      }
 
-        .container {
-            width: 100%;
-            max-width: 950px;
-            background: rgba(255, 255, 255, 0.45);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-radius: 32px;
-            border: 2px solid rgba(255, 255, 255, 0.6);
-            padding: 45px 35px;
-            box-shadow: 0 16px 40px rgba(250, 132, 168, 0.25);
-            text-align: center;
-        }
+      .container {
+        width: 100%;
+        max-width: 950px;
+        background: rgba(255, 255, 255, 0.45);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-radius: 32px;
+        border: 2px solid rgba(255, 255, 255, 0.6);
+        padding: 45px 35px;
+        box-shadow: 0 16px 40px rgba(250, 132, 168, 0.25);
+        text-align: center;
+      }
 
-        h1 {
-            color: #fa84a8;
-            font-size: 2.8rem;
-            margin-bottom: 8px;
-            font-weight: 800;
-            text-shadow: 2px 2px 0px rgba(255, 255, 255, 0.8);
-            letter-spacing: 2px;
-        }
+      h1 {
+        color: #fa84a8;
+        font-size: 2.8rem;
+        margin-bottom: 8px;
+        font-weight: 800;
+        text-shadow: 2px 2px 0px rgba(255, 255, 255, 0.8);
+        letter-spacing: 2px;
+      }
 
-        .subtitle {
-            color: #9c6276;
-            font-size: 1.05rem;
-            margin-bottom: 40px;
-            font-weight: 500;
-            opacity: 0.9;
-        }
+      .subtitle {
+        color: #9c6276;
+        font-size: 1.05rem;
+        margin-bottom: 40px;
+        font-weight: 500;
+        opacity: 0.9;
+      }
 
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 25px;
-        }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 25px;
+      }
 
-        .card {
-            background: rgba(255, 255, 255, 0.75);
-            border-radius: 24px;
-            padding: 35px 25px;
-            text-decoration: none;
-            color: #5c474e;
-            border: 2px solid transparent;
-            box-shadow: 0 8px 16px rgba(250, 132, 168, 0.05);
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
-        }
+      .card {
+        background: rgba(255, 255, 255, 0.75);
+        border-radius: 24px;
+        padding: 35px 25px;
+        text-decoration: none;
+        color: #5c474e;
+        border: 2px solid transparent;
+        box-shadow: 0 8px 16px rgba(250, 132, 168, 0.05);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+      }
 
-        .card:hover {
-            transform: translateY(-8px) scale(1.02);
-            background: rgba(255, 255, 255, 0.95);
-            border-color: rgba(250, 132, 168, 0.4);
-            box-shadow: 0 15px 30px rgba(250, 132, 168, 0.2);
-        }
+      .card:hover {
+        transform: translateY(-8px) scale(1.02);
+        background: rgba(255, 255, 255, 0.95);
+        border-color: rgba(250, 132, 168, 0.4);
+        box-shadow: 0 15px 30px rgba(250, 132, 168, 0.2);
+      }
 
-        /* 气泡小装饰 */
-        .card::after {
-            content: '';
-            position: absolute;
-            width: 50px;
-            height: 50px;
-            background: rgba(250, 132, 168, 0.05);
-            border-radius: 50%;
-            top: -20px;
-            right: -20px;
-            transition: all 0.4s;
-        }
-        .card:hover::after {
-            width: 90px;
-            height: 90px;
-            top: -30px;
-            right: -30px;
-            background: rgba(250, 132, 168, 0.08);
-        }
+      /* 气泡小装饰 */
+      .card::after {
+        content: "";
+        position: absolute;
+        width: 50px;
+        height: 50px;
+        background: rgba(250, 132, 168, 0.05);
+        border-radius: 50%;
+        top: -20px;
+        right: -20px;
+        transition: all 0.4s;
+      }
+      .card:hover::after {
+        width: 90px;
+        height: 90px;
+        top: -30px;
+        right: -30px;
+        background: rgba(250, 132, 168, 0.08);
+      }
 
-        .icon {
-            font-size: 3rem;
-            margin-bottom: 18px;
-            transition: transform 0.3s ease;
-        }
+      .icon {
+        font-size: 3rem;
+        margin-bottom: 18px;
+        transition: transform 0.3s ease;
+      }
 
-        .card:hover .icon {
-            transform: rotate(10deg) scale(1.1);
-        }
+      .card:hover .icon {
+        transform: rotate(10deg) scale(1.1);
+      }
 
-        .title {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: #d1567d;
-            margin-bottom: 10px;
-        }
+      .title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #d1567d;
+        margin-bottom: 10px;
+      }
 
-        .desc {
-            font-size: 0.9rem;
-            color: #8c737b;
-            line-height: 1.5;
-        }
+      .desc {
+        font-size: 0.9rem;
+        color: #8c737b;
+        line-height: 1.5;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
+    <div class="container">
+      <h1>DECK CENTER 🎀</h1>
+      <div class="subtitle">欢迎回来！今天想要戳哪一个服务呢？</div>
 
-<div class="container">
-    <h1>DECK CENTER 🎀</h1>
-    <div class="subtitle">欢迎回来！今天想要戳哪一个服务呢？</div>
-
-    <div class="grid">
+      <div class="grid">
         <!-- 随身 Wi-Fi 后台 -->
         <a class="card" onclick="navigate('deck', 8181, 'http')">
-            <div class="icon">✉️</div>
-            <div class="title">随身 Wi-Fi 短信</div>
-            <div class="desc">悄悄查看手机卡收到的短信通知</div>
+          <div class="icon">✉️</div>
+          <div class="title">随身 Wi-Fi 短信</div>
+          <div class="desc">悄悄查看手机卡收到的短信通知</div>
         </a>
 
         <!-- Sunshine 串流管理 (修改为 http) -->
         <a class="card" onclick="navigate('deck', 8282, 'http')">
-            <div class="icon">✨</div>
-            <div class="title">Sunshine 串流</div>
-            <div class="desc">贴心伪装后的免限制高级管理后台</div>
+          <div class="icon">✨</div>
+          <div class="title">Sunshine 串流</div>
+          <div class="desc">贴心伪装后的免限制高级管理后台</div>
         </a>
 
         <!-- OpenList -->
         <a class="card" onclick="navigate('deck', 5244, 'http')">
-            <div class="icon">📂</div>
-            <div class="title">OpenList</div>
-            <div class="desc">网盘与多存储文件聚合小管家</div>
+          <div class="icon">📂</div>
+          <div class="title">OpenList</div>
+          <div class="desc">网盘与多存储文件聚合小管家</div>
         </a>
 
         <!-- qBittorrent -->
         <a class="card" onclick="navigate('deck', 8080, 'http')">
-            <div class="icon">🍿</div>
-            <div class="title">qBittorrent</div>
-            <div class="desc">大片与精彩资源的下载控制中心</div>
+          <div class="icon">🍿</div>
+          <div class="title">qBittorrent</div>
+          <div class="desc">大片与精彩资源的下载控制中心</div>
         </a>
 
         <!-- 飞行控制面板 -->
         <a class="card" onclick="navigate('pc', 9090, 'http')">
-            <div class="icon">✈️</div>
-            <div class="title">飞行控制面板</div>
-            <div class="desc">直达主机的飞行姿态与状态监控</div>
+          <div class="icon">✈️</div>
+          <div class="title">飞行控制面板</div>
+          <div class="desc">直达主机的飞行姿态与状态监控</div>
         </a>
 
         <!-- Surge 控制中心 -->
         <a class="card" onclick="navigate('192.168.2.2', 2222, 'http')">
-            <div class="icon">🚀</div>
-            <div class="title">Surge 控制中心</div>
-            <div class="desc">精准把控全局的网络大闸门</div>
+          <div class="icon">🚀</div>
+          <div class="title">Surge 控制中心</div>
+          <div class="desc">精准把控全局的网络大闸门</div>
         </a>
+      </div>
     </div>
-</div>
 
-<script>
-    /**
-     * 优雅的动态跳转核心
-     * @param {string} defaultHost - 预设的目标主机名或IP（如 'deck', 'pc', '192.168.2.2'）
-     * @param {number} port - 端口号
-     * @param {string} [protocolMode] - 可选: 指定 'http' 或 'https'。不填则自动跟随当前主页
-     */
-    function navigate(defaultHost, port, protocolMode) {
+    <script>
+      /**
+       * 优雅的动态跳转核心
+       * @param {string} defaultHost - 预设的目标主机名或IP（如 'deck', 'pc', '192.168.2.2'）
+       * @param {number} port - 端口号
+       * @param {string} [protocolMode] - 可选: 指定 'http' 或 'https'。不填则自动跟随当前主页
+       */
+      function navigate(defaultHost, port, protocolMode) {
         // 如果预设的是 'deck'，我们依然优先获取当前浏览器实际访问的 host (防止你通过IP访问主页)
         // 如果是 'pc' 或固定的 IP，就直接走设定的目标
         let targetHost = defaultHost;
-        if (defaultHost === 'deck') {
-            targetHost = window.location.hostname;
+        if (defaultHost === "deck") {
+          targetHost = window.location.hostname;
         }
 
         // 优雅的选择器逻辑：
         // 如果指定了 'http'/'https' 就用指定的；没指定(undefined)就用 window.location.protocol 自适应
-        const protocol = protocolMode ? `${protocolMode}:` : window.location.protocol;
+        const protocol = protocolMode
+          ? `${protocolMode}:`
+          : window.location.protocol;
 
         window.location.href = `${protocol}//${targetHost}:${port}`;
-    }
-</script>
-
-</body>
+      }
+    </script>
+  </body>
 </html>

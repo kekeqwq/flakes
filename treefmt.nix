@@ -5,8 +5,6 @@
 
   settings.global.excludes = [
     "flake.lock"
-    "**/.p10k.zsh"
-    "**/p10k.zsh"
   ];
 
   programs = {

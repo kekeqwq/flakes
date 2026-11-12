@@ -24,27 +24,6 @@
         '';
       };
     };
-    virtualHosts."sunshine-proxy" = {
-      listen = [
-        {
-          addr = "0.0.0.0";
-          port = 8282;
-        }
-      ];
-      locations."/" = {
-        proxyPass = "https://127.0.0.1:47990";
-        extraConfig = ''
-          proxy_set_header Host "127.0.0.1:47990";
-          proxy_set_header Origin "https://127.0.0.1:47990";
-          proxy_set_header Referer "https://127.0.0.1:47990/";
-          proxy_set_header X-Real-IP "127.0.0.1";
-          proxy_set_header X-Forwarded-For "127.0.0.1";
-          proxy_http_version 1.1;
-          proxy_set_header Upgrade $http_upgrade;
-          proxy_set_header Connection "upgrade";
-        '';
-      };
-    };
     virtualHosts."deck-center" = {
       listen = [
         {

@@ -9,8 +9,12 @@
   };
 
   # Linux-only graphical configuration. Common/desktop is gated by the same
-  # switch, independently of this Linux layer.
-  imports =
+  # switch, independently of this Linux layer. Host-varying features are
+  # options in this folder, default off; hosts only set the differences.
+  imports = [
+    ./sunshine.nix
+  ]
+  ++
     map
       (
         path:
@@ -35,7 +39,6 @@
         ./mimeapps.nix
         ./emacs-rime.nix
         ./wayland.nix
-        ./sunshine.nix
         ./yazi.nix
       ];
 }

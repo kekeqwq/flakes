@@ -40,7 +40,25 @@ assert !(disabled.options ? jovian);
 assert c.myuser.name == "keke";
 assert c.networking.hostName == "desktop-module-check";
 assert c.programs.niri.enable && c.services.greetd.enable;
-assert c.programs.steam.enable && c.services.sunshine.enable;
+assert c.programs.steam.enable && !c.services.sunshine.enable;
+assert !c.my.sunshine.enable && !off.my.sunshine.enable;
+assert !off.services.sunshine.enable;
+assert deck.config.my.sunshine.enable && deck.config.my.sunshine.proxy;
+assert deck.config.my.sunshine.capture == "DP-1";
+assert deck.config.services.sunshine.settings.output_name == "DP-1";
+assert deck.config.services.sunshine.settings.capture == "kms";
+assert !(c.services.nginx.virtualHosts ? sunshine-proxy);
+assert
+  deck.config.services.nginx.virtualHosts.sunshine-proxy.locations."/".proxyPass
+  == "https://127.0.0.1:47990";
+assert !c.services.qbittorrent.enable && !off.services.qbittorrent.enable;
+assert deck.config.services.qbittorrent.enable;
+assert deck.config.services.qbittorrent.package.pname == "qbittorrent-enhanced-nox";
+assert deck.config.services.qbittorrent.package.version == "5.2.4.10";
+assert
+  deck.config.systemd.tmpfiles.settings.qbittorrent-downloads."/var/lib/qBittorrent/downloads".d.user
+  == deck.config.services.qbittorrent.user;
+assert !(deck.config.systemd.services ? sing-box);
 assert c.networking.networkmanager.enable && c.hardware.bluetooth.enable;
 assert c.services.udisks2.enable && c.services.fwupd.enable;
 assert !off.programs.niri.enable && !off.services.greetd.enable && !off.services.sunshine.enable;

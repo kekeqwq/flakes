@@ -122,6 +122,13 @@
         system:
         {
           treefmt = treefmtFor.${system}.config.build.check self;
+          qbittorrent-policy =
+            pkgsFor.${system}.runCommand "qbittorrent-policy-check"
+              { nativeBuildInputs = [ pkgsFor.${system}.python3 ]; }
+              ''
+                python3 ${./tests/qbittorrent-policy.py} ${./NixOS/server/qbittorrent-policy.py}
+                touch "$out"
+              '';
         }
         // lib.optionalAttrs (system == "x86_64-linux") {
           desktop-boundaries = import ./tests/desktop.nix {

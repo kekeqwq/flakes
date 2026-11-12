@@ -7,7 +7,6 @@ _: {
     ./git.nix
     ./tmux.nix
     ./yazi.nix
-    # ./codex.nix
     ./pi.nix
     ./emacs.nix
     ./desktop
