@@ -115,6 +115,10 @@
       };
 
       nixosConfigurations.deck = mkNixos { modules = [ ./hosts/deck ]; };
+      nixosConfigurations.lab = mkNixos {
+        system = "aarch64-linux";
+        modules = [ ./hosts/lab.nix ];
+      };
       darwinConfigurations.mba = mkDarwin { modules = [ ./hosts/mba ]; };
 
       formatter = forAllSystems (system: treefmtFor.${system}.config.build.wrapper);

@@ -22,13 +22,19 @@
   programs.steam.enable = true;
   environment.pathsToLink = [ "/share/alsa/ucm2" ];
 
-  # Ordinary desktops need a login/session launcher without Jovian. Deck opts
-  # out and uses Jovian's Steam/Niri session selector instead.
+  # Ordinary desktops boot straight into Niri. A host that enables
+  # my.luks asks for the disk passphrase before this; there is no second
+  # user login. Deck disables greetd and keeps its Steam session selector.
   services.greetd = {
     enable = lib.mkDefault true;
+    restart = false;
+    settings.initial_session = {
+      command = "${pkgs.niri}/bin/niri-session";
+      user = config.myuser.name;
+    };
     settings.default_session = {
-      command = "${pkgs.tuigreet}/bin/tuigreet --time --cmd niri-session";
-      user = "greeter";
+      command = "${pkgs.niri}/bin/niri-session";
+      user = config.myuser.name;
     };
   };
 }

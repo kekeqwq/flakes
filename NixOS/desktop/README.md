@@ -15,8 +15,9 @@ layer, without importing Linux modules. See `AGENTS.md` for mandatory boundaries
 The desktop includes Niri, the application/package lists, themes, fonts,
 input methods, Emacs, WezTerm, Waybar, wallpaper, audio, Steam,
 NetworkManager, Bluetooth, removable-disk support and firmware updates.
-Ordinary hosts use greetd/tuigreet to launch `niri-session`. Deck disables greetd
-and uses Jovian's Steam/Niri session selector.
+Ordinary hosts use greetd to start `niri-session` for keke, with no user
+login prompt. A host that sets `my.luks.enable` asks for the disk passphrase
+before that. Deck disables greetd and uses Jovian's Steam/Niri session selector.
 
 `hosts/deck/` owns Jovian, Deck hardware/kernel/storage, hostname/host ID,
 resource limits, power-button behavior, display profiles, KMS/VA-API capture,
