@@ -1,4 +1,8 @@
-{ pkgs, ... }:
+{
+  lib,
+  pkgs,
+  ...
+}:
 {
   # GUI/tools used on both macOS and NixOS. Import this from both hosts.
   # Do not also list these in environment.systemPackages: on Darwin that
@@ -8,10 +12,14 @@
     volume-max=300
   '';
 
-  environment.systemPackages = with pkgs; [
-    mpv
-    scrcpy
-    # Builds Spotify, then applies SpotX. No existing install is required.
-    spotify-spotx
-  ];
+  environment.systemPackages =
+    with pkgs;
+    [
+      mpv
+      scrcpy
+    ]
+    # SpotX has no aarch64-linux build. macOS and x86_64 Linux still get it.
+    ++ lib.optionals (stdenv.hostPlatform.isDarwin || stdenv.hostPlatform.isx86_64) [
+      spotify-spotx
+    ];
 }

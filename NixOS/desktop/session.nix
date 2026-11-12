@@ -19,7 +19,9 @@
   services.udisks2.enable = lib.mkDefault true;
   services.fwupd.enable = lib.mkDefault true;
   services.orca.enable = lib.mkDefault true;
-  programs.steam.enable = true;
+  # Steam's 32-bit graphics support is x86_64-only. Deck is x86_64; an
+  # aarch64 desktop still gets Niri without this package.
+  programs.steam.enable = pkgs.stdenv.hostPlatform.isx86_64;
   environment.pathsToLink = [ "/share/alsa/ucm2" ];
 
   # Ordinary desktops boot straight into Niri. A host that enables
