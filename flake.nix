@@ -105,6 +105,11 @@
         system = "aarch64-linux";
         modules = [ ./hosts/lab.nix ];
       };
+      # Same private lab file. Only the NixOS system differs.
+      nixosConfigurations.lab-x86 = mkNixos {
+        system = "x86_64-linux";
+        modules = [ ./hosts/lab.nix ];
+      };
       darwinConfigurations.mba = mkDarwin { modules = [ ./hosts/mba ]; };
 
       formatter = forAllSystems (system: treefmtFor.${system}.config.build.wrapper);
