@@ -247,7 +247,12 @@ export default function inputMethod(pi: ExtensionAPI) {
     refreshTmux();
     // A short lease makes SIGKILL/crashes fail back to ABC instead of leaving
     // a stale Chinese context forever. The timer doesn't read user input.
-    timer = setInterval(() => report(true), 2000);
+    // Pane close/focus can miss a tmux hook. A stale client pane makes
+    // Hammerspoon force ABC and override a manual Chinese switch.
+    timer = setInterval(() => {
+      report(true);
+      refreshTmux();
+    }, 2000);
     timer.unref();
     process.once("exit", cleanup);
   });

@@ -50,6 +50,9 @@ let
     "after-new-window"
     "after-split-window"
     "pane-mode-changed"
+    "pane-exited"
+    "pane-died"
+    "window-pane-changed"
   ];
 in
 {
