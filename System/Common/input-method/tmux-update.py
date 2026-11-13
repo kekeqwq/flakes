@@ -25,7 +25,7 @@ try:
         if len(values) != len(fields):
             continue
         client = dict(zip(fields, values))
-        result = subprocess.run(["/bin/ps", "-o", "tpgid=", "-p", client["pane_pid"]],
+        result = subprocess.run(["@PS@", "-o", "tpgid=", "-p", client["pane_pid"]],
                                 capture_output=True, text=True, timeout=1)
         client["foreground_pid"] = int(result.stdout.strip() or 0)
         client["socket"] = socket
