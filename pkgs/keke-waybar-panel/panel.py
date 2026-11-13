@@ -448,20 +448,24 @@ class Panel(Gtk.Window):
         }[section]()
         card.pack_start(page, True, True, 0)
 
+        self.card = card
         if HAVE_LAYER_SHELL:
             holder = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
-            holder.set_halign(Gtk.Align.END)
+            holder.set_halign(Gtk.Align.START)
             holder.set_valign(Gtk.Align.START)
-            holder.set_margin_top(BAR_HEIGHT)
-            holder.set_margin_end(MARGIN)
             holder.pack_start(card, False, False, 0)
+            self.holder = holder
             # Full-screen transparent surface: any click outside the card
-            # reaches it and dismisses the popup, like a native menu.
+            # reaches it and dismisses the popup, like a native menu. The
+            # first pointer position we receive is the click location, so the
+            # card opens just under the cursor with a small gap.
             overlay = Gtk.EventBox()
             overlay.set_visible_window(False)
             overlay.connect("button-press-event", lambda *_: (self.close(), True)[1])
+            overlay.connect("enter-notify-event", self.on_pointer)
             overlay.add(holder)
             self.add(overlay)
+            self.sized = False
         else:
             self.add(card)
 
@@ -489,16 +493,36 @@ class Panel(Gtk.Window):
             GtkLayerShell.set_keyboard_mode(self, GtkLayerShell.KeyboardMode.EXCLUSIVE)
 
         self.show_all()
-        if not HAVE_LAYER_SHELL:
+        if HAVE_LAYER_SHELL:
+            self.card.hide()
+            GLib.timeout_add(150, self.fallback_place)
+        else:
             GLib.idle_add(self.place)
         self.page = page
 
-    def place(self):
-        display = Gdk.Display.get_default()
-        monitor = display.get_primary_monitor() or display.get_monitor(0)
-        geometry = monitor.get_geometry()
-        width = self.get_allocated_width() or self.get_preferred_width()[1]
-        self.move(geometry.x + geometry.width - width - MARGIN, geometry.y + BAR_HEIGHT)
+    def fallback_place(self):
+        if getattr(self, "sized", True):
+            return False
+        geometry = Gdk.Display.get_default().get_primary_monitor().get_geometry()
+        self.holder.set_margin_start(geometry.width - self.card.get_preferred_width()[1] - MARGIN)
+        self.holder.set_margin_top(BAR_HEIGHT)
+        self.card.show_all()
+        self.sized = True
+        return False
+
+    def on_pointer(self, _overlay, event):
+        """Anchor the card at the pointer, leaving a gap under the bar."""
+        monitor = Gdk.Display.get_default().get_monitor_at_point(event.x_root, event.y_root)
+        geometry = (monitor or Gdk.Display.get_default().get_primary_monitor()).get_geometry()
+        card_w, card_h = self.card.get_preferred_width()[1], self.card.get_preferred_height()[1]
+        x = min(max(event.x_root, geometry.x + MARGIN), geometry.x + geometry.width - card_w - MARGIN)
+        y = event.y_root + 8
+        if y + card_h > geometry.y + geometry.height - MARGIN:
+            y = event.y_root - card_h - 8
+        self.holder.set_margin_start(int(x - geometry.x))
+        self.holder.set_margin_top(int(max(y, BAR_HEIGHT) - geometry.y))
+        self.card.show_all()
+        self.sized = True
         return False
 
     def on_key(self, _window, event):

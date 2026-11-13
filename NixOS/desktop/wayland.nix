@@ -152,7 +152,6 @@ in
         margin-right = 12;
         modules-left = [
           "niri/workspaces"
-          "niri/window"
         ];
         modules-center = [
           "custom/clock"
@@ -233,7 +232,6 @@ in
     };
     style = ''
       * {
-          font-family: "MonoLisa Nasy", "LXGW WenKai", sans-serif;
           font-size: 14px;
           min-height: 0;
       }
