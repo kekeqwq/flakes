@@ -445,9 +445,17 @@ class Panel(Gtk.Window):
             self.set_visual(visual)
         self.set_app_paintable(True)
 
-        card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        # An EventBox paints its own opaque background; GTK's CSS background
+        # can be skipped for plain boxes, which made the card see-through.
+        card = Gtk.EventBox()
+        card.set_visible_window(True)
+        card.override_background_color(
+            Gtk.StateFlags.NORMAL, Gdk.RGBA(0.1176, 0.1176, 0.1804, 1.0)
+        )
         card.get_style_context().add_class("keke-card")
-        card.set_size_request(330, -1)
+        card.set_size_request(340, -1)
+        content = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        card.add(content)
         # Clicks inside the card must not dismiss it.
         card.connect("button-press-event", lambda *_: True)
         page = {
@@ -457,11 +465,12 @@ class Panel(Gtk.Window):
             "bluetooth": Bluetooth,
             "clock": Clock,
         }[section]()
-        card.pack_start(page, True, True, 0)
+        content.pack_start(page, True, True, 0)
 
         self.card = card
         if HAVE_LAYER_SHELL:
             holder = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+            holder.set_size_request(340, -1)
             holder.set_halign(Gtk.Align.START)
             holder.set_valign(Gtk.Align.START)
             holder.pack_start(card, False, False, 0)
