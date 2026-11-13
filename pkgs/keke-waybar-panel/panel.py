@@ -166,8 +166,7 @@ class Audio(Gtk.Box):
             if len(parts) < 2:
                 continue
             name = parts[1]
-            button = Gtk.Button(label=humanize(name))
-            button.get_style_context().add_class("keke-device")
+            button = device_button(humanize(name), name)
             if name == current:
                 button.get_style_context().add_class("active")
             button.connect("clicked", lambda _b, n=name: (spawn("pactl", setter, n), self.refresh()))
@@ -185,6 +184,20 @@ class Audio(Gtk.Box):
             return
         spawn("pactl", "set-source-volume", "@DEFAULT_SOURCE@", f"{int(scale.get_value())}%")
         self.mic_value.set_text(f"{int(scale.get_value())}%")
+
+
+def device_button(text, tooltip=None):
+    """Long device names must not widen the card beyond the window."""
+    label = Gtk.Label(label=text)
+    label.set_xalign(0)
+    label.set_ellipsize(3)  # Pango.EllipsizeMode.END
+    label.set_max_width_chars(30)
+    button = Gtk.Button()
+    button.add(label)
+    button.get_style_context().add_class("keke-device")
+    if tooltip or text:
+        button.set_tooltip_text(tooltip or text)
+    return button
 
 
 def humanize(name):
@@ -278,8 +291,7 @@ class Network(Gtk.Box):
                 seen.add(ssid)
                 icon = "󰤨" if int(strength or 0) > 70 else "󰤢" if int(strength or 0) > 40 else "󰤟"
                 label = f"{icon}  {ssid}  {strength}%{'  󰌾' if security and security != '--' else ''}"
-                button = Gtk.Button(label=label)
-                button.get_style_context().add_class("keke-device")
+                button = device_button(label, ssid)
                 if active == "*":
                     button.get_style_context().add_class("active")
                 button.connect("clicked", self.on_pick, ssid, security)
@@ -359,8 +371,7 @@ class Bluetooth(Gtk.Box):
                 continue
             mac, name = parts[1], parts[2]
             linked = any(mac in c for c in connected)
-            button = Gtk.Button(label=f"{name}{'  ✓' if linked else ''}")
-            button.get_style_context().add_class("keke-device")
+            button = device_button(f"{name}{'  ✓' if linked else ''}", mac)
             if linked:
                 button.get_style_context().add_class("active")
             button.connect(
