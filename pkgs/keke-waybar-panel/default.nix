@@ -6,6 +6,7 @@
   wrapGAppsHook3,
   gobject-introspection,
   gtk3,
+  gtk-layer-shell,
   brightnessctl,
   pulseaudio,
   networkmanager,
@@ -27,7 +28,10 @@ stdenv.mkDerivation {
     wrapGAppsHook3
     gobject-introspection
   ];
-  buildInputs = [ gtk3 ];
+  buildInputs = [
+    gtk3
+    gtk-layer-shell
+  ];
   dontWrapGApps = false;
 
   installPhase = ''

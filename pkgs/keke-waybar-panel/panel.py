@@ -22,6 +22,14 @@ gi.require_version("Gtk", "3.0")
 gi.require_version("Gdk", "3.0")
 from gi.repository import Gdk, GLib, Gtk  # noqa: E402
 
+try:
+    gi.require_version("GtkLayerShell", "0.1")
+    from gi.repository import GtkLayerShell  # noqa: E402
+
+    HAVE_LAYER_SHELL = True
+except (ValueError, ImportError):
+    HAVE_LAYER_SHELL = False
+
 APP_ID = "keke-waybar-panel"
 RUNTIME = os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}")
 PIDFILE = os.path.join(RUNTIME, f"{APP_ID}.pid")
@@ -438,10 +446,21 @@ class Panel(Gtk.Window):
         self.connect("focus-out-event", lambda *_: self.close())
         self.connect("destroy", Gtk.main_quit)
 
+        if HAVE_LAYER_SHELL:
+            # Wayland toplevels cannot position themselves; a layer surface
+            # anchors under the right end of the bar.
+            GtkLayerShell.init_for_window(self)
+            GtkLayerShell.set_namespace(self, APP_ID)
+            GtkLayerShell.set_layer(self, GtkLayerShell.Layer.OVERLAY)
+            for edge in (GtkLayerShell.Edge.TOP, GtkLayerShell.Edge.RIGHT):
+                GtkLayerShell.set_anchor(self, edge, True)
+            GtkLayerShell.set_margin(self, GtkLayerShell.Edge.TOP, BAR_HEIGHT)
+            GtkLayerShell.set_margin(self, GtkLayerShell.Edge.RIGHT, MARGIN)
+            GtkLayerShell.set_keyboard_mode(self, GtkLayerShell.KeyboardMode.ON_DEMAND)
+
         self.show_all()
-        # Size is only known after the first allocation; anchor to the right
-        # edge under the bar once it exists.
-        GLib.idle_add(self.place)
+        if not HAVE_LAYER_SHELL:
+            GLib.idle_add(self.place)
         self.page = page
 
     def place(self):
