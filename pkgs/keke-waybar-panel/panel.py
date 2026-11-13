@@ -439,15 +439,18 @@ class Panel(Gtk.Window):
         self.connect("destroy", Gtk.main_quit)
 
         self.show_all()
-        self.place()
+        # Size is only known after the first allocation; anchor to the right
+        # edge under the bar once it exists.
+        GLib.idle_add(self.place)
         self.page = page
 
     def place(self):
         display = Gdk.Display.get_default()
         monitor = display.get_primary_monitor() or display.get_monitor(0)
         geometry = monitor.get_geometry()
-        width, _ = self.get_size()
+        width = self.get_allocated_width() or self.get_preferred_width()[1]
         self.move(geometry.x + geometry.width - width - MARGIN, geometry.y + BAR_HEIGHT)
+        return False
 
     def on_key(self, _window, event):
         if event.keyval == Gdk.KEY_Escape:
