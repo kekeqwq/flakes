@@ -35,7 +35,9 @@ def select(source):
 def write_hold(active):
     STATE.mkdir(parents=True, exist_ok=True, mode=0o700)
     path = STATE / "prefix.json"
-    path.write_text(json.dumps({"active": active}))
+    # The hold expires by itself: a missed restore must not pin ABC forever.
+    payload = {"active": True, "expires": time.time() + 3} if active else {"active": False}
+    path.write_text(json.dumps(payload))
     path.chmod(0o600)
 
 

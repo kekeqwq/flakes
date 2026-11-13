@@ -54,7 +54,9 @@ local function frontBundle()
 end
 local function prefixHeld()
   local value = readJSON(root .. '/prefix.json')
-  return value and value.active == true or false
+  if not value or value.active ~= true then return false end
+  -- A missed restore expires instead of pinning ABC indefinitely.
+  return type(value.expires) == 'number' and hs.timer.secondsSinceEpoch() <= value.expires
 end
 local function desired()
   local bundle = frontBundle()
