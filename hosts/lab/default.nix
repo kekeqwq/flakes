@@ -25,6 +25,10 @@
     settings = {
       sunshine_name = "lab";
       capture = "kms";
+      # The guest is reached through Deck's second LAN address, not localhost.
+      # Sunshine's CSRF check rejects any other origin, which also breaks the
+      # first account creation and later PIN entry.
+      csrf_allowed_origins = "https://192.168.2.131:47990";
     };
   };
 }
