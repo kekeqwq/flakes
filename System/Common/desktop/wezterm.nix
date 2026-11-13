@@ -34,7 +34,10 @@ let
       '';
 in
 {
-  myuser.hm.xdg.configFile."wezterm/bar".source = barPlugin;
+  myuser.hm.xdg.configFile = {
+    "wezterm/bar".source = barPlugin;
+    "wezterm/input-method.lua".source = ../input-method/wezterm.lua;
+  };
 
   myuser.hm.programs.wezterm = {
     enable = true;
@@ -103,6 +106,15 @@ in
         config.term = "xterm-kitty"
         config.color_scheme = "Catppuccin Mocha"
         config.font_size = 12
+      end
+
+      -- Report the focused pane for the input-method switcher on macOS and
+      -- Linux. The reporter only writes metadata; it never switches sources.
+      if wezterm.target_triple == "aarch64-apple-darwin"
+        or wezterm.target_triple == "x86_64-unknown-linux-gnu" then
+        local imeConfig = wezterm.config_dir .. "/input-method.lua"
+        wezterm.add_to_config_reload_watch_list(imeConfig)
+        dofile(imeConfig).apply()
       end
 
       -- Let the bar see the initial scheme before it derives tab colors.

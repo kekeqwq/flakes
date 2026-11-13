@@ -6,6 +6,7 @@
 }:
 let
   source = ./input-method;
+  shared = ../../System/Common/input-method;
   sourceActuator = pkgs.stdenv.mkDerivation {
     pname = "input-method-select";
     version = "1";
@@ -21,25 +22,18 @@ let
       {
         nativeBuildInputs = [
           pkgs.lua
-          pkgs.nodejs
         ];
       }
       ''
         for file in ${source}/*.lua; do luac -p "$file"; done
         lua ${source}/policy.test.lua ${source}/policy.lua
         lua ${source}/manager.test.lua ${source}/init.lua
-        node ${source}/pi-ime.test.mjs ${source}/pi-ime.ts
         mkdir -p "$out"
         cp ${source}/* "$out/"
         substituteInPlace "$out/init.lua" \
           --replace-fail '@INPUT_SOURCE_SELECT@' '${sourceActuator}/bin/input-method-select'
       '';
-  tmuxReporter = pkgs.writeScriptBin "input-method-tmux-update" ''
-    #!${pkgs.python3}/bin/python3
-    ${builtins.replaceStrings [ "@TMUX@" ] [ "${pkgs.tmux}/bin/tmux" ] (
-      builtins.readFile (source + /tmux-update.py)
-    )}
-  '';
+  tmuxReporter = import (shared + "/reporter.nix") { inherit pkgs; };
   prefixSwitcher = pkgs.writeScriptBin "input-method-prefix" ''
     #!${pkgs.python3}/bin/python3
     ${builtins.replaceStrings
@@ -52,20 +46,9 @@ let
       (builtins.readFile (source + /prefix.py))
     }
   '';
-  hooks = [
-    "client-attached"
-    "client-detached"
-    "client-session-changed"
-    "session-window-changed"
-    "after-select-pane"
-    "after-select-window"
-    "after-new-window"
-    "after-split-window"
-    "pane-mode-changed"
-    "pane-exited"
-    "pane-died"
-    "window-pane-changed"
-  ];
+  tmuxHooks = import (shared + "/tmux-hooks.nix") {
+    reporter = tmuxReporter;
+  };
 in
 {
   homebrew.casks = [ "hammerspoon" ];
@@ -91,9 +74,7 @@ in
           fi
         '';
       };
-      ".pi/agent/extensions/input-method.ts".source = "${checkedSource}/pi-ime.ts";
     };
-    xdg.configFile."wezterm/input-method.lua".source = "${checkedSource}/wezterm.lua";
     home.activation.inputMethodState = inputs.home-manager.lib.hm.dag.entryAfter [ "writeBoundary" ] ''
       mkdir -p "$HOME/.local/state/input-method/"{pi,tmux}
       chmod 700 "$HOME/.local/state/input-method" "$HOME/.local/state/input-method/"{pi,tmux}
@@ -128,10 +109,7 @@ in
       end
     '';
     programs.tmux.extraConfig = lib.mkAfter (
-      lib.concatMapStringsSep "\n" (
-        hook:
-        ''set-hook -g '${hook}[90]' 'run-shell -b "${tmuxReporter}/bin/input-method-tmux-update #{q:socket_path}"' ''
-      ) hooks
+      builtins.concatStringsSep "\n" tmuxHooks
       + ''
 
         # WezTerm signals the prefix before tmux sees it; these only restore.

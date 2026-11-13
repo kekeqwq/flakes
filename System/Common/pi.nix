@@ -16,6 +16,13 @@ let
   # Discoverable extension, not a wrapper --extension flag: child Pi processes
   # launched with --no-extensions must keep their restricted loadout. This
   # package publishes loopback account routes for those children itself.
+  # Reports only editor focus for the input-method switcher; no prompt text.
+  # Shared by macOS (Hammerspoon) and Linux (fcitx5 watcher).
+  inputMethod = pkgs.runCommand "pi-input-method" { nativeBuildInputs = [ pkgs.nodejs ]; } ''
+    node ${./input-method/pi-ime.test.mjs} ${./input-method/pi-ime.ts}
+    mkdir -p "$out"
+    cp ${./input-method/pi-ime.ts} "$out/input-method.ts"
+  '';
   multiAccountSrc = pkgs.fetchzip {
     url = "https://registry.npmjs.org/pi-multi-account/-/pi-multi-account-1.28.1.tgz";
     hash = "sha256-TUjGG5hi83voCw/pek2NzvD/z4zKbChl4Rbv16MDDFg=";
@@ -66,6 +73,7 @@ in
       inputs.pi.homeModules.default
     ];
     # home.file.".pi/agent/extensions/pi-multi-account".source = multiAccount;
+    home.file.".pi/agent/extensions/input-method.ts".source = "${inputMethod}/input-method.ts";
     programs.pi.coding-agent = {
       enable = true;
       package = livePi;

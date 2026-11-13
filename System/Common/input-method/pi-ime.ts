@@ -108,7 +108,7 @@ export default function inputMethod(pi: ExtensionAPI) {
 
   pi.on("session_start", (_event, ctx) => {
     if (
-      process.platform !== "darwin" ||
+      (process.platform !== "darwin" && process.platform !== "linux") ||
       ctx.mode !== "tui" ||
       !ctx.hasUI ||
       (!process.env.WEZTERM_PANE && !process.env.TMUX)
