@@ -4,6 +4,7 @@
   stdenv,
   makeWrapper,
   wrapGAppsHook3,
+  gobject-introspection,
   gtk3,
   brightnessctl,
   pulseaudio,
@@ -24,6 +25,7 @@ stdenv.mkDerivation {
   nativeBuildInputs = [
     makeWrapper
     wrapGAppsHook3
+    gobject-introspection
   ];
   buildInputs = [ gtk3 ];
   dontWrapGApps = false;
@@ -45,7 +47,8 @@ stdenv.mkDerivation {
           iproute2
         ]
       } \
-      --set KEKE_PANEL_CSS "$out/share/keke-waybar-panel/panel.css"
+      --set KEKE_PANEL_CSS "$out/share/keke-waybar-panel/panel.css" \
+      --prefix GI_TYPELIB_PATH : "$GI_TYPELIB_PATH"
     runHook postInstall
   '';
 
