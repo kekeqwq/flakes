@@ -1,10 +1,10 @@
 /* Catppuccin Mocha, mauve accent. Loaded on top of the system GTK theme. */
 window.keke-panel {
-  background: transparent;
+  background-color: transparent;
 }
 
 .keke-card {
-  background: #1e1e2e;
+  background-color: #1e1e2e;
   border: 1px solid #45475a;
   border-radius: 14px;
   padding: 14px;
@@ -37,7 +37,7 @@ window.keke-panel {
 }
 
 button.keke-action {
-  background: #313244;
+  background-color: #313244;
   color: #cdd6f4;
   border: 1px solid #45475a;
   border-radius: 8px;
@@ -46,17 +46,17 @@ button.keke-action {
 }
 
 button.keke-action:hover {
-  background: #45475a;
+  background-color: #45475a;
 }
 
 button.keke-action.suggested {
-  background: #cba6f7;
+  background-color: #cba6f7;
   color: #1e1e2e;
   border-color: #cba6f7;
 }
 
 button.keke-device {
-  background: #313244;
+  background-color: #313244;
   color: #cdd6f4;
   border: 1px solid transparent;
   border-radius: 8px;
@@ -64,34 +64,34 @@ button.keke-device {
 }
 
 button.keke-device:hover {
-  background: #45475a;
+  background-color: #45475a;
 }
 
 button.keke-device.active {
   border-color: #cba6f7;
-  background: #313244;
+  background-color: #313244;
 }
 
 scale trough {
-  background: #313244;
+  background-color: #313244;
   border-radius: 6px;
   min-height: 8px;
 }
 
 scale highlight {
-  background: #cba6f7;
+  background-color: #cba6f7;
   border-radius: 6px;
 }
 
 scale slider {
-  background: #cdd6f4;
+  background-color: #cdd6f4;
   border-radius: 8px;
   min-width: 14px;
   min-height: 14px;
 }
 
 entry.keke-entry {
-  background: #313244;
+  background-color: #313244;
   color: #cdd6f4;
   border: 1px solid #45475a;
   border-radius: 8px;
@@ -99,14 +99,14 @@ entry.keke-entry {
 }
 
 calendar {
-  background: #313244;
+  background-color: #313244;
   color: #cdd6f4;
   border-radius: 10px;
   padding: 6px;
 }
 
 calendar:selected {
-  background: #cba6f7;
+  background-color: #cba6f7;
   color: #1e1e2e;
 }
 
