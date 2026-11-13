@@ -65,7 +65,7 @@ in
     imports = [
       inputs.pi.homeModules.default
     ];
-    home.file.".pi/agent/extensions/pi-multi-account".source = multiAccount;
+    # home.file.".pi/agent/extensions/pi-multi-account".source = multiAccount;
     programs.pi.coding-agent = {
       enable = true;
       package = livePi;
