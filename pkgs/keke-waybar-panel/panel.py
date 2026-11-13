@@ -428,10 +428,17 @@ class Panel(Gtk.Window):
         self.set_type_hint(Gdk.WindowTypeHint.POPUP_MENU)
         self.get_style_context().add_class("keke-panel")
         self.set_title(APP_ID)
+        # The overlay surface is transparent; only the card is painted.
+        visual = self.get_screen().get_rgba_visual()
+        if visual is not None:
+            self.set_visual(visual)
+        self.set_app_paintable(True)
 
         card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
         card.get_style_context().add_class("keke-card")
         card.set_size_request(330, -1)
+        # Clicks inside the card must not dismiss it.
+        card.connect("button-press-event", lambda *_: True)
         page = {
             "brightness": Brightness,
             "audio": Audio,
@@ -440,10 +447,27 @@ class Panel(Gtk.Window):
             "clock": Clock,
         }[section]()
         card.pack_start(page, True, True, 0)
-        self.add(card)
+
+        if HAVE_LAYER_SHELL:
+            holder = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+            holder.set_halign(Gtk.Align.END)
+            holder.set_valign(Gtk.Align.START)
+            holder.set_margin_top(BAR_HEIGHT)
+            holder.set_margin_end(MARGIN)
+            holder.pack_start(card, False, False, 0)
+            # Full-screen transparent surface: any click outside the card
+            # reaches it and dismisses the popup, like a native menu.
+            overlay = Gtk.EventBox()
+            overlay.set_visible_window(False)
+            overlay.connect("button-press-event", lambda *_: (self.close(), True)[1])
+            overlay.add(holder)
+            self.add(overlay)
+        else:
+            self.add(card)
 
         self.connect("key-press-event", self.on_key)
-        self.connect("focus-out-event", lambda *_: self.close())
+        if not HAVE_LAYER_SHELL:
+            self.connect("focus-out-event", lambda *_: self.close())
         self.connect("destroy", Gtk.main_quit)
 
         if HAVE_LAYER_SHELL:
@@ -452,11 +476,17 @@ class Panel(Gtk.Window):
             GtkLayerShell.init_for_window(self)
             GtkLayerShell.set_namespace(self, APP_ID)
             GtkLayerShell.set_layer(self, GtkLayerShell.Layer.OVERLAY)
-            for edge in (GtkLayerShell.Edge.TOP, GtkLayerShell.Edge.RIGHT):
+            for edge in (
+                GtkLayerShell.Edge.TOP,
+                GtkLayerShell.Edge.BOTTOM,
+                GtkLayerShell.Edge.LEFT,
+                GtkLayerShell.Edge.RIGHT,
+            ):
                 GtkLayerShell.set_anchor(self, edge, True)
-            GtkLayerShell.set_margin(self, GtkLayerShell.Edge.TOP, BAR_HEIGHT)
-            GtkLayerShell.set_margin(self, GtkLayerShell.Edge.RIGHT, MARGIN)
-            GtkLayerShell.set_keyboard_mode(self, GtkLayerShell.KeyboardMode.ON_DEMAND)
+            GtkLayerShell.set_exclusive_zone(self, -1)
+            # Exclusive keyboard so Escape reaches us; pointer clicks outside
+            # the card land on the transparent overlay and close the panel.
+            GtkLayerShell.set_keyboard_mode(self, GtkLayerShell.KeyboardMode.EXCLUSIVE)
 
         self.show_all()
         if not HAVE_LAYER_SHELL:
