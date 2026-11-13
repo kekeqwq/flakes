@@ -21,7 +21,8 @@ let
         python3 ${./input-method/policy.test.py} ${./input-method/policy.py}
         mkdir -p "$out/bin" "$out/lib"
         cp ${./input-method/policy.py} "$out/lib/policy.py"
-        cp ${./input-method/watch.py} "$out/bin/input-method-watch"
+        printf '#!${pkgs.python3}/bin/python3\n' > "$out/bin/input-method-watch"
+        cat ${./input-method/watch.py} >> "$out/bin/input-method-watch"
         substituteInPlace "$out/bin/input-method-watch" \
           --replace-fail '@DIR@' "$out/lib" \
           --replace-fail '@NIRI@' "${pkgs.niri}" \
