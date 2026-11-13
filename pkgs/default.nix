@@ -1,5 +1,6 @@
 self: super: {
   xrock = super.callPackage ./xrock { };
+  keke-waybar-panel = super.callPackage ./keke-waybar-panel { };
 
   emacs-head = super.emacs.overrideAttrs (old: {
     pname = "emacs-head";

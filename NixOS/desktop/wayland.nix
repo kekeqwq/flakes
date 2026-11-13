@@ -19,6 +19,38 @@ let
     niri validate -c ${niriConfig}
     cp ${niriConfig} "$out"
   '';
+  panel = pkgs.keke-waybar-panel;
+  clockStatus = pkgs.writeShellScript "waybar-clock" ''
+    exec ${pkgs.coreutils}/bin/date '+%I:%M %p' | ${pkgs.gnused}/bin/sed 's/^0//'
+  '';
+  brightnessStatus = pkgs.writeShellScript "waybar-brightness" ''
+    level=$(${pkgs.brightnessctl}/bin/brightnessctl -m | ${pkgs.gawk}/bin/awk -F, '{print $4}')
+    ${pkgs.coreutils}/bin/printf '󰃠 %s\n' "$level"
+  '';
+  audioStatus = pkgs.writeShellScript "waybar-audio" ''
+    if ${pkgs.pulseaudio}/bin/pactl get-sink-mute @DEFAULT_SINK@ | ${pkgs.gnugrep}/bin/grep -q yes; then
+      ${pkgs.coreutils}/bin/printf '󰝟 muted\n'
+      exit 0
+    fi
+    level=$(${pkgs.pulseaudio}/bin/pactl get-sink-volume @DEFAULT_SINK@ |
+      ${pkgs.gnugrep}/bin/grep -o '[0-9]\\+%' | ${pkgs.coreutils}/bin/head -1)
+    ${pkgs.coreutils}/bin/printf '󰕾 %s\n' "$level"
+  '';
+  networkStatus = pkgs.writeShellScript "waybar-network" (
+    builtins.replaceStrings
+      [ "@NMCLI@" "@AWK@" ]
+      [ "${pkgs.networkmanager}/bin/nmcli" "${pkgs.gawk}/bin/awk" ]
+      (builtins.readFile ./waybar/network-status.sh)
+  );
+  bluetoothStatus = pkgs.writeShellScript "waybar-bluetooth" (
+    builtins.replaceStrings
+      [ "@BLUETOOTHCTL@" "@AWK@" ]
+      [ "${pkgs.bluez}/bin/bluetoothctl" "${pkgs.gawk}/bin/awk" ]
+      (builtins.readFile ./waybar/bluetooth-status.sh)
+  );
+  batteryStatus = pkgs.writeShellScript "waybar-battery" (
+    builtins.readFile ./waybar/battery-status.sh
+  );
 in
 {
   myuser.hm.programs.rofi = {
@@ -83,6 +115,9 @@ in
   };
 
   environment.systemPackages = with pkgs; [
+    # Popup panels behind the Waybar modules.
+    keke-waybar-panel
+    brightnessctl
     # Niri need statllite
     xwayland-satellite
     wev
@@ -120,21 +155,70 @@ in
           "niri/window"
         ];
         modules-center = [
-          "clock"
+          "custom/clock"
         ];
         modules-right = [
           "tray"
-          "backlight"
-          "pulseaudio"
-          "battery"
+          "custom/bluetooth"
+          "custom/network"
+          "custom/audio"
+          "custom/brightness"
+          "custom/battery"
         ];
-        pulseaudio = {
-          format = "{volume}% 󰝚";
-          on-click = "${pkgs.pavucontrol}/bin/pavucontrol";
+
+        "custom/clock" = {
+          exec = "${clockStatus}";
+          interval = 5;
+          tooltip-format = "<tt>{calendar}</tt>";
+          calendar = {
+            mode = "month";
+            mode-mon-col = 3;
+            weeks-pos = "right";
+            on-scroll = 1;
+            format = {
+              months = "<span color='#89b4fa'><b>{}</b></span>";
+              days = "<span color='#cdd6f4'>{}</span>";
+              weeks = "<span color='#a6adc8'><b>W{}</b></span>";
+              today = "<span color='#cba6f7'><b><u>{}</u></b></span>";
+            };
+          };
+          on-click = "${panel}/bin/keke-waybar-panel clock";
+          on-click-right = "${panel}/bin/keke-waybar-panel clock";
         };
-        backlight = {
-          format = "{percent}% 󰌵";
+
+        "custom/brightness" = {
+          exec = "${brightnessStatus}";
+          interval = 3;
+          on-click = "${panel}/bin/keke-waybar-panel brightness";
+          on-scroll-up = "${pkgs.brightnessctl}/bin/brightnessctl set +5%";
+          on-scroll-down = "${pkgs.brightnessctl}/bin/brightnessctl set 5%-";
         };
+
+        "custom/audio" = {
+          exec = "${audioStatus}";
+          interval = 2;
+          on-click = "${panel}/bin/keke-waybar-panel audio";
+          on-scroll-up = "${pkgs.pulseaudio}/bin/pactl set-sink-volume @DEFAULT_SINK@ +5%";
+          on-scroll-down = "${pkgs.pulseaudio}/bin/pactl set-sink-volume @DEFAULT_SINK@ -5%";
+        };
+
+        "custom/network" = {
+          exec = "${networkStatus}";
+          interval = 3;
+          on-click = "${panel}/bin/keke-waybar-panel network";
+        };
+
+        "custom/bluetooth" = {
+          exec = "${bluetoothStatus}";
+          interval = 5;
+          on-click = "${panel}/bin/keke-waybar-panel bluetooth";
+        };
+
+        "custom/battery" = {
+          exec = "${batteryStatus}";
+          interval = 5;
+        };
+
         tray = {
           icon-size = 20;
           spacing = 10;
@@ -145,58 +229,42 @@ in
             Sunshine = "${trayIcons}/simplescreenrecorder-panel.svg";
           };
         };
-        battery = {
-          format = "{capacity}% 󱊣";
-          format-charging = "{capacity}% 󰂄";
-          interval = 1;
-          on-click = "${pkgs.rofi}/bin/rofi -show run";
-        };
       };
     };
     style = ''
       * {
-          font-size: 15px;
+          font-family: "MonoLisa Nasy", "LXGW WenKai", sans-serif;
+          font-size: 14px;
+          min-height: 0;
       }
+
       window#waybar {
-          background: rgba(30, 30, 46, 0.95);
+          background: rgba(30, 30, 46, 0.96);
           color: #cdd6f4;
           border: 1px solid #45475a;
-          border-radius: 10px;
+          border-radius: 12px;
       }
 
-
-      #clock,
-      #tray,
-      #battery,
-      #cpu,
-      #window,
-      #memory,
-      #network,
-      #scratchpad,
-      #temperature,
-      #pulseaudio,
-      #backlight {
-          background: transparent;
-          padding: 0px 0px;
-          border-radius: 6px;
-          margin: 0px;
-          margin-top: 0px;
-          margin-bottom: 0px;
-          margin-right: 14px;
+      .modules-left,
+      .modules-right,
+      .modules-center {
+          padding: 4px 6px;
       }
 
       #workspaces {
-          margin-left: 5px;
+          margin-left: 4px;
       }
 
       #workspaces button {
-          padding: 0 5px;
-          margin-right: 1px;
-          border-radius: 4px;
+          padding: 0 6px;
+          margin-right: 2px;
+          border-radius: 6px;
+          color: #a6adc8;
+          background: transparent;
       }
 
       #workspaces button:hover {
-          background-color: #45475a;
+          background-color: #313244;
           color: #cdd6f4;
       }
 
@@ -210,31 +278,74 @@ in
           color: #1e1e2e;
       }
 
-      #clock{
-          font-size: 16px;
+      #window {
+          color: #a6adc8;
+          margin-left: 6px;
       }
 
-      #tray {
-          padding: 0px 4px;
+      #clock,
+      #tray,
+      #custom-brightness,
+      #custom-audio,
+      #custom-network,
+      #custom-bluetooth,
+      #custom-battery {
+          background: #313244;
+          color: #cdd6f4;
+          border-radius: 8px;
+          padding: 4px 10px;
+          margin-left: 6px;
       }
 
-      #backlight {
+      #custom-clock {
+          background: #313244;
+          color: #cba6f7;
+          font-weight: 600;
+          border-radius: 8px;
+          padding: 4px 12px;
+      }
+
+      #custom-brightness {
           color: #f9e2af;
       }
-      #pulseaudio {
-          color: #89dceb;
+
+      #custom-audio {
+          color: #89b4fa;
       }
 
-      #battery {
+      #custom-network {
+          color: #94e2d5;
+      }
+
+      #custom-bluetooth {
+          color: #b4befe;
+      }
+
+      #custom-battery {
           color: #a6e3a1;
       }
 
+      #custom-battery.charging {
+          color: #f9e2af;
+      }
 
+      #custom-battery.warning {
+          color: #fab387;
+      }
 
-      .modules-left,
-      .modules-right,
-      .modules-center {
-          padding: 4px 0px;
+      #custom-battery.critical {
+          color: #f38ba8;
+      }
+
+      #tray {
+          padding: 4px 8px;
+      }
+
+      tooltip {
+          background: #1e1e2e;
+          border: 1px solid #45475a;
+          border-radius: 10px;
+          color: #cdd6f4;
       }
     '';
   };

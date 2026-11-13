@@ -1,0 +1,115 @@
+/* Catppuccin Mocha, mauve accent. Loaded on top of the system GTK theme. */
+window.keke-panel {
+  background: transparent;
+}
+
+.keke-card {
+  background: #1e1e2e;
+  border: 1px solid #45475a;
+  border-radius: 14px;
+  padding: 14px;
+  color: #cdd6f4;
+}
+
+.keke-title {
+  color: #cdd6f4;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.keke-sub {
+  color: #a6adc8;
+  font-size: 12px;
+}
+
+.keke-value {
+  color: #cba6f7;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.keke-section {
+  color: #89b4fa;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin-top: 6px;
+}
+
+button.keke-action {
+  background: #313244;
+  color: #cdd6f4;
+  border: 1px solid #45475a;
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 12px;
+}
+
+button.keke-action:hover {
+  background: #45475a;
+}
+
+button.keke-action.suggested {
+  background: #cba6f7;
+  color: #1e1e2e;
+  border-color: #cba6f7;
+}
+
+button.keke-device {
+  background: #313244;
+  color: #cdd6f4;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+
+button.keke-device:hover {
+  background: #45475a;
+}
+
+button.keke-device.active {
+  border-color: #cba6f7;
+  background: #313244;
+}
+
+scale trough {
+  background: #313244;
+  border-radius: 6px;
+  min-height: 8px;
+}
+
+scale highlight {
+  background: #cba6f7;
+  border-radius: 6px;
+}
+
+scale slider {
+  background: #cdd6f4;
+  border-radius: 8px;
+  min-width: 14px;
+  min-height: 14px;
+}
+
+entry.keke-entry {
+  background: #313244;
+  color: #cdd6f4;
+  border: 1px solid #45475a;
+  border-radius: 8px;
+  padding: 4px 8px;
+}
+
+calendar {
+  background: #313244;
+  color: #cdd6f4;
+  border-radius: 10px;
+  padding: 6px;
+}
+
+calendar:selected {
+  background: #cba6f7;
+  color: #1e1e2e;
+}
+
+calendar.header {
+  color: #89b4fa;
+}
