@@ -108,12 +108,13 @@ in
         ''set-hook -g '${hook}[90]' 'run-shell -b "${tmuxReporter}/bin/input-method-tmux-update #{q:socket_path}"' ''
       ) hooks
       + ''
+
         # Prefix is synchronous so the next shortcut is English. Esc, or any
         # prefix command finishing, restores Chinese when Pi is still editing.
-        bind-key -T root C-b "run-shell '${prefixSwitcher}/bin/input-method-prefix begin #{socket_path}'; switch-client -T prefix"
-        bind-key -T root C-Space "run-shell '${prefixSwitcher}/bin/input-method-prefix begin #{socket_path}'; switch-client -T prefix"
-        bind-key -T prefix Escape "run-shell '${prefixSwitcher}/bin/input-method-prefix end #{socket_path} --force'; switch-client -T root"
-        set-hook -g 'after-bind-key[91]' 'if-shell -F "#{==:#{client_prefix},0}" "run-shell \\"${prefixSwitcher}/bin/input-method-prefix end #{socket_path}\\""'
+        bind-key -T root C-b run-shell "${prefixSwitcher}/bin/input-method-prefix begin #{socket_path}" \; switch-client -T prefix
+        bind-key -T root C-Space run-shell "${prefixSwitcher}/bin/input-method-prefix begin #{socket_path}" \; switch-client -T prefix
+        bind-key -T prefix Escape run-shell "${prefixSwitcher}/bin/input-method-prefix end #{socket_path} --force" \; switch-client -T root
+        set-hook -g after-bind-key[91] 'run-shell "${prefixSwitcher}/bin/input-method-prefix settle #{socket_path}"'
       ''
     );
     launchd.agents.input-method = {
