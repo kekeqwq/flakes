@@ -2,8 +2,8 @@ local P = dofile(arg[1] or 'policy.lua')
 local now = 1000
 local terminal = { pane = 0, tty = '/dev/ttys001', pid = 42 }
 local pi = { pid = 42, editing = true, updated = now, weztermPane = '0' }
-local function want(bundle, term, clients, contexts, memory)
-  return P.desired(bundle, term, clients or {}, contexts or {}, now, memory or {})
+local function want(bundle, term, clients, contexts, memory, prefixHeld)
+  return P.desired(bundle, term, clients or {}, contexts or {}, now, memory or {}, prefixHeld)
 end
 assert(want('org.gnu.Emacs', terminal, {}, { pi }) == P.ABC)
 assert(want('com.tinycast.app', terminal, {}, { pi }) == P.ABC)
@@ -30,6 +30,8 @@ assert(want(P.WEZTERM, terminal, {client}, {tmuxPi}) == P.ABC)
 client.pane_in_mode='0'; client.client_prefix='1'
 assert(want(P.WEZTERM, terminal, {client}, {tmuxPi}) == P.ABC)
 client.client_prefix='0'
+assert(want(P.WEZTERM, terminal, {client}, {tmuxPi}, nil, true) == P.ABC)
+assert(want(P.WEZTERM, terminal, {client}, {tmuxPi}) == P.RIME)
 local nested = { client_tty='/dev/ttys004', pane_id='%8', pane_tty='/dev/ttys009',
   foreground_pid=99, socket='/tmp/tmux-501/nested', pane_in_mode='0',
   client_prefix='0', client_key_table='root' }

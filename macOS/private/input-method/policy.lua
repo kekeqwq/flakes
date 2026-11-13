@@ -37,7 +37,9 @@ function M.piContext(terminal, clients, contexts, now)
   end
   return nil
 end
-function M.desired(bundle, terminal, clients, contexts, now, memories)
+function M.desired(bundle, terminal, clients, contexts, now, memories, prefixHeld)
+  -- Prefix is armed for a shortcut, or the user has not cancelled it yet.
+  if bundle == M.WEZTERM and prefixHeld then return M.ABC end
   if bundle == M.WEZTERM then
     local ctx = M.piContext(terminal, clients, contexts, now)
     return ctx and M.RIME or M.ABC, ctx

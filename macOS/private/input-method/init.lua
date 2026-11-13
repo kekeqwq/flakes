@@ -52,12 +52,16 @@ local function frontBundle()
   if owner and (owner:bundleID() or ''):find('tinycast', 1, true) then app = owner end
   return app and app:bundleID()
 end
+local function prefixHeld()
+  local value = readJSON(root .. '/prefix.json')
+  return value and value.active == true or false
+end
 local function desired()
   local bundle = frontBundle()
   if not bundle then return nil end
   return policy.desired(bundle, readJSON(root .. '/wezterm.json'),
                         records(root .. '/tmux', 'clients'), records(root .. '/pi'),
-                        hs.timer.secondsSinceEpoch(), memories)
+                        hs.timer.secondsSinceEpoch(), memories, prefixHeld())
 end
 local function cancel(timer) if timer then timer:stop() end end
 
