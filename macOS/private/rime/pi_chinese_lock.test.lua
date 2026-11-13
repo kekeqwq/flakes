@@ -27,4 +27,18 @@ ctx:set_option('ascii_mode', true)
 assert(ctx:get_option('ascii_mode'), 'disabling guard restores ordinary behavior')
 guard.fini(env)
 assert(next(callbacks)==nil, 'disconnect on schema destruction')
-print('Pi native Chinese guard: 8 assertions passed')
+
+-- tmux prefix passthrough: no candidate window before tmux gets the key.
+local function key(name)
+  return { repr = function() return name end, release = function() return false end }
+end
+guard.fini(env)
+local env2 = {engine={context=ctx}}
+guard.init(env2)
+ctx:set_option('_pi_chinese_lock', true)
+assert(guard.func(key('Control+b'), env2) == 2, 'prefix itself reaches the terminal')
+assert(guard.func(key('c'), env2) == 1, 'next key is forwarded, not composed')
+assert(guard.func(key('c'), env2) == 2, 'hold is single-shot')
+assert(guard.func(key('Control+space'), env2) == 2)
+assert(guard.func(key('v'), env2) == 1)
+print('Pi native Chinese guard: 13 assertions passed')

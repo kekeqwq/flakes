@@ -49,7 +49,8 @@ let
         "${pkgs.tmux}/bin/tmux"
         "${tmuxReporter}/bin/input-method-tmux-update"
       ]
-      (builtins.readFile (source + /prefix.py))}
+      (builtins.readFile (source + /prefix.py))
+    }
   '';
   hooks = [
     "client-attached"
@@ -68,7 +69,10 @@ let
 in
 {
   homebrew.casks = [ "hammerspoon" ];
-  environment.systemPackages = [ tmuxReporter prefixSwitcher ];
+  environment.systemPackages = [
+    tmuxReporter
+    prefixSwitcher
+  ];
   myuser.hm = {
     home.file = {
       ".hammerspoon/init.lua" = {
@@ -100,6 +104,27 @@ in
         local imeConfig = wezterm.config_dir .. "/input-method.lua"
         wezterm.add_to_config_reload_watch_list(imeConfig)
         dofile(imeConfig).apply()
+
+        -- Tell the switcher before tmux sees the prefix. Spawning is
+        -- asynchronous, so the key itself is never delayed.
+        local divider = '${prefixSwitcher}/bin/input-method-prefix'
+        config.keys = config.keys or {}
+        for _, key in ipairs({
+          { key = 'b', mods = 'CTRL' },
+          { key = 'Space', mods = 'CTRL' },
+        }) do
+          table.insert(config.keys, {
+            key = key.key,
+            mods = key.mods,
+            action = wezterm.action_callback(function(window, pane)
+              wezterm.background_child_process({ divider, 'begin' })
+              window:perform_action(
+                wezterm.action.SendKey { key = key.key, mods = key.mods },
+                pane
+              )
+            end),
+          })
+        end
       end
     '';
     programs.tmux.extraConfig = lib.mkAfter (
@@ -109,12 +134,10 @@ in
       ) hooks
       + ''
 
-        # Prefix is synchronous so the next shortcut is English. Esc, or any
-        # prefix command finishing, restores Chinese when Pi is still editing.
-        bind-key -T root C-b run-shell "${prefixSwitcher}/bin/input-method-prefix begin #{socket_path}" \; switch-client -T prefix
-        bind-key -T root C-Space run-shell "${prefixSwitcher}/bin/input-method-prefix begin #{socket_path}" \; switch-client -T prefix
-        bind-key -T prefix Escape run-shell "${prefixSwitcher}/bin/input-method-prefix end #{socket_path} --force" \; switch-client -T root
-        set-hook -g after-bind-key[91] 'run-shell "${prefixSwitcher}/bin/input-method-prefix settle #{socket_path}"'
+        # WezTerm signals the prefix before tmux sees it; these only restore.
+        # Esc cancels the prefix, after-bind-key covers every other shortcut.
+        bind-key -T prefix Escape run-shell -b "${prefixSwitcher}/bin/input-method-prefix end #{socket_path} --force" \; switch-client -T root
+        set-hook -g after-bind-key[91] 'run-shell -b "${prefixSwitcher}/bin/input-method-prefix settle #{socket_path}"'
       ''
     );
     launchd.agents.input-method = {
