@@ -14,7 +14,7 @@
   my.qbittorrent.downloadDirectory = "/var/lib/qBittorrent/downloads";
 
   my.desktop.enable = true;
-  my.desktop.niri.extraConfig = builtins.readFile ./outputs.kdl;
+  my.desktop.niri.outputs = builtins.readFile ./outputs.kdl;
 
   # Jovian owns the login/session launcher on this hardware.
   services.greetd.enable = false;

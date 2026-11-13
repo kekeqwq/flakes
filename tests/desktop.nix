@@ -78,7 +78,7 @@ assert
 assert !off.home-manager.users.keke.programs.wezterm.enable;
 assert !off.home-manager.users.keke.programs.obsidian.enable;
 assert !(off.home-manager.users.keke.home.file ? ".local/share/emacs-rime-native");
-assert c.my.desktop.niri.extraConfig == "";
+assert c.my.desktop.niri.extraConfig == "" && c.my.desktop.niri.outputs == "";
 assert lib.all (font: builtins.elem (toString font) (map toString c.fonts.packages)) [
   enabled.pkgs.dejavu_fonts
   enabled.pkgs.lxgw-wenkai

@@ -10,7 +10,9 @@ let
     config.home-manager.users.${config.myuser.name}.gtk.iconTheme.package
   }/share/icons/Papirus-Dark/22x22/panel";
   niriConfig = pkgs.writeText "niri-unchecked.kdl" (
-    config.my.desktop.niri.extraConfig + builtins.readFile ./niri/config.kdl
+    config.my.desktop.niri.outputs
+    + config.my.desktop.niri.extraConfig
+    + builtins.readFile ./niri/config.kdl
   );
   # Validate the exact complete configuration installed by Home Manager.
   checkedNiriConfig = pkgs.runCommand "niri-config.kdl" { nativeBuildInputs = [ pkgs.niri ]; } ''

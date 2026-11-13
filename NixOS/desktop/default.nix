@@ -1,10 +1,15 @@
 { config, lib, ... }:
 {
   options.my.desktop = {
+    niri.outputs = lib.mkOption {
+      type = lib.types.lines;
+      default = "";
+      description = "Host-specific Niri output/display configuration. Every instance has different monitors, so only that host sets modes, scale and positions.";
+    };
     niri.extraConfig = lib.mkOption {
       type = lib.types.lines;
       default = "";
-      description = "Host-specific Niri configuration prepended to the shared desktop configuration.";
+      description = "Other host-specific Niri configuration prepended to the shared desktop configuration. Displays belong in niri.outputs.";
     };
   };
 

@@ -29,7 +29,7 @@ For a future host, add a `mkNixos { modules = [ ./hosts/new-host ]; }` entry in
 `flake.nix`. Its module enables `my.desktop.enable = true` and supplies
 only its own hostname, generated hardware/storage configuration, any GPU or
 login overrides, and `system.stateVersion`. Optional display profiles go in
-`my.desktop.niri.extraConfig = builtins.readFile ./outputs.kdl`. Provision the
+`my.desktop.niri.outputs = builtins.readFile ./outputs.kdl`. Provision the
 user's password/SSH credentials separately; do not commit secrets. No VM or
 `mynewvpc` host has been created yet.
 
@@ -75,7 +75,7 @@ runtime dependencies before the VM test.
 ## Niri configuration
 
 - `niri/config.kdl` is the main template. Home Manager installs a read-only store symlink at `~/.config/niri/config.kdl` and replaces older hand-edited copies.
-- Deck sets `my.desktop.niri.extraConfig` from `hosts/deck/outputs.kdl`, concatenated into the main configuration at build time: there are **no runtime includes**. The old `~/Downloads/deck.kdl` is no longer used and is left untouched as a backup.
+- Displays are per instance: each host sets `my.desktop.niri.outputs` (Deck reads `hosts/deck/outputs.kdl`, lab pins its virtio `Virtual-1`). It is concatenated before `niri.extraConfig` and the shared template at build time: there are **no runtime includes**. The old `~/Downloads/deck.kdl` is no longer used and is left untouched as a backup.
 - The AVerMedia capture card and PNP(LTM) LCD have EDID-specific profiles. A DP-1 fallback keeps replacement displays (including Ugreen/SAMZHE) at `(0,0)`, 1920×1080 at 60 Hz, so hotplug does not shift Sunshine's input coordinates. The internal LCD uses `transform "normal"` and scale 1.5: the kernel's built-in 270° panel orientation already makes it landscape. Copying the effective transform reported by `niri msg outputs` back into the configuration would rotate it twice.
 - The exact complete installed configuration is validated during the build and again before Home Manager activation. Invalid keybindings stop activation before files are replaced.
 - Change permanent display settings in `hosts/deck/outputs.kdl` and rebuild. `switchscreen` only toggles eDP-1 at runtime through niri IPC; it never edits the managed configuration.

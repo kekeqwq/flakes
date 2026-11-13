@@ -18,6 +18,17 @@
 
   my.desktop.enable = true;
 
+  # virtio-gpu exposes one "Virtual-1" output. Pin it to landscape so the
+  # stream is 16:9 instead of the guest's default portrait mode.
+  my.desktop.niri.outputs = ''
+    output "Virtual-1" {
+        mode "1920x1080@60.000"
+        scale 1
+        transform "normal"
+        position x=0 y=0
+    }
+  '';
+
   # virtio-gpu has one output. Leave its name unset and let Sunshine select it.
   # The first visit to the forwarded web UI creates the account.
   my.sunshine = {

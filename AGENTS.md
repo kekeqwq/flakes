@@ -24,7 +24,8 @@
   **server + System/Common + System/Common/desktop + NixOS/desktop**。
 - 不得导入 `hosts/deck/`、Jovian 或按主机名判断硬件行为。
 - 显示等主机差异必须通过明确的选项注入，例如
-  `my.desktop.niri.extraConfig`，禁止反向读取某台机器的文件。
+  `my.desktop.niri.outputs`（显示器）或 `my.desktop.niri.extraConfig`，
+  禁止反向读取某台机器的文件。
 
 ### 3. `System/Common/`
 
