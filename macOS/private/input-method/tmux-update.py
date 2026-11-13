@@ -6,6 +6,7 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
+import time
 
 socket = sys.argv[1] if len(sys.argv) > 1 else os.environ.get("TMUX", "").split(",")[0]
 if not socket:
@@ -28,15 +29,23 @@ try:
                                 capture_output=True, text=True, timeout=1)
         client["foreground_pid"] = int(result.stdout.strip() or 0)
         client["socket"] = socket
+        client["updated"] = time.time()
         clients.append(client)
 except (OSError, ValueError, subprocess.TimeoutExpired):
     pass
 name = hashlib.sha256(socket.encode()).hexdigest() + ".json"
+path = root / name
+if not clients:
+    try:
+        path.unlink()
+    except FileNotFoundError:
+        pass
+    sys.exit(0)
 fd, temporary = tempfile.mkstemp(prefix=".tmux-", dir=root)
 try:
     with os.fdopen(fd, "w") as f:
         json.dump({"version": 1, "clients": clients}, f)
-    os.replace(temporary, root / name)
+    os.replace(temporary, path)
 finally:
     if os.path.exists(temporary):
         os.unlink(temporary)

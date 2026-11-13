@@ -32,7 +32,8 @@ launches processes. `tmux-update.py` is called by tmux hooks (fixed index 90,
 so reloading config does not multiply hooks), including pane exit and active-pane
 changes; it reports each client's active pane, foreground process group and copy
 mode. Pi also refreshes that snapshot on its lease timer so a missed hook cannot
-leave Hammerspoon forcing ABC. Pressing either tmux prefix (`C-b` or `C-Space`)
+leave Hammerspoon forcing ABC. Snapshots older than seven seconds are ignored,
+so a leftover test tmux socket cannot steal the nested walk and force ABC. Pressing either tmux prefix (`C-b` or `C-Space`)
 switches to ABC before the shortcut key. Escape, or the shortcut finishing,
 restores Chinese when that pane is still a Pi editor. Nested local tmux is resolved up
 to four levels. Remote SSH/tmux is deliberately fail-closed ABC; no local

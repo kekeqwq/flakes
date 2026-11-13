@@ -20,7 +20,7 @@ assert(want('com.tinycast.app', terminal, {}, {}, memory) == P.ABC)
 assert(want('com.tencent.xinWeChat', terminal, {}, {}, memory) == P.RIME)
 local client = { client_tty='/dev/ttys001', pane_id='%3', pane_tty='/dev/ttys004',
   foreground_pid=88, socket='/private/tmp/tmux-501/default', pane_in_mode='0',
-  client_prefix='0', client_key_table='root' }
+  client_prefix='0', client_key_table='root', updated=now }
 local tmuxPi = { pid=88, editing=true, updated=now, tmuxPane='%3', socket='/tmp/tmux-501/default' }
 assert(want(P.WEZTERM, terminal, {client}, {pi,tmuxPi}) == P.RIME)
 client.pane_id='%4'
@@ -34,7 +34,11 @@ assert(want(P.WEZTERM, terminal, {client}, {tmuxPi}, nil, true) == P.ABC)
 assert(want(P.WEZTERM, terminal, {client}, {tmuxPi}) == P.RIME)
 local nested = { client_tty='/dev/ttys004', pane_id='%8', pane_tty='/dev/ttys009',
   foreground_pid=99, socket='/tmp/tmux-501/nested', pane_in_mode='0',
-  client_prefix='0', client_key_table='root' }
+  client_prefix='0', client_key_table='root', updated=now }
+local stale = { client_tty='/dev/ttys004', pane_id='%9', pane_tty='/dev/ttys010',
+  foreground_pid=100, socket='/tmp/tmux-501/imetest', pane_in_mode='0',
+  client_prefix='0', client_key_table='root', updated=now-30 }
+assert(want(P.WEZTERM, terminal, {client,stale}, {tmuxPi}) == P.RIME)
 local nestedPi = {pid=99, editing=true, updated=now, tmuxPane='%8', socket='/tmp/tmux-501/nested'}
 assert(want(P.WEZTERM, terminal, {client,nested}, {tmuxPi,nestedPi}) == P.RIME)
-print('input-method policy: 15 transition/restore/tmux/lease assertions passed')
+print('input-method policy: 16 transition/restore/tmux/lease assertions passed')

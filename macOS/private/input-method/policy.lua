@@ -17,7 +17,12 @@ function M.piContext(terminal, clients, contexts, now)
   for _ = 1, 4 do
     local found
     for _, client in ipairs(clients) do
-      if client.client_tty == tty then found = client; break end
+      -- Ignore leftover snapshots from dead tmux sockets. Their client_tty
+      -- can collide with a live pane and steal the nested walk to ABC.
+      if type(client.updated) == 'number' and now - client.updated < 7
+          and now >= client.updated - 1 and client.client_tty == tty then
+        found = client; break
+      end
     end
     if not found then break end
     if found.pane_in_mode == '1' or found.client_prefix == '1'

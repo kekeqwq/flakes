@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+import time
 
 SELECT = "@SELECT@"
 TMUX = "@TMUX@"
@@ -52,6 +53,7 @@ def rewrite_prefix(socket, active):
     for client in data.get("clients") or []:
         client["client_prefix"] = "1" if active else "0"
         client["client_key_table"] = "prefix" if active else "root"
+        client["updated"] = time.time()
     path.write_text(json.dumps(data))
 
 
@@ -84,6 +86,30 @@ def pi_editing(socket):
     return False
 
 
+def prefix_armed(socket):
+    if not socket:
+        return False
+    listed = subprocess.run(
+        [TMUX, "-S", socket, "display-message", "-p", "#{client_prefix}"],
+        capture_output=True,
+        text=True,
+        timeout=1,
+    )
+    return listed.stdout.strip() == "1"
+
+
+def restore(socket, force):
+    write_hold(False)
+    if not socket:
+        return
+    if force:
+        rewrite_prefix(socket, False)
+    else:
+        subprocess.run([REPORTER, socket], timeout=2)
+    if pi_editing(socket):
+        select(RIME)
+
+
 def main():
     mode = sys.argv[1] if len(sys.argv) > 1 else ""
     socket = sys.argv[2] if len(sys.argv) > 2 else ""
@@ -94,16 +120,13 @@ def main():
         select(ABC)
         return
     if mode == "end":
-        write_hold(False)
-        force = "--force" in sys.argv[3:]
-        if socket and not force:
-            subprocess.run([REPORTER, socket], timeout=2)
-        elif socket:
-            # Escape runs before tmux leaves the prefix table. Tell the
-            # manager the shortcut is over so it does not force ABC again.
-            rewrite_prefix(socket, False)
-        if socket and pi_editing(socket):
-            select(RIME)
+        restore(socket, "--force" in sys.argv[3:])
+        return
+    if mode == "settle":
+        # Prefix command finished, or Escape already left the table.
+        if prefix_armed(socket):
+            return
+        restore(socket, False)
         return
     sys.exit(2)
 
