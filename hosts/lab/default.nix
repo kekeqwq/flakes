@@ -1,6 +1,9 @@
 { modulesPath, ... }:
 {
-  imports = [ (modulesPath + "/profiles/qemu-guest.nix") ];
+  imports = [
+    ../../NixOS/desktop/baseline.nix
+    (modulesPath + "/profiles/qemu-guest.nix")
+  ];
 
   networking.hostName = "lab";
   networking.hostId = "1ab04e01";
@@ -16,10 +19,8 @@
     fsType = "ext4";
   };
 
-  my.desktop.enable = true;
-
-  # virtio-gpu exposes one "Virtual-1" output. Pin it to landscape so the
-  # stream is 16:9 instead of the guest's default portrait mode.
+  # Only the guest's own outputs belong here; a physical instance sets its
+  # connectors instead.
   my.desktop.niri.outputs = ''
     output "Virtual-1" {
         mode "1920x1080@60.000"

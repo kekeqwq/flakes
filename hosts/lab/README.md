@@ -1,7 +1,8 @@
 # lab (aarch64) and lab-x86
 
-One private host file, `default.nix`, for throwaway QEMU guests: disk layout,
-desktop, and this instance's Sunshine settings. `flake.nix` registers it twice
+One private host file, `default.nix`, for throwaway QEMU guests. It imports
+`NixOS/desktop/baseline.nix` (desktop + newest stable kernel) and adds only this
+instance's disk layout, virtio output, and Sunshine settings. `flake.nix` registers it twice
 so only the NixOS system differs.
 
 Install from the minimal ISO into a disk, then boot that disk. Nothing here

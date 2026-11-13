@@ -25,8 +25,9 @@ and its private LAN services. Nothing in `NixOS/desktop/` imports Deck files or
 selects behavior by hostname. The retired `hosts/pc/` has been removed; it can
 be recovered from Git history if its old hardware details are ever needed.
 
-For a future host, add a `mkNixos { modules = [ ./hosts/new-host ]; }` entry in
-`flake.nix`. Its module enables `my.desktop.enable = true` and supplies
+New Linux desktop instances import `NixOS/desktop/baseline.nix` (desktop enabled,
+newest stable kernel). For a future host, add a
+`mkNixos { modules = [ ./hosts/new-host ]; }` entry in `flake.nix`. Its module enables `my.desktop.enable = true` and supplies
 only its own hostname, generated hardware/storage configuration, any GPU or
 login overrides, and `system.stateVersion`. Optional display profiles go in
 `my.desktop.niri.outputs = builtins.readFile ./outputs.kdl`. Provision the
