@@ -468,30 +468,26 @@ class Panel(Gtk.Window):
         content.pack_start(page, True, True, 0)
 
         self.card = card
+        self.add(card)
         if HAVE_LAYER_SHELL:
-            holder = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
-            holder.set_size_request(340, -1)
-            holder.set_halign(Gtk.Align.START)
-            holder.set_valign(Gtk.Align.START)
-            holder.pack_start(card, False, False, 0)
-            self.holder = holder
-            # Full-screen transparent surface: any click outside the card
-            # reaches it and dismisses the popup, like a native menu. The
-            # first pointer position we receive is the click location, so the
-            # card opens just under the cursor with a small gap.
-            overlay = Gtk.EventBox()
-            overlay.set_visible_window(False)
-            overlay.connect("button-press-event", lambda *_: (self.close(), True)[1])
-            overlay.connect("enter-notify-event", self.on_pointer)
-            overlay.add(holder)
-            self.add(overlay)
-            self.sized = False
-        else:
-            self.add(card)
+            # Wayland gives no global pointer position, so the dropdown is
+            # anchored under the right end of the bar with a small gap.
+            GtkLayerShell.init_for_window(self)
+            GtkLayerShell.set_namespace(self, APP_ID)
+            GtkLayerShell.set_layer(self, GtkLayerShell.Layer.OVERLAY)
+            GtkLayerShell.set_anchor(self, GtkLayerShell.Edge.TOP, True)
+            GtkLayerShell.set_anchor(self, GtkLayerShell.Edge.RIGHT, True)
+            GtkLayerShell.set_margin(self, GtkLayerShell.Edge.TOP, BAR_HEIGHT + 10)
+            GtkLayerShell.set_margin(self, GtkLayerShell.Edge.RIGHT, MARGIN)
+            GtkLayerShell.set_exclusive_zone(self, -1)
+            # Focus so Escape and outside clicks can dismiss the dropdown.
+            GtkLayerShell.set_keyboard_mode(self, GtkLayerShell.KeyboardMode.EXCLUSIVE)
+
+        self.show_all()
+        self.page = page
 
         self.connect("key-press-event", self.on_key)
-        if not HAVE_LAYER_SHELL:
-            self.connect("focus-out-event", lambda *_: self.close())
+        self.connect("focus-out-event", lambda *_: (self.close(), False)[1])
         self.connect("destroy", Gtk.main_quit)
 
         if HAVE_LAYER_SHELL:
@@ -519,31 +515,6 @@ class Panel(Gtk.Window):
         else:
             GLib.idle_add(self.place)
         self.page = page
-
-    def fallback_place(self):
-        if getattr(self, "sized", True):
-            return False
-        geometry = Gdk.Display.get_default().get_primary_monitor().get_geometry()
-        self.holder.set_margin_start(geometry.width - self.card.get_preferred_width()[1] - MARGIN)
-        self.holder.set_margin_top(BAR_HEIGHT)
-        self.card.show_all()
-        self.sized = True
-        return False
-
-    def on_pointer(self, _overlay, event):
-        """Anchor the card at the pointer, leaving a gap under the bar."""
-        monitor = Gdk.Display.get_default().get_monitor_at_point(event.x_root, event.y_root)
-        geometry = (monitor or Gdk.Display.get_default().get_primary_monitor()).get_geometry()
-        card_w, card_h = self.card.get_preferred_width()[1], self.card.get_preferred_height()[1]
-        x = min(max(event.x_root, geometry.x + MARGIN), geometry.x + geometry.width - card_w - MARGIN)
-        y = event.y_root + 8
-        if y + card_h > geometry.y + geometry.height - MARGIN:
-            y = event.y_root - card_h - 8
-        self.holder.set_margin_start(int(x - geometry.x))
-        self.holder.set_margin_top(int(max(y, BAR_HEIGHT) - geometry.y))
-        self.card.show_all()
-        self.sized = True
-        return False
 
     def on_key(self, _window, event):
         if event.keyval == Gdk.KEY_Escape:
