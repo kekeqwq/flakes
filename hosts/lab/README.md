@@ -8,6 +8,22 @@ so only the NixOS system differs.
 Install from the minimal ISO into a disk, then boot that disk. Nothing here
 formats a disk; the partition table is created during installation.
 
+## Initial password
+
+No password lives in this repository. `keke` is created without one, so the
+installer writes it into the target system's shadow database:
+
+```sh
+sudo nixos-install --flake /root/flakes#lab-x86 --root /mnt --no-root-passwd
+sudo passwd --root /mnt keke     # prompts; never enters the store
+sudo umount -R /mnt
+```
+
+`users.mutableUsers` stays enabled in `baseline.nix`, so later changes are just
+`passwd` (or `sudo passwd keke`) inside the running instance. A declarative
+password hash belongs in a file outside the repo via
+`users.users.keke.hashedPasswordFile`.
+
 ## Networking on Deck
 
 Deck is on Wi-Fi, so a bridge is not reliable. Instead the guest keeps QEMU's
