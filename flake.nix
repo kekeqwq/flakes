@@ -103,12 +103,12 @@
       nixosConfigurations.deck = mkNixos { modules = [ ./hosts/deck ]; };
       nixosConfigurations.lab = mkNixos {
         system = "aarch64-linux";
-        modules = [ ./hosts/lab.nix ];
+        modules = [ ./hosts/lab ];
       };
       # Same private lab file. Only the NixOS system differs.
       nixosConfigurations.lab-x86 = mkNixos {
         system = "x86_64-linux";
-        modules = [ ./hosts/lab.nix ];
+        modules = [ ./hosts/lab ];
       };
       darwinConfigurations.mba = mkDarwin { modules = [ ./hosts/mba ]; };
 
