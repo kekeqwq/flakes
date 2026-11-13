@@ -1,4 +1,5 @@
 {
+  config,
   lib,
   pkgs,
   ...
@@ -115,6 +116,29 @@ in
         local imeConfig = wezterm.config_dir .. "/input-method.lua"
         wezterm.add_to_config_reload_watch_list(imeConfig)
         dofile(imeConfig).apply()
+
+        -- Tell the switcher before tmux sees the prefix. Spawning is
+        -- asynchronous, so tmux's own prefix handling is never delayed.
+        local prefix = '${config.my.inputMethod.prefixCommand}'
+        if prefix ~= "" then
+          config.keys = config.keys or {}
+          for _, keyspec in ipairs({
+            { key = 'b', mods = 'CTRL' },
+            { key = 'Space', mods = 'CTRL' },
+          }) do
+            table.insert(config.keys, {
+              key = keyspec.key,
+              mods = keyspec.mods,
+              action = wezterm.action_callback(function(window, pane)
+                wezterm.background_child_process({ prefix, 'begin' })
+                window:perform_action(
+                  wezterm.action.SendKey { key = keyspec.key, mods = keyspec.mods },
+                  pane
+                )
+              end),
+            })
+          end
+        end
       end
 
       -- Let the bar see the initial scheme before it derives tab colors.

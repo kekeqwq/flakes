@@ -46,6 +46,7 @@ in
     tmuxReporter
     watcher
   ];
+  my.inputMethod.prefixCommand = "${watcher}/bin/input-method-hold";
 
   i18n.inputMethod = {
     enable = true;
@@ -136,10 +137,9 @@ in
     builtins.concatStringsSep "\n" tmuxHooks
     + ''
 
-      # Prefix switches fcitx5 to ASCII before tmux reads the shortcut key.
-      bind-key -T root C-b run-shell "${watcher}/bin/input-method-hold begin #{socket_path}" \; switch-client -T prefix
-      bind-key -T root C-Space run-shell "${watcher}/bin/input-method-hold begin #{socket_path}" \; switch-client -T prefix
-      bind-key -T prefix Escape run-shell "${watcher}/bin/input-method-hold end #{socket_path}" \; switch-client -T root
+      # WezTerm signals the prefix before tmux sees it. These only restore:
+      # a synchronous root binding would delay tmux's own prefix handling.
+      bind-key -T prefix Escape run-shell -b "${watcher}/bin/input-method-hold end #{socket_path}" \; switch-client -T root
       set-hook -g after-bind-key[91] 'run-shell -b "${watcher}/bin/input-method-hold settle #{socket_path}"'
     ''
   );

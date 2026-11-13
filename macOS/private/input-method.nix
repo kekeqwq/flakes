@@ -56,6 +56,7 @@ in
     tmuxReporter
     prefixSwitcher
   ];
+  my.inputMethod.prefixCommand = "${prefixSwitcher}/bin/input-method-prefix";
   myuser.hm = {
     home.file = {
       ".hammerspoon/init.lua" = {
@@ -80,34 +81,6 @@ in
       chmod 700 "$HOME/.local/state/input-method" "$HOME/.local/state/input-method/"{pi,tmux}
     '';
     programs.wezterm.settings.status_update_interval = 100;
-    programs.wezterm.extraConfig = lib.mkAfter ''
-      if wezterm.target_triple == "aarch64-apple-darwin" then
-        local imeConfig = wezterm.config_dir .. "/input-method.lua"
-        wezterm.add_to_config_reload_watch_list(imeConfig)
-        dofile(imeConfig).apply()
-
-        -- Tell the switcher before tmux sees the prefix. Spawning is
-        -- asynchronous, so the key itself is never delayed.
-        local divider = '${prefixSwitcher}/bin/input-method-prefix'
-        config.keys = config.keys or {}
-        for _, key in ipairs({
-          { key = 'b', mods = 'CTRL' },
-          { key = 'Space', mods = 'CTRL' },
-        }) do
-          table.insert(config.keys, {
-            key = key.key,
-            mods = key.mods,
-            action = wezterm.action_callback(function(window, pane)
-              wezterm.background_child_process({ divider, 'begin' })
-              window:perform_action(
-                wezterm.action.SendKey { key = key.key, mods = key.mods },
-                pane
-              )
-            end),
-          })
-        end
-      end
-    '';
     programs.tmux.extraConfig = lib.mkAfter (
       builtins.concatStringsSep "\n" tmuxHooks
       + ''
