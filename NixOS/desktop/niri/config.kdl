@@ -42,6 +42,17 @@ hotkey-overlay {
 }
 prefer-no-csd
 layer-rule {
+    match namespace="keke-waybar-panel"
+    opacity 1.0
+    geometry-corner-radius 14
+    shadow {
+        on
+        softness 12
+        spread 6
+        offset x=0 y=6
+    }
+}
+layer-rule {
     match namespace="waybar"
     match namespace="rofi"
     match at-startup=true
