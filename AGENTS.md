@@ -32,7 +32,7 @@
   udev、boot 设置，也禁止放 Homebrew、launchd、Hammerspoon 等 macOS 私有设置。
 - 根层仅放无图形依赖的配置；无头 Linux 和 macOS 都使用这一层。
 - `System/Common/desktop/` 放两端共用的图形程序/配置，例如 WezTerm、
-  Obsidian、共享 GUI 应用、GUI Emacs 和共享 Emacs 原生模块。
+  共享 GUI 应用、GUI Emacs 和共享 Emacs 原生模块。
 - 仅在 `my.desktop.enable` 时启用 desktop 子层。没有打开该开关时，
   不得通过 Common 间接启用图形程序。
 - Emacs 公共定义在这里：无头系统默认 nox，desktop 子层选择 Linux

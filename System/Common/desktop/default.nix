@@ -24,6 +24,5 @@
         ./emacs.nix
         ./emacs-rime.nix
         ./wezterm.nix
-        ./obsidian.nix
       ];
 }

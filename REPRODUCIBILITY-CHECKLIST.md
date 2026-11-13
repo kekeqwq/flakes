@@ -126,11 +126,9 @@
 - [x] models、provider、failover、auth 与 sessions 属每实例/运行状态，不要求从旧机器复制。
 - 限制：这是固定版本的依赖入口审计，不是对第三方全部源码进行安全证明；升级插件仍需重查依赖。
 
-### F-10 Obsidian/其他受管 GUI 资源
+### F-10 其他受管 GUI 资源
 
-- [x] Obsidian 主题 CSS/manifest 固定提交和哈希；本地两个插件源码在仓库，模块依赖是宿主 API，构建工具由 Nix 声明。
-- [x] 默认外观、快捷键、CSS 及插件入口纳管；Mac 程序补丁在构建期应用并签名，不依赖手工改 app.asar。
-- [x] 笔记、vault 内容、核心插件用户选择、workspace 和索引状态未强制复刻；本轮仅保证声明的默认体验，不纳管整份用户 vault。
+- [x] Obsidian 及两个本地插件、主题 CSS 与 macOS 透明补丁已删除。
 - [x] Linux Niri/Waybar/rofi/GTK/Kvantum/Papirus/Bibata/壁纸资源有包或仓库来源；Niri 主配置与主机显示注入都受管。
 - [x] Niri 调用 wezterm/rofi/wpctl，有对应程序/集成声明；无 Downloads 下旧 KDL 或用户脚本依赖。
 - [x] GUI Emacs/原生 Rime 桥由本仓库安装；独立 Emacs 用户工作流已按用户要求排除。
@@ -173,7 +171,7 @@
 | ------------------------------------ | ------------------------------------------------------------------- | ------------------------------------------------------------ |
 | flake.nix / flake.lock / treefmt.nix | 原生 outputs、平台组装、input pin、overlay、检查入口                | 无新增 mutable 构建来源；QBE/策略回归检查已接入待跑          |
 | System/Common 根层                   | 导入树、Fish/Git/tmux/Yazi/Pi/终端 Emacs、Python/开发工具           | 第一方资源有来源；账户/历史不复制；旧 shell 模块已移除       |
-| System/Common/desktop                | 字体、WezTerm/bar、共享 apps、Obsidian 插件/CSS、GUI Emacs/原生模块 | 资源自带或固定获取；用户 dotfiles/vault/账户另界定           |
+| System/Common/desktop                | 字体、WezTerm/bar、共享 apps、GUI Emacs/原生模块                    | 资源自带或固定获取；用户 dotfiles/vault/账户另界定           |
 | NixOS/server                         | 引导/locale/用户基础、udev/开发工具、Enhanced-nox                   | 公共服务不默认套用实例；旧 OpenList/SMB/sing-box 已分离/删除 |
 | NixOS/desktop                        | session/theme/font/input/Waybar/Niri/Yazi/代理                      | 无反向读取 Deck 文件；Sunshine 捕获属主机，资源有固定来源    |
 | hosts/deck                           | 硬件、显示、Jovian、服务启用、网页和网络                            | 机器差异留此；静态网页已纳管；秘密不入 store                 |

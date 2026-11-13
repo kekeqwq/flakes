@@ -8,9 +8,8 @@ actual `aarch64-darwin` MBA in `/Users/keke/Repos/flakes`.
 - `darwin-rebuild build --flake .#mba --max-jobs 1 --cores 2 -L` succeeded.
 - The input-method Lua / Node tests ran successfully during the build.
 - Fish, Git, WezTerm, mpv, scrcpy and Emacs executables from the new system / Home
-  Manager paths passed version-command smoke tests. The new Obsidian app passed
-  `codesign --verify --deep --strict`. This does not substitute for a complete
-  interactive GUI / accessibility-permission test.
+  Manager paths passed version-command smoke tests. This does not substitute for
+  a complete interactive GUI / accessibility-permission test.
 - Evaluating the old revision `f663e07ac69f744c4ab64cd1f16929cd78bad4b8`
   and the migrated configuration showed no removed or added system packages,
   Home Manager packages, declared font packages, Homebrew casks, managed home

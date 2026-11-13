@@ -68,9 +68,9 @@ can be reproduced on a fresh host. The following still need separate work:
   only recognized Fish 4.3 auto-migration files, keeping the declared defaults.
   The cursor is consistently Bibata-Modern-Ice, including Dconf.
 
-The wallpaper, Niri base/display profiles, Rofi theme, GTK/Qt themes, Rime
-configuration and local Obsidian plugin sources are already tracked or fetched
-with fixed hashes. Audit remaining runtime dependencies before the VM test.
+The wallpaper, Niri base/display profiles, Rofi theme, GTK/Qt themes and Rime
+configuration are already tracked or fetched with fixed hashes. Audit remaining
+runtime dependencies before the VM test.
 
 ## Niri configuration
 
