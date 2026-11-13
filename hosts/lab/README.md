@@ -24,6 +24,10 @@ sudo umount -R /mnt
 password hash belongs in a file outside the repo via
 `users.users.keke.hashedPasswordFile`.
 
+Throwaway guests use a deliberately trivial initial password typed at install
+time, so rebuilding a test instance needs no lookup. That value is never
+committed; real machines get a real password the same way.
+
 ## Networking on Deck
 
 Deck is on Wi-Fi, so a bridge is not reliable. Instead the guest keeps QEMU's
