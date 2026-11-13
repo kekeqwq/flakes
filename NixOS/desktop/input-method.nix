@@ -2,6 +2,7 @@
   config,
   pkgs,
   lib,
+  inputs,
   ...
 }:
 let
@@ -119,6 +120,30 @@ in
             - schema: double_pinyin_flypy
       '';
     };
+    # Emacs Rime copies its private runtime from this user directory. fcitx5
+    # resolves rime-ice via `rime_ice_suggestion:/`, but librime in Emacs does
+    # not know that resource path, so link the schemas/dictionaries/lua here
+    # too (the macOS Squirrel setup does the same into ~/Library/Rime).
+    home.activation.syncRimeIce =
+      inputs.home-manager.lib.hm.dag.entryAfter [ "linkGeneration" ]
+        ''
+          set -euo pipefail
+          src=${pkgs.rime-ice}/share/rime-data
+          dest="$HOME/.local/share/fcitx5/rime"
+          mkdir -p "$dest"
+          find -L "$src" -type f -print0 | while IFS= read -r -d "" f; do
+            rel="''${f#"$src"/}"
+            case "$rel" in
+              AGENTS.md|LICENSE|recipe.yaml|weasel.yaml|build/*) continue ;;
+            esac
+            target="$dest/$rel"
+            mkdir -p "$(dirname "$target")"
+            ln -sfn "$f" "$target"
+          done
+          # nixpkgs renames ice default.yaml to rime_ice_suggestion.yaml so
+          # several schemas can share one data dir.
+          ln -sfn "$src/rime_ice_suggestion.yaml" "$dest/default.yaml"
+        '';
   };
 
   # Pi inside WezTerm gets Chinese; Emacs and non-editor surfaces get ASCII.
