@@ -23,11 +23,17 @@ let
         cp ${./input-method/policy.py} "$out/lib/policy.py"
         printf '#!${pkgs.python3}/bin/python3\n' > "$out/bin/input-method-watch"
         cat ${./input-method/watch.py} >> "$out/bin/input-method-watch"
+        printf '#!${pkgs.python3}/bin/python3\n' > "$out/bin/input-method-hold"
+        cat ${./input-method/hold.py} >> "$out/bin/input-method-hold"
         substituteInPlace "$out/bin/input-method-watch" \
           --replace-fail '@DIR@' "$out/lib" \
           --replace-fail '@NIRI@' "${pkgs.niri}" \
           --replace-fail '@FCITX5_REMOTE@' "${pkgs.qt6Packages.fcitx5-with-addons}"
-        chmod +x "$out/bin/input-method-watch"
+        substituteInPlace "$out/bin/input-method-hold" \
+          --replace-fail '@DIR@' "$out/lib" \
+          --replace-fail '@FCITX5_REMOTE@' "${pkgs.qt6Packages.fcitx5-with-addons}" \
+          --replace-fail '@TMUX@' "${pkgs.tmux}"
+        chmod +x "$out/bin/input-method-watch" "$out/bin/input-method-hold"
       '';
 in
 {
@@ -121,7 +127,17 @@ in
     Install.WantedBy = [ "graphical-session.target" ];
   };
 
-  myuser.hm.programs.tmux.extraConfig = lib.mkAfter (builtins.concatStringsSep "\n" tmuxHooks);
+  myuser.hm.programs.tmux.extraConfig = lib.mkAfter (
+    builtins.concatStringsSep "\n" tmuxHooks
+    + ''
+
+      # Prefix switches fcitx5 to ASCII before tmux reads the shortcut key.
+      bind-key -T root C-b run-shell "${watcher}/bin/input-method-hold begin #{socket_path}" \; switch-client -T prefix
+      bind-key -T root C-Space run-shell "${watcher}/bin/input-method-hold begin #{socket_path}" \; switch-client -T prefix
+      bind-key -T prefix Escape run-shell "${watcher}/bin/input-method-hold end #{socket_path}" \; switch-client -T root
+      set-hook -g after-bind-key[91] 'run-shell -b "${watcher}/bin/input-method-hold settle #{socket_path}"'
+    ''
+  );
 
   # Keep the reporter's state directory owner-only.
   systemd.tmpfiles.rules = [
