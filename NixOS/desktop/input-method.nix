@@ -21,11 +21,16 @@ let
         python3 ${./input-method/policy.test.py} ${./input-method/policy.py}
         mkdir -p "$out/bin" "$out/lib"
         cp ${./input-method/policy.py} "$out/lib/policy.py"
+        cp ${./input-method/watch.py} "$out/lib/watch.py"
         printf '#!${pkgs.python3}/bin/python3\n' > "$out/bin/input-method-watch"
         cat ${./input-method/watch.py} >> "$out/bin/input-method-watch"
         printf '#!${pkgs.python3}/bin/python3\n' > "$out/bin/input-method-hold"
         cat ${./input-method/hold.py} >> "$out/bin/input-method-hold"
         substituteInPlace "$out/bin/input-method-watch" \
+          --replace-fail '@DIR@' "$out/lib" \
+          --replace-fail '@NIRI@' "${pkgs.niri}" \
+          --replace-fail '@FCITX5_REMOTE@' "${pkgs.qt6Packages.fcitx5-with-addons}"
+        substituteInPlace "$out/lib/watch.py" \
           --replace-fail '@DIR@' "$out/lib" \
           --replace-fail '@NIRI@' "${pkgs.niri}" \
           --replace-fail '@FCITX5_REMOTE@' "${pkgs.qt6Packages.fcitx5-with-addons}"
