@@ -106,6 +106,10 @@ in
         '';
       };
     };
+    # The wrapper's data dir is not always searched before Qt falls back to
+    # its own palette, so link the theme into the user data dir explicitly.
+    xdg.dataFile."fcitx5/themes/catppuccin-mocha-mauve".source =
+      "${pkgs.catppuccin-fcitx5}/share/fcitx5/themes/catppuccin-mocha-mauve";
     xdg.dataFile."fcitx5/rime/default.custom.yaml" = {
       force = true;
       text = ''
