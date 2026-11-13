@@ -490,32 +490,6 @@ class Panel(Gtk.Window):
         self.connect("focus-out-event", lambda *_: (self.close(), False)[1])
         self.connect("destroy", Gtk.main_quit)
 
-        if HAVE_LAYER_SHELL:
-            # Wayland toplevels cannot position themselves; a layer surface
-            # anchors under the right end of the bar.
-            GtkLayerShell.init_for_window(self)
-            GtkLayerShell.set_namespace(self, APP_ID)
-            GtkLayerShell.set_layer(self, GtkLayerShell.Layer.OVERLAY)
-            for edge in (
-                GtkLayerShell.Edge.TOP,
-                GtkLayerShell.Edge.BOTTOM,
-                GtkLayerShell.Edge.LEFT,
-                GtkLayerShell.Edge.RIGHT,
-            ):
-                GtkLayerShell.set_anchor(self, edge, True)
-            GtkLayerShell.set_exclusive_zone(self, -1)
-            # Exclusive keyboard so Escape reaches us; pointer clicks outside
-            # the card land on the transparent overlay and close the panel.
-            GtkLayerShell.set_keyboard_mode(self, GtkLayerShell.KeyboardMode.EXCLUSIVE)
-
-        self.show_all()
-        if HAVE_LAYER_SHELL:
-            self.card.hide()
-            GLib.timeout_add(150, self.fallback_place)
-        else:
-            GLib.idle_add(self.place)
-        self.page = page
-
     def on_key(self, _window, event):
         if event.keyval == Gdk.KEY_Escape:
             self.close()
