@@ -9,10 +9,15 @@ else
 fi
 level=$(cat "$bat/capacity")
 status=$(cat "$bat/status" 2>/dev/null || echo Unknown)
-if [ "$status" = "Charging" ]; then icon=󰂄
-elif [ "$level" -ge 90 ]; then icon=󱊣
-elif [ "$level" -ge 60 ]; then icon=󱊢
-elif [ "$level" -ge 30 ]; then icon=󱊡
-else icon=󰁺
+if [ "$status" = "Charging" ]; then
+  icon=󰂄
+elif [ "$level" -ge 90 ]; then
+  icon=󱊣
+elif [ "$level" -ge 60 ]; then
+  icon=󱊢
+elif [ "$level" -ge 30 ]; then
+  icon=󱊡
+else
+  icon=󰁺
 fi
 printf '%s %s%%\n' "$icon" "$level"

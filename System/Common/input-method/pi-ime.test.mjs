@@ -65,7 +65,13 @@ test("factory registers lifecycle without creating timers or files", () => {
 });
 test("direct Ghostty publishes exact surface identity, focus and shutdown lease", () => {
   const home = mkdtempSync(join(tmpdir(), "pi-ime-direct-"));
-  const keys = ["HOME", "TMUX", "TMUX_PANE", "WEZTERM_PANE", "GHOSTTY_SURFACE_ID"];
+  const keys = [
+    "HOME",
+    "TMUX",
+    "TMUX_PANE",
+    "WEZTERM_PANE",
+    "GHOSTTY_SURFACE_ID",
+  ];
   const saved = Object.fromEntries(keys.map((key) => [key, process.env[key]]));
   const originalInterval = globalThis.setInterval;
   const originalClear = globalThis.clearInterval;
@@ -75,26 +81,55 @@ test("direct Ghostty publishes exact surface identity, focus and shutdown lease"
   const titles = [];
   let editor;
   const tui = { stop() {}, start() {} };
-  const file = join(home, ".local/state/input-method/pi", `${process.pid}.json`);
+  const file = join(
+    home,
+    ".local/state/input-method/pi",
+    `${process.pid}.json`,
+  );
   try {
     process.env.HOME = home;
     delete process.env.TMUX;
     process.env.TMUX_PANE = "%inherited"; // Without TMUX this is not a tmux context.
     delete process.env.WEZTERM_PANE;
     process.env.GHOSTTY_SURFACE_ID = "surface-a";
-    globalThis.setInterval = (cb) => { timerCallback = cb; return { unref() {} }; };
-    globalThis.clearInterval = () => { cleared = true; };
-    mod.default({ on(name, cb) { events.set(name, cb); } });
-    events.get("session_start")({}, {
-      mode: "tui", hasUI: true,
-      ui: {
-        setTitle(title) { titles.push(title); },
-        editor() {}, input() {}, custom() {},
-        setEditorComponent(factory) {
-          editor = factory(tui, {}, { matches() { return false; } });
-        },
+    globalThis.setInterval = (cb) => {
+      timerCallback = cb;
+      return { unref() {} };
+    };
+    globalThis.clearInterval = () => {
+      cleared = true;
+    };
+    mod.default({
+      on(name, cb) {
+        events.set(name, cb);
       },
     });
+    events.get("session_start")(
+      {},
+      {
+        mode: "tui",
+        hasUI: true,
+        ui: {
+          setTitle(title) {
+            titles.push(title);
+          },
+          editor() {},
+          input() {},
+          custom() {},
+          setEditorComponent(factory) {
+            editor = factory(
+              tui,
+              {},
+              {
+                matches() {
+                  return false;
+                },
+              },
+            );
+          },
+        },
+      },
+    );
     const value = () => JSON.parse(readFileSync(file, "utf8"));
     assert.equal(value().ghosttySurface, "surface-a");
     assert.equal(value().pid, process.pid);
@@ -109,7 +144,11 @@ test("direct Ghostty publishes exact surface identity, focus and shutdown lease"
     tui.stop();
     timerCallback();
     assert.equal(value().editing, false);
-    assert.equal(titles.length, beforeStop, "stopped TUI must not overwrite a subprocess title");
+    assert.equal(
+      titles.length,
+      beforeStop,
+      "stopped TUI must not overwrite a subprocess title",
+    );
     tui.start();
     timerCallback();
     assert.equal(value().editing, true);
@@ -119,7 +158,8 @@ test("direct Ghostty publishes exact surface identity, focus and shutdown lease"
   } finally {
     events.get("session_shutdown")?.();
     for (const [key, value] of Object.entries(saved)) {
-      if (value === undefined) delete process.env[key]; else process.env[key] = value;
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
     }
     globalThis.setInterval = originalInterval;
     globalThis.clearInterval = originalClear;

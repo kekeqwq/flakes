@@ -115,7 +115,9 @@ export default function inputMethod(pi: ExtensionAPI) {
       (process.platform !== "darwin" && process.platform !== "linux") ||
       ctx.mode !== "tui" ||
       !ctx.hasUI ||
-      (!process.env.WEZTERM_PANE && !process.env.TMUX && !process.env.GHOSTTY_SURFACE_ID)
+      (!process.env.WEZTERM_PANE &&
+        !process.env.TMUX &&
+        !process.env.GHOSTTY_SURFACE_ID)
     )
       return;
     if (enabled) {

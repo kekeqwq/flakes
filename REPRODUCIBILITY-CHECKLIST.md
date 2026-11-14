@@ -167,18 +167,18 @@
 
 检查方法：核对导入树与启用状态，扫描全部第一方文本中的 home/绝对路径、外部 URL、下载与执行入口；按所属模块追踪资源和命令来源。二进制字体比对哈希，图片资源核对是否跟踪。不是只看 enable 布尔值，也不把未导入文件当实际运行依赖。
 
-| 区域                                 | 检查内容                                                            | 结论                                                         |
-| ------------------------------------ | ------------------------------------------------------------------- | ------------------------------------------------------------ |
-| flake.nix / flake.lock / treefmt.nix | 原生 outputs、平台组装、input pin、overlay、检查入口                | 无新增 mutable 构建来源；QBE/策略回归检查已接入待跑          |
-| System/Common 根层                   | 导入树、Fish/Git/tmux/Yazi/Pi/终端 Emacs、Python/开发工具           | 第一方资源有来源；账户/历史不复制；旧 shell 模块已移除       |
-| System/Common/desktop                | 字体、WezTerm/bar、共享 apps、GUI Emacs/原生模块                    | 资源自带或固定获取；用户 dotfiles/vault/账户另界定           |
-| NixOS/server                         | 引导/locale/用户基础、udev/开发工具、Enhanced-nox                   | 公共服务不默认套用实例；旧 OpenList/SMB/sing-box 已分离/删除 |
-| NixOS/desktop                        | session/theme/font/input/Waybar/Niri/Yazi/代理                      | 无反向读取 Deck 文件；Sunshine 捕获属主机，资源有固定来源    |
-| hosts/deck                           | 硬件、显示、Jovian、服务启用、网页和网络                            | 机器差异留此；静态网页已纳管；秘密不入 store                 |
-| hosts/mba / macOS/private            | 私有集成、Brew、launchd/IME、Rime、学习扩展及脚本                   | 共享配置不复制；Mac 系统授权/自更新例外明确                  |
-| pkgs                                 | Emacs patches、xrock、Weylus、QBE、MonoLisa                         | 源码/patch 哈希固定；字体授权边界已记录                      |
-| tests / 本地测试脚本                 | 测试依赖、fixture、失败断言                                         | 准备统一执行；不读私人数据库或真实凭据                       |
-| README / AGENTS / 静态资源           | 部署约束、安装笔记、资源引用                                        | 文档中的外部服务/手工步骤不冒称 Nix 自动恢复                 |
+| 区域                                 | 检查内容                                                  | 结论                                                         |
+| ------------------------------------ | --------------------------------------------------------- | ------------------------------------------------------------ |
+| flake.nix / flake.lock / treefmt.nix | 原生 outputs、平台组装、input pin、overlay、检查入口      | 无新增 mutable 构建来源；QBE/策略回归检查已接入待跑          |
+| System/Common 根层                   | 导入树、Fish/Git/tmux/Yazi/Pi/终端 Emacs、Python/开发工具 | 第一方资源有来源；账户/历史不复制；旧 shell 模块已移除       |
+| System/Common/desktop                | 字体、WezTerm/bar、共享 apps、GUI Emacs/原生模块          | 资源自带或固定获取；用户 dotfiles/vault/账户另界定           |
+| NixOS/server                         | 引导/locale/用户基础、udev/开发工具、Enhanced-nox         | 公共服务不默认套用实例；旧 OpenList/SMB/sing-box 已分离/删除 |
+| NixOS/desktop                        | session/theme/font/input/Waybar/Niri/Yazi/代理            | 无反向读取 Deck 文件；Sunshine 捕获属主机，资源有固定来源    |
+| hosts/deck                           | 硬件、显示、Jovian、服务启用、网页和网络                  | 机器差异留此；静态网页已纳管；秘密不入 store                 |
+| hosts/mba / macOS/private            | 私有集成、Brew、launchd/IME、Rime、学习扩展及脚本         | 共享配置不复制；Mac 系统授权/自更新例外明确                  |
+| pkgs                                 | Emacs patches、xrock、Weylus、QBE、MonoLisa               | 源码/patch 哈希固定；字体授权边界已记录                      |
+| tests / 本地测试脚本                 | 测试依赖、fixture、失败断言                               | 准备统一执行；不读私人数据库或真实凭据                       |
+| README / AGENTS / 静态资源           | 部署约束、安装笔记、资源引用                              | 文档中的外部服务/手工步骤不冒称 Nix 自动恢复                 |
 
 未声称覆盖：第三方全部传递源码的安全审计、应用用户数据库语义、Mac 被权限阻止的内容、实际全新设备安装、Windows。
 

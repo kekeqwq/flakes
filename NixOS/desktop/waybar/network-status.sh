@@ -15,10 +15,14 @@ if [ -n "$wifi" ]; then
   signal=$($NMCLI -t -f IN-USE,SIGNAL device wifi |
     $AWK -F: '$1=="*" {print $2; exit}')
   [ -z "$signal" ] && signal=0
-  if [ "$signal" -ge 75 ]; then icon=󰤨
-  elif [ "$signal" -ge 50 ]; then icon=󰤥
-  elif [ "$signal" -ge 25 ]; then icon=󰤢
-  else icon=󰤟
+  if [ "$signal" -ge 75 ]; then
+    icon=󰤨
+  elif [ "$signal" -ge 50 ]; then
+    icon=󰤥
+  elif [ "$signal" -ge 25 ]; then
+    icon=󰤢
+  else
+    icon=󰤟
   fi
   printf '%s %s%%\n' "$icon" "$signal"
   exit 0
