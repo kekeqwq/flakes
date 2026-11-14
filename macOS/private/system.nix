@@ -111,7 +111,6 @@ in
     ];
     casks = [
       "ghostty"
-      "chatgpt"
       "dingtalk"
       "anki"
       "baidunetdisk"
