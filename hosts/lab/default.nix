@@ -13,6 +13,8 @@
   fileSystems."/boot" = {
     device = "/dev/disk/by-label/boot";
     fsType = "vfat";
+    # EFI random seeds must not be readable by other users.
+    options = [ "umask=0077" ];
   };
   fileSystems."/" = {
     device = "/dev/disk/by-label/nixos";
