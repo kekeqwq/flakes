@@ -12,6 +12,12 @@ in
   myuser.hm = {
     gtk = {
       enable = true;
+      # Generic families deliberately resolve through the system Fontconfig
+      # policy (MonoLisa/WenKai), not a GTK/CSS hardcoded UI font.
+      font = {
+        name = "sans-serif";
+        size = 11;
+      };
       theme = {
         name = "catppuccin-mocha-mauve-standard+rimless";
         package = gtkTheme;
@@ -33,6 +39,8 @@ in
       "${gtkTheme}/share/themes/catppuccin-mocha-mauve-standard+rimless/gtk-4.0/assets";
     dconf.settings."org/gnome/desktop/interface" = {
       color-scheme = "prefer-dark";
+      font-name = "sans-serif 11";
+      monospace-font-name = "monospace 11";
       gtk-theme = "catppuccin-mocha-mauve-standard+rimless";
       icon-theme = "Papirus-Dark";
       cursor-theme = "Bibata-Modern-Ice";

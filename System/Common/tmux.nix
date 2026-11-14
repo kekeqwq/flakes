@@ -1,41 +1,13 @@
 { pkgs, ... }:
-let
-  applyTheme = pkgs.writeShellScript "tmux-apply-catppuccin" ''
-    set -e
-    export PATH="${pkgs.tmux}/bin:/usr/bin:/bin:$PATH"
-    mode=''${1:-}
-    if [ -z "$mode" ]; then
-      if [ "$(uname)" = Darwin ]; then
-        mode=$(defaults read -g AppleInterfaceStyle 2>/dev/null || printf Light)
-      else
-        mode=Dark
-      fi
-    fi
-    case "$mode" in
-      [Dd]ark|dark)
-        blue=#89b4fa
-        on_blue=#1e1e2e
-        ;;
-      *)
-        blue=#7287fd
-        on_blue=#eff1f5
-        ;;
-    esac
-    tmux set -g status-style "bg=default,fg=default"
-    tmux set -g status-left "#[fg=$on_blue,bg=$blue,bold] #S #[bg=default] "
-    tmux set -g status-right "#[fg=$blue]"'#{?pane_in_mode,COPY ,}#{?client_prefix,PREFIX ,}#{?window_zoomed_flag,ZOOM ,}'"#[fg=brightblack]#h "
-    tmux set -g window-status-format "#[fg=brightblack] #I:#W "
-    tmux set -g window-status-current-format "#[fg=$blue,bold] #I:#W "
-    tmux set -g pane-border-style "fg=brightblack"
-    tmux set -g pane-active-border-style "fg=$blue"
-    tmux set -g message-style "bg=default,fg=$blue"
-    tmux set -g message-command-style "bg=default,fg=$blue"
-    tmux set -g mode-style "bg=$blue,fg=$on_blue"
-    tmux set -g clock-mode-colour "$blue" || true
-  '';
-in
 {
-  myuser.hm.xdg.configFile."tmux/apply-theme".source = applyTheme;
+
+  # Installing the new file alone leaves existing servers on their old title,
+  # hooks and palette. Reload without detaching clients or restarting panes.
+  myuser.hm.xdg.configFile."tmux/tmux.conf".onChange = ''
+    if ${pkgs.tmux}/bin/tmux has-session 2>/dev/null; then
+      ${pkgs.tmux}/bin/tmux source-file "$HOME/.config/tmux/tmux.conf"
+    fi
+  '';
   myuser.hm.programs.tmux = {
     enable = true;
     shell = "${pkgs.fish}/bin/fish";
@@ -120,6 +92,8 @@ in
       set -g set-clipboard on
       set -g allow-passthrough on
       set -g detach-on-destroy off
+      set -g cursor-style block
+      set -g cursor-colour '#f5c2e7'
 
       # Status bar
       set -g status-position top
@@ -130,12 +104,32 @@ in
       set -gw automatic-rename on
       set -gw automatic-rename-format '#{b:pane_current_path}'
       set -g set-titles on
-      set -g set-titles-string '#h:#W'
+      # Socket + client tty disambiguate windows, even on the same session.
+      set -g set-titles-string 'tmux:#{socket_path}:#{client_tty}'
 
-      # Named theme colours do not follow `theme light`: tmux only uses the
-      # light palette when the client reports a light background, which WezTerm
-      # does not. Apply explicit Catppuccin hex instead.
-      run-shell ${applyTheme}
+      # Native per-client palettes, not async scripts writing server-global
+      # hex colours. Two clients may have different appearances at once.
+      set-hook -gu client-light-theme[92]
+      set-hook -gu client-dark-theme[92]
+      set -g theme detect
+      set -g dark-theme-black '#1e1e2e'
+      set -g dark-theme-white '#cdd6f4'
+      set -g dark-theme-light-grey '#a6adc8'
+      set -g dark-theme-blue '#89b4fa'
+      set -g light-theme-black '#eff1f5'
+      set -g light-theme-white '#4c4f69'
+      set -g light-theme-light-grey '#6c6f85'
+      set -g light-theme-blue '#7287fd'
+      set -g status-style 'bg=default,fg=default'
+      set -g status-left '#[fg=themeblack,bg=themeblue,bold] #S #[bg=default] '
+      set -g status-right '#[fg=themeblue]#{?pane_in_mode,COPY ,}#{?client_prefix,PREFIX ,}#{?window_zoomed_flag,ZOOM ,}#[fg=themelightgrey]#h '
+      set -g window-status-format '#[fg=themelightgrey] #I:#W '
+      set -g window-status-current-format '#[fg=themeblue,bold] #I:#W '
+      set -g pane-border-style 'fg=themelightgrey'
+      set -g pane-active-border-style 'fg=themeblue'
+      set -g message-style 'bg=default,fg=themeblue'
+      set -g message-command-style 'bg=default,fg=themeblue'
+      set -g mode-style 'bg=themeblue,fg=themeblack'
     '';
   };
 }

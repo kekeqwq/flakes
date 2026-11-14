@@ -5,14 +5,6 @@
   ...
 }:
 let
-  livePi = inputs.pi.packages.${pkgs.stdenv.hostPlatform.system}.coding-agent.overrideAttrs (old: {
-    nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [ pkgs.python3 ];
-    postInstall = (old.postInstall or "") + ''
-      pi_root="$out/lib/node_modules/@earendil-works/pi-coding-agent"
-      python ${./pi-live-theme.py} "$pi_root"
-      PI_TEST_PACKAGE_DIR="$pi_root" node --test ${./pi-live-theme.test.mjs}
-    '';
-  });
   # Discoverable extension, not a wrapper --extension flag: child Pi processes
   # launched with --no-extensions must keep their restricted loadout. This
   # package publishes loopback account routes for those children itself.
@@ -76,7 +68,9 @@ in
     home.file.".pi/agent/extensions/input-method.ts".source = "${inputMethod}/input-method.ts";
     programs.pi.coding-agent = {
       enable = true;
-      package = livePi;
+      # Ghostty/tmux support native appearance notifications (mode 2031).
+      # No WezTerm-specific periodic palette-query patch is needed.
+      package = inputs.pi.packages.${pkgs.stdenv.hostPlatform.system}.coding-agent;
       extensions = [ ];
     };
   };

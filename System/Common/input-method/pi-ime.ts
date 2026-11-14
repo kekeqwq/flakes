@@ -45,6 +45,7 @@ export default function inputMethod(pi: ExtensionAPI) {
   let restoreDialogs: (() => void) | undefined;
   let timer: ReturnType<typeof setInterval> | undefined;
   let last = "";
+  let publishTitle: (() => void) | undefined;
   const directory = join(homedir(), ".local/state/input-method/pi");
   const file = join(directory, `${process.pid}.json`);
   const temporary = `${file}.tmp`;
@@ -64,6 +65,7 @@ export default function inputMethod(pi: ExtensionAPI) {
           )));
     if (!force && last === String(editing)) return;
     last = String(editing);
+    if (!tuiStopped && !suspended) publishTitle?.();
     try {
       mkdirSync(directory, { recursive: true, mode: 0o700 });
       writeFileSync(
@@ -74,7 +76,8 @@ export default function inputMethod(pi: ExtensionAPI) {
           editing,
           updated: Date.now() / 1000,
           weztermPane: process.env.WEZTERM_PANE ?? null,
-          tmuxPane: process.env.TMUX_PANE ?? null,
+          ghosttySurface: process.env.GHOSTTY_SURFACE_ID ?? null,
+          tmuxPane: process.env.TMUX ? (process.env.TMUX_PANE ?? null) : null,
           socket: process.env.TMUX?.split(",")[0] ?? null,
         }),
         { mode: 0o600 },
@@ -90,6 +93,7 @@ export default function inputMethod(pi: ExtensionAPI) {
   }
   function cleanup() {
     enabled = false;
+    publishTitle = undefined;
     restoreTui?.();
     restoreTui = undefined;
     restoreDialogs?.();
@@ -111,7 +115,7 @@ export default function inputMethod(pi: ExtensionAPI) {
       (process.platform !== "darwin" && process.platform !== "linux") ||
       ctx.mode !== "tui" ||
       !ctx.hasUI ||
-      (!process.env.WEZTERM_PANE && !process.env.TMUX)
+      (!process.env.WEZTERM_PANE && !process.env.TMUX && !process.env.GHOSTTY_SURFACE_ID)
     )
       return;
     if (enabled) {
@@ -121,6 +125,12 @@ export default function inputMethod(pi: ExtensionAPI) {
     enabled = true;
     suspended = false;
     last = "";
+    const surface = process.env.GHOSTTY_SURFACE_ID;
+    if (!process.env.TMUX && surface && /^[a-zA-Z0-9-]{1,64}$/.test(surface)) {
+      // A metadata-only token identifies this exact direct Pi surface on
+      // Linux/Niri as well as macOS; never publish cwd or prompt text.
+      publishTitle = () => ctx.ui.setTitle(`pi-ime:${process.pid}:${surface}`);
+    }
     // Built-in text dialogs (including ask_user_question's answer editor)
     // are Chinese input areas too. Select/confirm dialogs remain ABC.
     const ui = ctx.ui;

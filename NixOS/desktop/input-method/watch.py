@@ -58,7 +58,8 @@ def niri_socket():
     return found[-1] if found else None
 
 
-def focused_app(socket):
+def focused_window(socket):
+    """niri's focused window: app_id, title, pid. None if unavailable."""
     if not socket:
         return None
     try:
@@ -74,10 +75,19 @@ def focused_app(socket):
     if done.returncode != 0:
         return None
     try:
-        window = json.loads(done.stdout or "null")
+        return json.loads(done.stdout or "null") or None
     except json.JSONDecodeError:
         return None
-    return (window or {}).get("app_id")
+
+
+def terminal_record(window):
+    """Build the terminal identity the policy expects for this focus."""
+    app = (window or {}).get("app_id")
+    if app in policy.WEZTERM:
+        return read_json(STATE / "wezterm.json", {}) or {}
+    if app in policy.GHOSTTY:
+        return {"title": (window or {}).get("title") or "", "blocked": False}
+    return None
 
 
 def prefix_held(now):
@@ -110,8 +120,9 @@ def main():
     tick = 0
     while True:
         now = time.time()
-        app = focused_app(socket)
-        terminal = read_json(STATE / "wezterm.json", {}) or {}
+        window = focused_window(socket)
+        app = (window or {}).get("app_id")
+        terminal = terminal_record(window)
         clients = records(STATE / "tmux", "clients")
         contexts = records(STATE / "pi")
         want = policy.desired(app, terminal, clients, contexts, now, prefix_held(now))

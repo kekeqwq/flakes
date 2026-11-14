@@ -47,7 +47,6 @@ in
     tmuxReporter
     watcher
   ];
-  my.inputMethod.prefixCommand = "${watcher}/bin/input-method-hold";
 
   i18n.inputMethod = {
     enable = true;
@@ -124,29 +123,27 @@ in
     # resolves rime-ice via `rime_ice_suggestion:/`, but librime in Emacs does
     # not know that resource path, so link the schemas/dictionaries/lua here
     # too (the macOS Squirrel setup does the same into ~/Library/Rime).
-    home.activation.syncRimeIce =
-      inputs.home-manager.lib.hm.dag.entryAfter [ "linkGeneration" ]
-        ''
-          set -euo pipefail
-          src=${pkgs.rime-ice}/share/rime-data
-          dest="$HOME/.local/share/fcitx5/rime"
-          mkdir -p "$dest"
-          find -L "$src" -type f -print0 | while IFS= read -r -d "" f; do
-            rel="''${f#"$src"/}"
-            case "$rel" in
-              AGENTS.md|LICENSE|recipe.yaml|weasel.yaml|build/*) continue ;;
-            esac
-            target="$dest/$rel"
-            mkdir -p "$(dirname "$target")"
-            ln -sfn "$f" "$target"
-          done
-          # nixpkgs renames ice default.yaml to rime_ice_suggestion.yaml so
-          # several schemas can share one data dir.
-          ln -sfn "$src/rime_ice_suggestion.yaml" "$dest/default.yaml"
-        '';
+    home.activation.syncRimeIce = inputs.home-manager.lib.hm.dag.entryAfter [ "linkGeneration" ] ''
+      set -euo pipefail
+      src=${pkgs.rime-ice}/share/rime-data
+      dest="$HOME/.local/share/fcitx5/rime"
+      mkdir -p "$dest"
+      find -L "$src" -type f -print0 | while IFS= read -r -d "" f; do
+        rel="''${f#"$src"/}"
+        case "$rel" in
+          AGENTS.md|LICENSE|recipe.yaml|weasel.yaml|build/*) continue ;;
+        esac
+        target="$dest/$rel"
+        mkdir -p "$(dirname "$target")"
+        ln -sfn "$f" "$target"
+      done
+      # nixpkgs renames ice default.yaml to rime_ice_suggestion.yaml so
+      # several schemas can share one data dir.
+      ln -sfn "$src/rime_ice_suggestion.yaml" "$dest/default.yaml"
+    '';
   };
 
-  # Pi inside WezTerm gets Chinese; Emacs and non-editor surfaces get ASCII.
+  # Pi inside an identified Ghostty/tmux surface gets Chinese; Emacs gets ASCII.
   # Nothing here writes prompt text, only focus metadata.
   myuser.hm.systemd.user.services.input-method-watch = {
     Unit = {
@@ -166,8 +163,7 @@ in
     builtins.concatStringsSep "\n" tmuxHooks
     + ''
 
-      # WezTerm signals the prefix before tmux sees it. These only restore:
-      # a synchronous root binding would delay tmux's own prefix handling.
+      # Restore after prefix commands without blocking tmux's root bindings.
       bind-key -T prefix Escape run-shell -b "${watcher}/bin/input-method-hold end #{socket_path}" \; switch-client -T root
       set-hook -g after-bind-key[91] 'run-shell -b "${watcher}/bin/input-method-hold settle #{socket_path}"'
     ''

@@ -1,6 +1,6 @@
 -- Native Squirrel session guard, not an input-source switcher.
 -- Hammerspoon chooses Squirrel only for Pi text input; ordinary tabs use ABC.
--- Squirrel app_options sets this private flag ONLY on its WezTerm sessions.
+-- Squirrel app_options sets this private flag only on managed terminals.
 local M = {}
 local HOLD_SECONDS = 2
 
@@ -26,19 +26,25 @@ function M.init(env)
 end
 
 function M.func(key, env)
-  enforce(env.engine.context)
+  local ctx = env.engine.context
+  if not ctx:get_option('_pi_chinese_lock') then
+    env.pi_prefix_until = nil
+    return 2
+  end
+  enforce(ctx)
   local name = repr(key)
-  -- tmux prefix: the next key belongs to tmux. Forwarding it untouched avoids
-  -- opening a candidate window that delays the shortcut by a whole compose.
-  -- WezTerm normally handles the prefix itself, so this is a safety net.
+  -- Release events must not consume the pending next-key passthrough.
+  if name and name:find('Release+', 1, true) then return 2 end
+  -- kRejected (0) exits Rime unhandled; kAccepted (1) consumes the key.
+  -- kNoop (2) continues through other processors and is not passthrough.
   if name == 'Control+b' or name == 'Control+space' then
     env.pi_prefix_until = os.time() + HOLD_SECONDS
-    return 2 -- kNoop: let the terminal see the prefix key
+    return 0
   end
   if env.pi_prefix_until then
     local active = os.time() <= env.pi_prefix_until
     env.pi_prefix_until = nil
-    if active then return 1 end -- kAccept: hand the key straight to tmux
+    if active then return 0 end -- kRejected: hand the key straight to tmux
   end
   return 2 -- kNoop: preserve key handling, uppercase/chords and composition.
 end

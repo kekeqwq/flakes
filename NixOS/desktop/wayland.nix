@@ -144,7 +144,7 @@ in
       mainBar = {
         layer = "top";
         position = "top";
-        height = 0;
+        height = 40;
         spacing = 0;
         margin-top = 12;
         margin-bottom = 5;
@@ -168,19 +168,9 @@ in
         "custom/clock" = {
           exec = "${clockStatus}";
           interval = 5;
-          tooltip-format = "<tt>{calendar}</tt>";
-          calendar = {
-            mode = "month";
-            mode-mon-col = 3;
-            weeks-pos = "right";
-            on-scroll = 1;
-            format = {
-              months = "<span color='#89b4fa'><b>{}</b></span>";
-              days = "<span color='#cdd6f4'>{}</span>";
-              weeks = "<span color='#a6adc8'><b>W{}</b></span>";
-              today = "<span color='#cba6f7'><b><u>{}</u></b></span>";
-            };
-          };
+          # Calendar belongs to our click popup, not the custom module's
+          # unsupported {calendar} tooltip formatter.
+          tooltip = false;
           on-click = "${panel}/bin/keke-waybar-panel clock";
           on-click-right = "${panel}/bin/keke-waybar-panel clock";
         };
@@ -254,11 +244,24 @@ in
       }
 
       #workspaces button {
-          padding: 0 6px;
-          margin-right: 2px;
+          padding: 0;
+          min-width: 28px;
+          min-height: 28px;
+          margin: 0 2px;
+          border: none;
+          box-shadow: none;
           border-radius: 6px;
           color: #a6adc8;
           background: transparent;
+      }
+
+      #workspaces button label {
+          padding: 0;
+          margin: 0;
+          /* Waybar packs labels without expansion: the label itself must
+             occupy the full square, otherwise its glyph stays left-aligned. */
+          min-width: 28px;
+          min-height: 28px;
       }
 
       #workspaces button:hover {

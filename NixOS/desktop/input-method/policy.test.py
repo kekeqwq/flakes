@@ -33,6 +33,7 @@ client = {
     "pane_in_mode": "0",
     "client_prefix": "0",
     "client_key_table": "root",
+    "updated": now,
 }
 tmux_pi = {
     "pid": 88,
@@ -67,8 +68,68 @@ nested = {
     "pane_in_mode": "0",
     "client_prefix": "0",
     "client_key_table": "root",
+    "updated": now,
 }
 nested_pi = {"pid": 99, "editing": True, "updated": now, "tmuxPane": "%8", "socket": "/tmp/tmux-501/nested"}
 assert want("org.wezfurlong.wezterm", clients=[client, nested], contexts=[tmux_pi, nested_pi]) == "rime"
 
-print("linux input-method policy: 17 assertions passed")
+# Ghostty: socket + client tty identifies the client.
+titled = {**client, "session_name": "0", "window_name": "pi"}
+gh = {"title": "tmux:/private/tmp/tmux-501/default:/dev/pts/1"}
+assert want("com.mitchellh.ghostty", term=gh, clients=[titled], contexts=[tmux_pi]) == "rime"
+# An unidentified window permits manual Chinese instead of forcing ASCII.
+assert (
+    want("com.mitchellh.ghostty", term={"title": "keke@deck ~"}, clients=[titled], contexts=[tmux_pi])
+    is None
+)
+# Prefix held on the focused client keeps ASCII.
+assert (
+    want("com.mitchellh.ghostty", term=gh, clients=[{**titled, "client_prefix": "1"}], contexts=[tmux_pi])
+    == "ascii"
+)
+# Two clients on the same session/window still have distinct focus tokens.
+other = {
+    **titled,
+    "client_tty": "/dev/pts/5",
+    "pane_id": "%9",
+    "session_name": "0",
+    "window_name": "pi",
+    "foreground_pid": 77,
+}
+other_pi = {"pid": 77, "editing": True, "updated": now, "tmuxPane": "%9", "socket": "/tmp/tmux-501/default"}
+gh2 = {"title": "tmux:/private/tmp/tmux-501/default:/dev/pts/5"}
+assert want("com.mitchellh.ghostty", term=gh2, clients=[titled, other], contexts=[tmux_pi]) == "ascii"
+assert (
+    want("com.mitchellh.ghostty", term=gh2, clients=[titled, other], contexts=[tmux_pi, other_pi])
+    == "rime"
+)
+
+# A stale snapshot from a dead socket must not steal the nested walk.
+stale = {
+    **client,
+    "client_tty": "/dev/pts/9",
+    "pane_id": "%9",
+    "foreground_pid": 100,
+    "updated": now - 30,
+}
+assert want("org.wezfurlong.wezterm", clients=[client, stale], contexts=[tmux_pi]) == "rime"
+
+# Non-tmux Pi: exact PID + Ghostty surface identity, never title/cwd guesses.
+direct = {"title": "pi-ime:42:surface-a"}
+direct_pi = {"pid": 42, "ghosttySurface": "surface-a", "editing": True, "updated": now}
+assert want("com.mitchellh.ghostty", term=direct, contexts=[direct_pi]) == "rime"
+assert want("com.mitchellh.ghostty", term=direct, contexts=[{**direct_pi, "editing": False}]) == "ascii"
+assert want("com.mitchellh.ghostty", term=direct, contexts=[{**direct_pi, "pid": 43}]) == "ascii"
+assert want("com.mitchellh.ghostty", term=direct, contexts=[{**direct_pi, "ghosttySurface": "surface-b"}]) == "ascii"
+assert want("com.mitchellh.ghostty", term=direct, contexts=[{**direct_pi, "updated": now - 8}]) == "ascii"
+assert want("com.mitchellh.ghostty", term=direct, contexts=[{**direct_pi, "updated": now + 2}]) == "ascii"
+assert want("com.mitchellh.ghostty", term=direct, contexts=[{**direct_pi, "tmuxPane": "%1"}]) == "ascii"
+assert want("com.mitchellh.ghostty", term=direct, contexts=[], prefix=True) == "ascii"
+assert want("com.mitchellh.ghostty", term={"title": "ghostty-shell:surface-a"}, contexts=[direct_pi]) == "ascii"
+assert want("com.example.other", term=direct, contexts=[direct_pi]) is None
+# A second direct Pi in another tab must never steal the active surface.
+other_direct = {"pid": 43, "ghosttySurface": "surface-b", "editing": True, "updated": now}
+assert want("com.mitchellh.ghostty", term=direct, contexts=[other_direct, direct_pi]) == "rime"
+assert want("com.mitchellh.ghostty", term=direct, contexts=[other_direct]) == "ascii"
+assert want("com.mitchellh.ghostty", term={"title": "pi-ime:0:surface-a"}, contexts=[direct_pi]) is None
+print("linux input-method policy: tmux/direct Ghostty, isolation, lease and shell tests passed")

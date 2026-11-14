@@ -15,18 +15,30 @@ RIME = "im.rime.inputmethod.Squirrel.Hans"
 STATE = Path.home() / ".local/state/input-method"
 
 
-def wezterm_pid():
-    listed = subprocess.run(
-        ["pgrep", "-f", "/MacOS/wezterm-gui"],
-        capture_output=True,
-        text=True,
-    )
-    pids = [int(line) for line in listed.stdout.split() if line.isdigit()]
-    return pids[-1] if pids else None
+def focused_pid():
+    """Frontmost app pid; the TSM actuator checks keyboard focus matches it."""
+    try:
+        done = subprocess.run(
+            [
+                "/usr/bin/osascript",
+                "-e",
+                'tell application "System Events"\n'
+                'set frontApp to first application process whose frontmost is true\n'
+                'if bundle identifier of frontApp is not "com.mitchellh.ghostty" then return 0\n'
+                'return unix id of frontApp\n'
+                'end tell',
+            ],
+            capture_output=True,
+            text=True,
+            timeout=2,
+        )
+        return int(done.stdout.strip() or 0) or None
+    except (OSError, ValueError, subprocess.TimeoutExpired):
+        return None
 
 
 def select(source):
-    pid = wezterm_pid()
+    pid = focused_pid()
     if not pid:
         return
     subprocess.run([SELECT, source, str(pid)], timeout=2)

@@ -5,6 +5,9 @@ local log = hs.logger.new('input-method', 'info')
 local root = os.getenv('HOME') .. '/.local/state/input-method'
 local memories = hs.settings.get('input-method.memories') or {}
 local active, generation = nil, 0
+local schedule
+local ghosttyFocus, ghosttyFocusTask, ghosttyFocusExit
+local ghosttyFocusRequestedAt = 0
 local pending, verify
 local nativeTask, nativeKey, nativeApplied, nativeExit
 local nativeAttempts = 0
@@ -58,10 +61,61 @@ local function prefixHeld()
   -- A missed restore expires instead of pinning ABC indefinitely.
   return type(value.expires) == 'number' and hs.timer.secondsSinceEpoch() <= value.expires
 end
+local function terminalRecord(bundle)
+  -- WezTerm reports its pane over its own Lua hook; Ghostty has no scripting,
+  -- so the window title (pushed by tmux set-titles) identifies its client.
+  if bundle == policy.WEZTERM then
+    return readJSON(root .. '/wezterm.json')
+  end
+  if bundle == policy.GHOSTTY then
+    local win = hs.window.focusedWindow()
+    if not win then return nil end
+    local title = win:title() or ''
+    -- tmux remains the fast path and needs no Automation permission.
+    if title:match('^tmux:') or title:match('^pi%-ime:') or title:match('^ghostty%-shell:') then
+      return {title=title, blocked=false}
+    end
+    local window, now = win:id(), hs.timer.secondsSinceEpoch()
+    if not ghosttyFocusTask and now - ghosttyFocusRequestedAt >= 0.15 then
+      ghosttyFocusRequestedAt = now
+      local task
+      task = hs.task.new('/usr/bin/osascript', function(code, output)
+        if ghosttyFocusTask ~= task then return end
+        ghosttyFocusTask = nil
+        ghosttyFocusExit = code
+        local focused = hs.window.focusedWindow()
+        if code ~= 0 then
+          -- Permission denied or app unavailable: do not flood prompts/retries.
+          ghosttyFocusRequestedAt = hs.timer.secondsSinceEpoch() + 3
+          ghosttyFocus = nil
+          return
+        end
+        if frontBundle() ~= policy.GHOSTTY or not focused
+            or focused:id() ~= window or focused:title() ~= title then return end
+        local surface, pid, tty = output:match('^([^\t\r\n]+)\t(%d+)\t(/dev/[^\r\n]+)')
+        if not surface or tonumber(pid) <= 0 then return end
+        ghosttyFocus = {native=true, window=window, pane=surface, pid=tonumber(pid),
+          tty=tty, sourceTitle=title, updated=hs.timer.secondsSinceEpoch()}
+        if schedule then schedule() end
+      end, {'-e', [[with timeout of 1 seconds
+        tell application id "com.mitchellh.ghostty"
+          set t to focused terminal of selected tab of front window
+          return (id of t) & tab & ((pid of t) as text) & tab & (tty of t)
+        end tell
+      end timeout]]})
+      ghosttyFocusTask = task
+      if not task or not task:start() then ghosttyFocusTask = nil end
+    end
+    if ghosttyFocus and ghosttyFocus.window == window and ghosttyFocus.sourceTitle == title
+        and now - ghosttyFocus.updated < 0.6 then return ghosttyFocus end
+    return nil
+  end
+  return nil
+end
 local function desired()
   local bundle = frontBundle()
   if not bundle then return nil end
-  return policy.desired(bundle, readJSON(root .. '/wezterm.json'),
+  return policy.desired(bundle, terminalRecord(bundle),
                         records(root .. '/tmux', 'clients'), records(root .. '/pi'),
                         hs.timer.secondsSinceEpoch(), memories, prefixHeld())
 end
@@ -72,15 +126,16 @@ local function cancelNative()
   nativeTask = nil
   if task then note('cancel', nativeKey); task:terminate() end
 end
-local function selectTerminal(want, context)
-  local terminal = readJSON(root .. '/wezterm.json') or {}
-  local key = want .. ':' .. tostring(context and context.pid) .. ':' .. tostring(terminal.window) .. ':' .. tostring(terminal.pane)
+local function selectTerminal(want, context, bundle)
+  local terminal = terminalRecord(bundle) or {}
+  local key = bundle .. ':' .. want .. ':' .. tostring(context and context.pid)
+    .. ':' .. tostring(terminal.window) .. ':' .. tostring(terminal.pane) .. ':' .. tostring(terminal.title)
   if nativeKey ~= key then
     cancelNative(); nativeKey = key; nativeApplied = nil; nativeAttempts = 0
   end
   if nativeTask or (nativeApplied == key and hs.keycodes.currentSourceID() == want)
       or nativeAttempts >= 3 then return end
-  local app = hs.application.get(policy.WEZTERM)
+  local app = hs.application.get(bundle or policy.WEZTERM)
   if not app then return end
   nativeAttempts = nativeAttempts + 1
   note('request', key)
@@ -115,8 +170,8 @@ local function apply(attempt)
     end
   end
   local want, context = desired()
-  if bundle == policy.WEZTERM and want then
-    selectTerminal(want, context)
+  if policy.isTerminal(bundle) and want then
+    selectTerminal(want, context, bundle)
     return
   end
   cancelNative(); nativeKey = nil; nativeApplied = nil; nativeAttempts = 0
@@ -135,7 +190,7 @@ local function apply(attempt)
     end
   end
 end
-local function schedule()
+schedule = function()
   generation = generation + 1
   cancel(pending)
   cancel(verify)
@@ -156,7 +211,7 @@ M.leaseTimer = hs.timer.doEvery(0.2, function()
   local bundle = frontBundle()
   -- Also detect nonactivating panels closing; no application activation is
   -- emitted then. An unchanged app/policy never makes a native source switch.
-  if bundle ~= active or bundle == policy.WEZTERM then apply() end
+  if bundle ~= active or policy.isTerminal(bundle) then apply() end
 end)
 hs.keycodes.inputSourceChanged(function()
   local bundle = frontBundle()
@@ -175,10 +230,12 @@ function M.status()
   return { front = frontBundle(), source = hs.keycodes.currentSourceID(),
            desired = want, pi = context and context.pid, trusted = hs.accessibilityState(),
            nativePending = nativeTask ~= nil, nativeContext = nativeApplied,
-           nativeExit = nativeExit, nativeAttempts = nativeAttempts }
+           nativeExit = nativeExit, nativeAttempts = nativeAttempts,
+           ghosttyFocusExit = ghosttyFocusExit, ghosttyFocusPending = ghosttyFocusTask ~= nil }
 end
 function M.stop()
   cancel(pending); cancel(verify); cancelNative()
+  if ghosttyFocusTask then ghosttyFocusTask:terminate(); ghosttyFocusTask = nil end
   M.appWatcher:stop(); M.windowWatcher:unsubscribeAll(); M.fileWatcher:stop()
   M.leaseTimer:stop()
   hs.keycodes.inputSourceChanged(nil)

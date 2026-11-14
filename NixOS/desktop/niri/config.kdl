@@ -43,13 +43,11 @@ hotkey-overlay {
 prefer-no-csd
 layer-rule {
     match namespace="keke-waybar-panel"
+    // A transparent input-dismiss surface fills the monitor. Only the GTK
+    // card paints a background/rounded shadow; never decorate the full layer.
     opacity 1.0
-    geometry-corner-radius 14
     shadow {
-        on
-        softness 12
-        spread 6
-        offset x=0 y=6
+        off
     }
 }
 layer-rule {
@@ -72,7 +70,7 @@ window-rule {
 }
 binds {
     Mod+Return {
-        spawn "wezterm"
+        spawn "ghostty"
     }
     Mod+D {
         spawn "rofi" "-show" "drun"

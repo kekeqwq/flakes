@@ -1,10 +1,19 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, mkdtempSync, existsSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { stripTypeScriptTypes } from "node:module";
 const source = readFileSync(process.argv[2], "utf8").replace(
   /import\s*\{[\s\S]*?\}\s*from\s*["']@earendil-works\/pi-coding-agent["'];/,
-  "class CustomEditor {}",
+  `class CustomEditor {
+    focused = true;
+    text = '';
+    isShowingAutocomplete() { return false; }
+    getText() { return this.text; }
+    render() { return ['']; }
+    handleInput() {}
+  }`,
 );
 const mod = await import(
   "data:text/javascript;base64," +
@@ -53,4 +62,67 @@ test("factory registers lifecycle without creating timers or files", () => {
     },
   });
   assert.deepEqual([...events.keys()], ["session_start", "session_shutdown"]);
+});
+test("direct Ghostty publishes exact surface identity, focus and shutdown lease", () => {
+  const home = mkdtempSync(join(tmpdir(), "pi-ime-direct-"));
+  const keys = ["HOME", "TMUX", "TMUX_PANE", "WEZTERM_PANE", "GHOSTTY_SURFACE_ID"];
+  const saved = Object.fromEntries(keys.map((key) => [key, process.env[key]]));
+  const originalInterval = globalThis.setInterval;
+  const originalClear = globalThis.clearInterval;
+  let timerCallback;
+  let cleared = false;
+  const events = new Map();
+  const titles = [];
+  let editor;
+  const tui = { stop() {}, start() {} };
+  const file = join(home, ".local/state/input-method/pi", `${process.pid}.json`);
+  try {
+    process.env.HOME = home;
+    delete process.env.TMUX;
+    process.env.TMUX_PANE = "%inherited"; // Without TMUX this is not a tmux context.
+    delete process.env.WEZTERM_PANE;
+    process.env.GHOSTTY_SURFACE_ID = "surface-a";
+    globalThis.setInterval = (cb) => { timerCallback = cb; return { unref() {} }; };
+    globalThis.clearInterval = () => { cleared = true; };
+    mod.default({ on(name, cb) { events.set(name, cb); } });
+    events.get("session_start")({}, {
+      mode: "tui", hasUI: true,
+      ui: {
+        setTitle(title) { titles.push(title); },
+        editor() {}, input() {}, custom() {},
+        setEditorComponent(factory) {
+          editor = factory(tui, {}, { matches() { return false; } });
+        },
+      },
+    });
+    const value = () => JSON.parse(readFileSync(file, "utf8"));
+    assert.equal(value().ghosttySurface, "surface-a");
+    assert.equal(value().pid, process.pid);
+    assert.equal(value().tmuxPane, null);
+    assert.equal(value().editing, true);
+    assert.equal(titles.at(-1), `pi-ime:${process.pid}:surface-a`);
+    editor.focused = false;
+    assert.equal(value().editing, false);
+    editor.focused = true;
+    assert.equal(value().editing, true);
+    const beforeStop = titles.length;
+    tui.stop();
+    timerCallback();
+    assert.equal(value().editing, false);
+    assert.equal(titles.length, beforeStop, "stopped TUI must not overwrite a subprocess title");
+    tui.start();
+    timerCallback();
+    assert.equal(value().editing, true);
+    events.get("session_shutdown")();
+    assert.equal(existsSync(file), false);
+    assert.equal(cleared, true);
+  } finally {
+    events.get("session_shutdown")?.();
+    for (const [key, value] of Object.entries(saved)) {
+      if (value === undefined) delete process.env[key]; else process.env[key] = value;
+    }
+    globalThis.setInterval = originalInterval;
+    globalThis.clearInterval = originalClear;
+    rmSync(home, { recursive: true, force: true });
+  }
 });

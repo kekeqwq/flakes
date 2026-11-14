@@ -110,6 +110,7 @@ in
       }
     ];
     casks = [
+      "ghostty"
       "chatgpt"
       "dingtalk"
       "anki"
@@ -119,7 +120,7 @@ in
       "google-chrome"
       "heptabase"
       "karabiner-elements"
-      "marginnote"
+      "marginnote" # Current cask installs MarginNote 5, not the retired v4.
       "pikpak"
       "surge"
       "squirrel-app"

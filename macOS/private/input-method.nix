@@ -56,7 +56,6 @@ in
     tmuxReporter
     prefixSwitcher
   ];
-  my.inputMethod.prefixCommand = "${prefixSwitcher}/bin/input-method-prefix";
   myuser.hm = {
     home.file = {
       ".hammerspoon/init.lua" = {
@@ -80,12 +79,11 @@ in
       mkdir -p "$HOME/.local/state/input-method/"{pi,tmux}
       chmod 700 "$HOME/.local/state/input-method" "$HOME/.local/state/input-method/"{pi,tmux}
     '';
-    programs.wezterm.settings.status_update_interval = 100;
     programs.tmux.extraConfig = lib.mkAfter (
       builtins.concatStringsSep "\n" tmuxHooks
       + ''
 
-        # WezTerm signals the prefix before tmux sees it; these only restore.
+        # Prefix/Escape restore hooks; focus policy observes tmux metadata.
         # Esc cancels the prefix, after-bind-key covers every other shortcut.
         bind-key -T prefix Escape run-shell -b "${prefixSwitcher}/bin/input-method-prefix end #{socket_path} --force" \; switch-client -T root
         set-hook -g after-bind-key[91] 'run-shell -b "${prefixSwitcher}/bin/input-method-prefix settle #{socket_path}"'

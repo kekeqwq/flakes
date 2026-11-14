@@ -2,9 +2,9 @@
 # 位置：~/Library/Rime/squirrel.custom.yaml
 patch:
   # Hammerspoon alone selects the macOS source. When it chooses Squirrel for
-  # Pi, its WezTerm session must really compose Chinese, not retain ASCII mode.
+  # Pi, its terminal session must really compose Chinese, not retain ASCII mode.
   # This native session flag does not affect any other application's session.
-  app_options/com.github.wez.wezterm:
+  app_options/com.mitchellh.ghostty:
     ascii_mode: false
     _pi_chinese_lock: true
 

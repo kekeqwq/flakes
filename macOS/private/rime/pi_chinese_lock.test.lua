@@ -36,9 +36,24 @@ guard.fini(env)
 local env2 = {engine={context=ctx}}
 guard.init(env2)
 ctx:set_option('_pi_chinese_lock', true)
-assert(guard.func(key('Control+b'), env2) == 2, 'prefix itself reaches the terminal')
-assert(guard.func(key('c'), env2) == 1, 'next key is forwarded, not composed')
+-- librime Processor::ProcessResult: rejected=0, accepted=1, noop=2.
+-- Engine::ProcessKey returns false on rejected (OS receives the key),
+-- true on accepted (consumed), and continues processors on noop.
+local function reachesTerminal(name)
+  local result = guard.func(key(name), env2)
+  assert(result ~= 1, 'shortcut must never be consumed by this processor')
+  return result == 0
+end
+assert(reachesTerminal('Control+b'), 'prefix itself reaches the terminal')
+assert(guard.func(key('Release+Control+b'), env2) == 2, 'release preserves pending passthrough')
+assert(reachesTerminal('c'), 'next key is forwarded, not composed')
 assert(guard.func(key('c'), env2) == 2, 'hold is single-shot')
-assert(guard.func(key('Control+space'), env2) == 2)
-assert(guard.func(key('v'), env2) == 1)
-print('Pi native Chinese guard: 13 assertions passed')
+assert(reachesTerminal('Control+space'))
+assert(reachesTerminal('v'))
+assert(reachesTerminal('Control+b'))
+env2.pi_prefix_until = os.time() - 1
+assert(guard.func(key('x'), env2) == 2, 'expired hold permits ordinary composition')
+ctx:set_option('_pi_chinese_lock', false)
+assert(guard.func(key('Control+b'), env2) == 2, 'other apps retain their processors')
+assert(env2.pi_prefix_until == nil)
+print('Pi native Chinese guard: passthrough/scope/release/expiry assertions passed')

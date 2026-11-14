@@ -20,6 +20,11 @@
     ]
     # SpotX has no aarch64-linux build. macOS and x86_64 Linux still get it.
     ++ lib.optionals (stdenv.hostPlatform.isDarwin || stdenv.hostPlatform.isx86_64) [
-      spotify-spotx
+      (spotify-spotx.override {
+        spotxArgs = [
+          "--premium"
+          "--hide"
+        ];
+      })
     ];
 }

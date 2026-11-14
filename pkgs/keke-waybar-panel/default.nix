@@ -16,7 +16,10 @@
 
 let
   # Wrapped interpreter: `gi` must be importable at runtime.
-  python = python3.withPackages (ps: [ ps.pygobject3 ]);
+  python = python3.withPackages (ps: [
+    ps.pygobject3
+    ps.pycairo
+  ]);
 in
 stdenv.mkDerivation {
   pname = "keke-waybar-panel";
@@ -39,6 +42,9 @@ stdenv.mkDerivation {
     mkdir -p "$out/bin" "$out/share/keke-waybar-panel"
     cp ${./panel.py} "$out/share/keke-waybar-panel/panel.py"
     cp ${./panel.css} "$out/share/keke-waybar-panel/panel.css"
+    cp ${./geometry.py} "$out/share/keke-waybar-panel/geometry.py"
+    ${python}/bin/python3 ${./geometry.test.py} ${./geometry.py}
+    ${python}/bin/python3 -c "import ast; ast.parse(open('${./panel.py}').read())"
     makeWrapper ${python}/bin/python3 "$out/bin/keke-waybar-panel" \
       "''${gappsWrapperArgs[@]}" \
       --add-flags "$out/share/keke-waybar-panel/panel.py" \

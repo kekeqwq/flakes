@@ -75,7 +75,12 @@ assert off.home-manager.users.keke.programs.pi.coding-agent.enable;
 assert off.home-manager.users.keke.programs.emacs.enable;
 assert
   toString off.home-manager.users.keke.programs.emacs.package == toString disabled.pkgs.emacs-nox;
+assert !off.home-manager.users.keke.programs.ghostty.enable;
 assert !off.home-manager.users.keke.programs.wezterm.enable;
+assert c.home-manager.users.keke.programs.ghostty.enable;
+assert !c.home-manager.users.keke.programs.wezterm.enable;
+assert !(c.home-manager.users.keke.programs.ghostty.settings ? background-blur);
+assert lib.hasInfix ''spawn "ghostty"'' (builtins.readFile ../NixOS/desktop/niri/config.kdl);
 assert !off.home-manager.users.keke.programs.obsidian.enable;
 assert !(off.home-manager.users.keke.home.file ? ".local/share/emacs-rime-native");
 assert c.my.desktop.niri.extraConfig == "" && c.my.desktop.niri.outputs == "";
@@ -100,6 +105,9 @@ assert
 assert !(c.systemd.services ? openlist) && !(off.systemd.services ? openlist);
 assert deck.config.systemd.services.openlist.enable;
 assert deck.config.systemd.services.openlist.serviceConfig.WorkingDirectory == "/home/keke";
+assert c.home-manager.users.keke.gtk.font.name == "sans-serif";
+assert
+  c.home-manager.users.keke.dconf.settings."org/gnome/desktop/interface".font-name == "sans-serif 11";
 assert c.i18n.inputMethod.enable && c.i18n.inputMethod.type == "fcitx5";
 assert !c.i18n.inputMethod.fcitx5.ignoreUserConfig;
 # Bare fcitx5 shadows the wrapped binary and XDG autostart entry.

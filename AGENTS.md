@@ -32,7 +32,7 @@
 - macOS / Linux 共用的配置和程序定义，禁止放 Linux 专属 systemd、
   udev、boot 设置，也禁止放 Homebrew、launchd、Hammerspoon 等 macOS 私有设置。
 - 根层仅放无图形依赖的配置；无头 Linux 和 macOS 都使用这一层。
-- `System/Common/desktop/` 放两端共用的图形程序/配置，例如 WezTerm、
+- `System/Common/desktop/` 放两端共用的图形程序/配置，例如 Ghostty、
   共享 GUI 应用、GUI Emacs 和共享 Emacs 原生模块。
 - 仅在 `my.desktop.enable` 时启用 desktop 子层。没有打开该开关时，
   不得通过 Common 间接启用图形程序。
@@ -47,7 +47,7 @@
 - macOS 专属系统设置、Homebrew/casks、launchd、Hammerspoon、Squirrel、
   Karabiner、原生默认应用关联及私有应用/工作流。
 - 导入 `System/Common/` 并启用共享 desktop；不得导入任何 `NixOS/` 文件。
-- 不得把已有共享程序（fish、Git、Pi、Emacs、WezTerm 等）的完整定义
+- 不得把已有共享程序（fish、Git、Pi、Emacs、Ghostty 等）的完整定义
   重新复制到这里。平台专有补丁和集成可以放在这里。
 
 ## 主机与基础设施

@@ -63,8 +63,9 @@ resolved separately:
   testing. The migration did not modify it. Nix supplies the Emacs executable
   and native module, but not that checkout or its Elpaca state. Do not overwrite
   it or publish its contents as part of a deployment test.
-- **WezTerm plugin:** `bar.wezterm` is fetched at runtime without a pinned
-  revision. An existing plugin cache is not evidence of cold-start reproducibility.
+- **Terminal migration:** Ghostty replaces WezTerm and its plugin. Its macOS
+  cask and native glass integration are declared in the private layer; shared
+  settings and remaining GUI acceptance tests are in `System/Common/desktop/TERMINALS.md`.
 - **Homebrew:** cask names are declared, but their individual payload versions
   and mutable tap state are not pinned here. Disabling automatic upgrades does
   not pin what a fresh installation will download.

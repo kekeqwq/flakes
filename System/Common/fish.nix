@@ -5,7 +5,7 @@
   ...
 }:
 {
-  # WezTerm starts the login shell. macOS will not switch to a shell
+  # Ghostty starts the login shell. macOS will not switch to a shell
   # that is missing from /etc/shells.
   programs.fish.enable = true;
   myuser.users.shell = pkgs.fish;
@@ -36,6 +36,11 @@
 
       interactiveShellInit = ''
         set fish_greeting # Disable greeting
+        set -g fish_cursor_default block
+        set -g fish_cursor_insert block
+        set -g fish_cursor_replace_one block
+        set -g fish_cursor_replace block
+        set -g fish_cursor_visual block
         starship init fish | source
         alias ls="exa"
       '';

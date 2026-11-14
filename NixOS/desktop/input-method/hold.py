@@ -35,7 +35,7 @@ def restore(socket):
     """Return to Chinese only when that pane is still a Pi editor."""
     if not socket:
         return
-    terminal = watch.read_json(STATE / "wezterm.json", {}) or {}
+    terminal = watch.terminal_record(watch.focused_window(watch.niri_socket()))
     clients = watch.records(STATE / "tmux", "clients")
     contexts = watch.records(STATE / "pi")
     now = time.time()

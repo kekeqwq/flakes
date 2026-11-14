@@ -5,7 +5,6 @@ One small window per section (brightness, audio, network, bluetooth, clock).
 Only reads system state; sliders and buttons call the usual CLI tools.
 """
 
-import calendar as pycal
 import json
 import os
 import re
@@ -16,6 +15,11 @@ import threading
 import time
 from datetime import datetime
 
+if os.environ.get("KEKE_PANEL_DEBUG"):
+    import faulthandler
+    faulthandler.dump_traceback_later(8, repeat=True)
+
+import cairo
 import gi
 
 gi.require_version("Gtk", "3.0")
@@ -33,8 +37,10 @@ except (ValueError, ImportError):
 APP_ID = "keke-waybar-panel"
 RUNTIME = os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}")
 PIDFILE = os.path.join(RUNTIME, f"{APP_ID}.pid")
-MARGIN = 24
-BAR_HEIGHT = 46
+MARGIN = 16
+BAR_TOP = 12
+BAR_HEIGHT = 40
+GAP = 14
 
 
 def run(*cmd, timeout=3):
@@ -428,11 +434,56 @@ class Clock(Gtk.Box):
 # -------------------------------------------------------------------- window
 
 
-class Panel(Gtk.Window):
+class PanelGroup:
     def __init__(self, section):
+        self.panels = []
+        self.active = None
+        display = Gdk.Display.get_default()
+        for index in range(display.get_n_monitors()):
+            self.panels.append(Panel(section, display.get_monitor(index), self))
+        GLib.timeout_add(350, self.fallback)
+        if os.environ.get("KEKE_PANEL_DEBUG"):
+            GLib.timeout_add_seconds(2, self.debug_state)
+
+    def debug_state(self):
+        print("panel-state", [{"active": self.active is panel,
+              "mapped": panel.get_mapped(), "size": panel.get_size(),
+              "card-visible": panel.card.get_visible(),
+              "placed": panel.placed} for panel in self.panels], flush=True)
+        return True
+
+    def activate(self, panel, pointer_x):
+        if self.active is None:
+            if panel.get_allocated_width() < 2 or panel.get_allocated_height() < 2:
+                GLib.timeout_add(16, self.activate, panel, pointer_x)
+                return False
+            self.active = panel
+            if HAVE_LAYER_SHELL:
+                GtkLayerShell.set_keyboard_mode(panel, GtkLayerShell.KeyboardMode.EXCLUSIVE)
+            panel.place(pointer_x)
+
+    def fallback(self):
+        if self.active is None and self.panels:
+            panel = self.panels[0]
+            self.activate(panel, panel.get_allocated_width() - MARGIN)
+        return False
+
+    def close(self):
+        for panel in self.panels:
+            panel.hide()
+        if Gtk.main_level():
+            Gtk.main_quit()
+
+
+class Panel(Gtk.Window):
+    def __init__(self, section, monitor, group):
         super().__init__(type=Gtk.WindowType.TOPLEVEL)
         self.set_decorated(False)
-        self.set_resizable(False)
+        # Full-monitor input surfaces must accept compositor configure sizes.
+        # A non-resizable window can get stuck at GTK's initial 200x1 size.
+        self.set_resizable(True)
+        geometry = monitor.get_geometry()
+        self.set_default_size(geometry.width, geometry.height)
         self.set_skip_taskbar_hint(True)
         self.set_skip_pager_hint(True)
         self.set_keep_above(True)
@@ -445,17 +496,28 @@ class Panel(Gtk.Window):
             self.set_visual(visual)
         self.set_app_paintable(True)
 
-        # An EventBox paints its own opaque background; GTK's CSS background
-        # can be skipped for plain boxes, which made the card see-through.
+        # A full-monitor transparent surface receives outside clicks. The card
+        # has no opaque child GdkWindow, so CSS alpha and rounded corners work.
+        self.section = section
+        self.group = group
+        self.placed = False
         card = Gtk.EventBox()
-        card.set_visible_window(True)
-        card.override_background_color(
-            Gtk.StateFlags.NORMAL, Gdk.RGBA(0.1176, 0.1176, 0.1804, 1.0)
-        )
+        card.set_visible_window(False)
+        card.add_events(Gdk.EventMask.BUTTON_PRESS_MASK)
         card.get_style_context().add_class("keke-card")
         card.set_size_request(340, -1)
-        content = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
-        card.add(content)
+        content = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        for setter in (content.set_margin_start, content.set_margin_end):
+            setter(20)
+        for setter in (content.set_margin_top, content.set_margin_bottom):
+            setter(18)
+        self.scroller = Gtk.ScrolledWindow()
+        self.scroller.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        self.scroller.set_propagate_natural_height(True)
+        self.scroller.set_max_content_height(560)
+        self.scroller.add(content)
+        card.add(self.scroller)
+        card.connect("draw", self.paint_card)
         # Clicks inside the card must not dismiss it.
         card.connect("button-press-event", lambda *_: True)
         page = {
@@ -468,27 +530,81 @@ class Panel(Gtk.Window):
         content.pack_start(page, True, True, 0)
 
         self.card = card
-        self.add(card)
+        self.fixed = Gtk.Fixed()
+        self.fixed.put(card, 0, 0)
+        outside = Gtk.EventBox()
+        outside.set_visible_window(False)
+        outside.add_events(Gdk.EventMask.BUTTON_PRESS_MASK)
+        outside.add(self.fixed)
+        outside.connect("button-press-event", lambda *_: (self.close(), True)[1])
+        self.add(outside)
         if HAVE_LAYER_SHELL:
-            # Wayland gives no global pointer position, so the dropdown is
-            # anchored under the right end of the bar with a small gap.
             GtkLayerShell.init_for_window(self)
             GtkLayerShell.set_namespace(self, APP_ID)
+            GtkLayerShell.set_monitor(self, monitor)
             GtkLayerShell.set_layer(self, GtkLayerShell.Layer.OVERLAY)
-            GtkLayerShell.set_anchor(self, GtkLayerShell.Edge.TOP, True)
-            GtkLayerShell.set_anchor(self, GtkLayerShell.Edge.RIGHT, True)
-            GtkLayerShell.set_margin(self, GtkLayerShell.Edge.TOP, BAR_HEIGHT + 10)
-            GtkLayerShell.set_margin(self, GtkLayerShell.Edge.RIGHT, MARGIN)
+            for edge in (GtkLayerShell.Edge.TOP, GtkLayerShell.Edge.BOTTOM,
+                         GtkLayerShell.Edge.LEFT, GtkLayerShell.Edge.RIGHT):
+                GtkLayerShell.set_anchor(self, edge, True)
+            # Cover the bar too, but reserve no space or change window layout.
             GtkLayerShell.set_exclusive_zone(self, -1)
-            # Focus so Escape and outside clicks can dismiss the dropdown.
-            GtkLayerShell.set_keyboard_mode(self, GtkLayerShell.KeyboardMode.EXCLUSIVE)
+            GtkLayerShell.set_keyboard_mode(self, GtkLayerShell.KeyboardMode.NONE)
+        else:
+            self.fullscreen()
 
-        self.show_all()
-        self.page = page
-
+        self.add_events(Gdk.EventMask.ENTER_NOTIFY_MASK | Gdk.EventMask.POINTER_MOTION_MASK
+                        | Gdk.EventMask.BUTTON_PRESS_MASK)
+        self.connect("draw", self.clear_background)
+        self.connect("enter-notify-event", self.on_pointer)
+        self.connect("motion-notify-event", self.on_pointer)
         self.connect("key-press-event", self.on_key)
-        self.connect("focus-out-event", lambda *_: (self.close(), False)[1])
-        self.connect("destroy", Gtk.main_quit)
+        self.connect("delete-event", lambda *_: (self.group.close(), True)[1])
+        self.page = page
+        card.set_no_show_all(True)
+        self.show_all()
+        # Enter coordinates are surface-local and work on Wayland: no guessed
+        # global pointer coordinates, xdotool, or host-specific output layout.
+
+    def clear_background(self, _widget, cr):
+        cr.set_operator(cairo.OPERATOR_SOURCE)
+        cr.set_source_rgba(0, 0, 0, 0)
+        cr.paint()
+        cr.set_operator(cairo.OPERATOR_OVER)
+        return False
+
+    def paint_card(self, widget, cr):
+        allocation = widget.get_allocation()
+        context = widget.get_style_context()
+        Gtk.render_background(context, cr, 0, 0, allocation.width, allocation.height)
+        Gtk.render_frame(context, cr, 0, 0, allocation.width, allocation.height)
+        for child in widget.get_children():
+            widget.propagate_draw(child, cr)
+        return True
+
+    def on_pointer(self, _widget, event):
+        self.group.activate(self, event.x)
+        return False
+
+    def place(self, pointer_x):
+        from geometry import placement
+
+        width, height = self.get_allocated_width(), self.get_allocated_height()
+        if width < 2 or height < 2:
+            return
+        self.placed = True
+        top = BAR_TOP + BAR_HEIGHT + GAP
+        available = max(80, height - top - MARGIN)
+        self.card.set_no_show_all(False)
+        self.card.show_all()
+        card_width = min(max(340, self.page.get_preferred_width()[0] + 40), width - 2 * MARGIN)
+        page_height = self.page.get_preferred_height_for_width(card_width - 40)[1]
+        card_height = min(page_height + 38, available)
+        self.scroller.set_max_content_height(available)
+        # GtkFixed allocates a child's minimum, not its natural height. An
+        # explicit bounded request prevents the calendar collapsing to 32px.
+        self.card.set_size_request(card_width, card_height)
+        x, y = placement(width, height, card_width, card_height, pointer_x, self.section)
+        self.fixed.move(self.card, x, y)
 
     def on_key(self, _window, event):
         if event.keyval == Gdk.KEY_Escape:
@@ -502,6 +618,11 @@ def existing_instance():
         with open(PIDFILE) as handle:
             pid = int(handle.read().strip())
         os.kill(pid, 0)
+        if os.stat(f"/proc/{pid}").st_uid != os.getuid():
+            return None
+        with open(f"/proc/{pid}/cmdline", "rb") as handle:
+            if APP_ID.encode() not in handle.read():
+                return None
         return pid
     except (OSError, ValueError):
         return None
@@ -509,14 +630,23 @@ def existing_instance():
 
 def main():
     section = sys.argv[1] if len(sys.argv) > 1 else "clock"
+    if section == "--diagnostics":
+        context = Gtk.Label().get_pango_context()
+        font = context.load_font(context.get_font_description())
+        print(json.dumps({
+            "gtk-font-name": Gtk.Settings.get_default().get_property("gtk-font-name"),
+            "resolved-font": font.describe().to_string() if font else None,
+            "monitors": Gdk.Display.get_default().get_n_monitors(),
+        }))
+        return
+    if section not in {"brightness", "audio", "network", "bluetooth", "clock"}:
+        sys.exit("Expected brightness, audio, network, bluetooth or clock")
     previous = existing_instance()
     if previous:
         try:
             os.kill(previous, signal.SIGTERM)
         except OSError:
             pass
-        if os.environ.get("KEKE_PANEL_SECTION") == section:
-            return
         time.sleep(0.15)
 
     with open(PIDFILE, "w") as handle:
@@ -530,15 +660,24 @@ def main():
 
     def bye(*_args):
         try:
-            os.unlink(PIDFILE)
-        except OSError:
+            with open(PIDFILE) as handle:
+                owner = int(handle.read().strip())
+            if owner == os.getpid():
+                os.unlink(PIDFILE)
+        except (OSError, ValueError):
             pass
-        Gtk.main_quit()
+        if Gtk.main_level():
+            Gtk.main_quit()
 
-    signal.signal(signal.SIGTERM, bye)
-    signal.signal(signal.SIGINT, bye)
-    Panel(section)
+    def terminate(*_args):
+        bye()
+        raise SystemExit(0)
+
+    signal.signal(signal.SIGTERM, terminate)
+    signal.signal(signal.SIGINT, terminate)
+    panels = PanelGroup(section)
     Gtk.main()
+    panels.close()
     bye()
 
 

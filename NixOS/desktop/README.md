@@ -13,7 +13,7 @@ The desktop is disabled by default. `NixOS/server/` always imports
 layer, without importing Linux modules. See `AGENTS.md` for mandatory boundaries.
 
 The desktop includes Niri, the application/package lists, themes, fonts,
-input methods, Emacs, WezTerm, Waybar, wallpaper, audio, Steam,
+input methods, Emacs, Ghostty, Waybar, wallpaper, audio, Steam,
 NetworkManager, Bluetooth, removable-disk support and firmware updates.
 Ordinary hosts use greetd to start `niri-session` for keke, with no user
 login prompt. A host that sets `my.luks.enable` asks for the disk passphrase
@@ -46,10 +46,10 @@ can be reproduced on a fresh host. The following still need separate work:
   Chinese (WenKai Mono for monospace). Old PingFang/Hiragino aliases were removed;
   no Japanese font policy is requested. Other manually installed fonts such as
   Source Han Serif SC and 仓耳今楷 may still be used by out-of-scope user programs.
-- WezTerm's bar plugin is now pinned and deployed locally by Nix, including a
-  loader adaptation that removes its mutable plugin-cache dependency. GUI
-  activation/behavior still needs verification. External Emacs dotfiles/Elpaca
-  are independently managed by the user and excluded from this audit's goals.
+- Ghostty replaces WezTerm and its bar plugin. Shared fonts, Fish and themes
+  are declared in Common; native macOS glass stays private. See
+  `System/Common/desktop/TERMINALS.md` for remaining interactive acceptance tests.
+  External Emacs dotfiles/Elpaca remain independently user-managed.
 - Deck's homepage is tracked at `hosts/deck/center/index.html` and served from
   Nix store; `/kk/center` is no longer an installation prerequisite. Sunshine
   client state/certificates remain private instance data, not public store data.
@@ -82,7 +82,7 @@ runtime dependencies before the VM test.
 - Change permanent display settings in `hosts/deck/outputs.kdl` and rebuild. `switchscreen` only toggles eDP-1 at runtime through niri IPC; it never edits the managed configuration.
 - Waybar and swaybg are started **only by user systemd services**. Do not additionally start them from niri, a shell, or XDG autostart. The default niri fallback configuration starts another Waybar if the main configuration cannot load.
 - Icons use Papirus-Dark with the official Catppuccin Mocha/Mauve folder adaptation. Waybar explicitly overrides qBittorrent/Sunshine pixmaps with Papirus panel glyphs; Telegram keeps its dynamic attention/mute icons. Sunshine uses Papirus's screen-recording glyph because the theme has no dedicated Sunshine icon.
-- Linux uses fixed Mocha (mauve accent); WezTerm retains native Mocha/Latte appearance switching on macOS/Windows. Emacs remains in the shared external dotfiles checkout.
+- Linux desktop chrome uses fixed Mocha (mauve accent); Ghostty follows native light/dark appearance using Latte/Mocha. Emacs remains in the shared external dotfiles checkout.
 - `wallpapers/generate.py` regenerates the seeded 4K Mocha mountain wallpaper without third-party dependencies.
 
 ## Public configuration versus instance inputs
