@@ -7,6 +7,7 @@
 }:
 let
   shared = ../../System/Common/input-method;
+  rimeData = import ./input-method/rime-data.nix { inherit pkgs; };
   # Reuse the shared reporter so tmux/pane identity matches macOS.
   tmuxReporter = import (shared + "/reporter.nix") { inherit pkgs; };
   tmuxHooks = import (shared + "/tmux-hooks.nix") { reporter = tmuxReporter; };
@@ -20,6 +21,7 @@ let
       }
       ''
         python3 ${./input-method/policy.test.py} ${./input-method/policy.py}
+        python3 ${./input-method/watch.test.py} ${./input-method/policy.py} ${./input-method/watch.py}
         mkdir -p "$out/bin" "$out/lib"
         cp ${./input-method/policy.py} "$out/lib/policy.py"
         cp ${./input-method/watch.py} "$out/lib/watch.py"
@@ -56,7 +58,7 @@ in
       ignoreUserConfig = false;
       addons = with pkgs; [
         catppuccin-fcitx5
-        (fcitx5-rime.override { rimeDataPkgs = [ rime-ice ]; })
+        (fcitx5-rime.override { rimeDataPkgs = [ rimeData ]; })
       ];
     };
   };
@@ -125,9 +127,14 @@ in
     # too (the macOS Squirrel setup does the same into ~/Library/Rime).
     home.activation.syncRimeIce = inputs.home-manager.lib.hm.dag.entryAfter [ "linkGeneration" ] ''
       set -euo pipefail
-      src=${pkgs.rime-ice}/share/rime-data
+      src=${rimeData}/share/rime-data
       dest="$HOME/.local/share/fcitx5/rime"
       mkdir -p "$dest"
+      if [ "$(readlink "$dest/lua/ghostty_tmux_prefix.lua" 2>/dev/null || true)" != "$src/lua/ghostty_tmux_prefix.lua" ]; then
+        # Store timestamps are normalized. Invalidate only the derived schema
+        # on guard updates; never touch dictionaries, prism data or userdb.
+        rm -f "$dest/build/double_pinyin_flypy.schema.yaml"
+      fi
       find -L "$src" -type f -print0 | while IFS= read -r -d "" f; do
         rel="''${f#"$src"/}"
         case "$rel" in

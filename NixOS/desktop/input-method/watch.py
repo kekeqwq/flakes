@@ -114,10 +114,25 @@ def apply(source):
         pass
 
 
+def publish_prefix_context(active, now):
+    """A private, expiring lease; Rime does no subprocess work on key events."""
+    try:
+        STATE.mkdir(parents=True, exist_ok=True, mode=0o700)
+        temporary = STATE / f".prefix-context-{os.getpid()}"
+        fd = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        with os.fdopen(fd, "w") as handle:
+            handle.write(f"{'tmux' if active else 'other'} {now:.3f}\n")
+        os.replace(temporary, STATE / "tmux-prefix-context")
+    except OSError:
+        pass
+
+
 def main():
     socket = niri_socket()
     applied = None
     tick = 0
+    lease_active = None
+    lease_updated = 0
     while True:
         now = time.time()
         window = focused_window(socket)
@@ -125,6 +140,10 @@ def main():
         terminal = terminal_record(window)
         clients = records(STATE / "tmux", "clients")
         contexts = records(STATE / "pi")
+        active = policy.focused_tmux(app, terminal, clients, now)
+        if active != lease_active or now - lease_updated >= 1:
+            publish_prefix_context(active, now)
+            lease_active, lease_updated = active, now
         want = policy.desired(app, terminal, clients, contexts, now, prefix_held(now))
         if want is None:
             applied = None

@@ -40,6 +40,16 @@ def client_for_title(title, clients, now):
     return None
 
 
+def focused_tmux(app_id, terminal, clients, now):
+    """Authority for the native Rime prefix guard, not general key interception."""
+    return (
+        (app_id or "").lower() in GHOSTTY
+        and bool(terminal)
+        and not terminal.get("blocked")
+        and client_for_title(terminal.get("title"), clients, now) is not None
+    )
+
+
 def _walk(first, clients, now):
     """Follow nested tmux from the matched client; None means prefix/mode."""
     current = first

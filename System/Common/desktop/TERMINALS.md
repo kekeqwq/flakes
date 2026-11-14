@@ -41,8 +41,15 @@ this split option does not promise identical glass rendering on window blur.
 - Unidentified windows preserve manual input-source selection. Direct Pi and
   Fish are identified by their shared surface tokens, not by guessed cwd/title.
   Real Linux/Niri input composition still requires testing on a reachable host.
-- Linux fast prefix keys still need real key-delivery tests; a 200 ms watcher is
-  not proof of prefix passthrough. The Squirrel guard is macOS-specific.
+- Linux has a native Rime prefix processor as well: a fresh Niri-confirmed
+  tmux lease is mandatory. Nonempty frontend app names are also verified;
+  native Wayland may leave that field empty. Prefix and next press return
+  `kRejected`, releases preserve state, and Rime reset clears pending state.
+  No subprocess or synchronous tmux root binding runs on a keystroke.
+  Native librime and real Ghostty/fcitx virtual-key tests cover Ctrl+B,c,
+  Ctrl+Space,c, new-shell English and returning to Pi/Escape Chinese. Physical
+  keyboard/streaming-client delivery and actual Chinese glyph composition
+  still require interactive confirmation.
 - Test real prefix/next-command/Escape, multiple clients/tabs/native splits,
   nested tmux, actual Chinese composition, light/dark changes and image previews.
 - Full system `build`, activation (`switch`) and interactive GUI results are

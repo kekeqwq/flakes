@@ -132,4 +132,9 @@ other_direct = {"pid": 43, "ghosttySurface": "surface-b", "editing": True, "upda
 assert want("com.mitchellh.ghostty", term=direct, contexts=[other_direct, direct_pi]) == "rime"
 assert want("com.mitchellh.ghostty", term=direct, contexts=[other_direct]) == "ascii"
 assert want("com.mitchellh.ghostty", term={"title": "pi-ime:0:surface-a"}, contexts=[direct_pi]) is None
-print("linux input-method policy: tmux/direct Ghostty, isolation, lease and shell tests passed")
+assert policy["focused_tmux"]("com.mitchellh.ghostty", gh, [titled], now)
+assert not policy["focused_tmux"]("emacs", gh, [titled], now)
+assert not policy["focused_tmux"]("com.mitchellh.ghostty", direct, [titled], now)
+assert not policy["focused_tmux"]("com.mitchellh.ghostty", gh, [{**titled, "updated": now - 8}], now)
+assert not policy["focused_tmux"]("com.mitchellh.ghostty", None, [titled], now)
+print("linux input-method policy: tmux/direct Ghostty, prefix scope, isolation and lease tests passed")
