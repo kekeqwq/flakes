@@ -176,8 +176,11 @@ in
     ''
   );
 
-  # Keep the reporter's state directory owner-only.
+  # tmpfiles otherwise creates missing parents as root, preventing a fresh
+  # user's Home Manager/Nix profile from initializing alongside reporter state.
   systemd.tmpfiles.rules = [
+    "d ${config.users.users.${config.myuser.name}.home}/.local 0755 ${config.myuser.name} - -"
+    "d ${config.users.users.${config.myuser.name}.home}/.local/state 0700 ${config.myuser.name} - -"
     "d ${
       config.users.users.${config.myuser.name}.home
     }/.local/state/input-method 0700 ${config.myuser.name} - -"
