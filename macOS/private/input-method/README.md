@@ -8,6 +8,8 @@ WezTerm; there is no terminal Lua callback or bar plugin anymore.
 ## Focus policy
 
 - Emacs and Tinycast use the actual ABC source; Emacs Rime composes internally.
+  Tinycast's current bundle ID is `com.abueammar.tinycast`; legacy
+  `com.tinycast.app` and `com.tinycast.app.dictation` remain supported.
 - Identified Ghostty/tmux surfaces use Chinese for a fresh Pi editing context,
   and ABC for shells, menus, copy mode and prefix tables.
 - Direct Pi uses `pi-ime:<pid>:<surface-id>` with a matching fresh metadata
@@ -39,6 +41,13 @@ Home Manager reloads an existing default tmux server when its config changes.
 A custom server may need `tmux -S <socket> source-file ~/.config/tmux/tmux.conf`.
 Allow Hammerspoon in macOS Privacy & Security > Accessibility. Pi extension
 changes can use `/reload`; application-package changes require restarting Pi.
+
+Tinycast upgrades that change its bundle ID do not inherit macOS privacy grants.
+If its global shortcut stops working, remove the stale Tinycast entry under
+Privacy & Security > Accessibility, add `/Applications/Tinycast.app` again and
+allow it. Also check Input Monitoring, then quit and reopen Tinycast. These
+permissions require manual authorization; the input-source policy cannot grant
+or migrate them.
 
 Use the bundled `hs` CLI or Hammerspoon console:
 

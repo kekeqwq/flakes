@@ -8,7 +8,8 @@ function M.isTerminal(bundle)
   return bundle == M.WEZTERM or bundle == M.GHOSTTY
 end
 function M.managed(bundle)
-  return bundle == 'org.gnu.Emacs' or bundle == 'com.tinycast.app'
+  return bundle == 'org.gnu.Emacs' or bundle == 'com.abueammar.tinycast'
+    or bundle == 'com.tinycast.app'
     or bundle == 'com.tinycast.app.dictation' or M.isTerminal(bundle)
 end
 local function socketName(path)

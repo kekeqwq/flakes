@@ -6,7 +6,9 @@ local function want(bundle, term, clients, contexts, memory, prefixHeld)
   return P.desired(bundle, term, clients or {}, contexts or {}, now, memory or {}, prefixHeld)
 end
 assert(want('org.gnu.Emacs', terminal, {}, { pi }) == P.ABC)
+assert(want('com.abueammar.tinycast', terminal, {}, { pi }) == P.ABC)
 assert(want('com.tinycast.app', terminal, {}, { pi }) == P.ABC)
+assert(want('com.tinycast.app.dictation', terminal, {}, { pi }) == P.ABC)
 assert(want(P.WEZTERM, terminal, {}, { pi }) == P.RIME)
 terminal.blocked = true
 assert(want(P.WEZTERM, terminal, {}, { pi }) == P.ABC)
@@ -16,6 +18,9 @@ assert(want(P.WEZTERM, terminal, {}, {{pid=42, editing=false, updated=now, wezte
 assert(want(P.WEZTERM, terminal, {}, {{pid=42, editing=true, updated=now-8, weztermPane='0'}}) == P.ABC)
 local memory = { ['com.tencent.xinWeChat'] = P.RIME }
 assert(want('com.tencent.xinWeChat', terminal, {}, {}, memory) == P.RIME)
+assert(want('com.abueammar.tinycast', terminal, {}, {}, {
+  ['com.abueammar.tinycast'] = P.RIME,
+}) == P.ABC, 'Tinycast must use ABC even when a Chinese source was remembered')
 assert(want('com.tinycast.app', terminal, {}, {}, memory) == P.ABC)
 assert(want('com.tencent.xinWeChat', terminal, {}, {}, memory) == P.RIME)
 local client = { client_tty='/dev/ttys001', pane_id='%3', pane_tty='/dev/ttys004',
