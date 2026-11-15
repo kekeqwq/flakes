@@ -1,4 +1,9 @@
-{ lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 let
   wallpaper = import ./wallpaper.nix;
   lock = pkgs.writeShellApplication {
@@ -6,7 +11,7 @@ let
     runtimeInputs = [
       pkgs.coreutils
       pkgs.util-linux
-      pkgs.swaylock-effects
+      pkgs.swaylock-security-key
     ];
     text = ''
       : "''${XDG_RUNTIME_DIR:?A graphical user session is required}"
@@ -24,12 +29,19 @@ let
   };
 in
 {
-  security.pam.services.swaylock = { };
+  # Password authentication must never wait behind the hardware-key attempt.
+  security.pam.services.swaylock.u2f.enable = false;
+  # A separate strict stack for the locker's private background worker. No
+  # password fallback and no permissive/missing-user success in this service.
+  security.pam.services.swaylock-key.text = ''
+    auth required ${pkgs.pam_u2f}/lib/security/pam_u2f.so authfile=${config.security.pam.u2f.settings.authfile} origin=${config.security.pam.u2f.settings.origin} appid=${config.security.pam.u2f.settings.origin} userpresence=1 pinverification=0 userverification=0
+    account required ${pkgs.pam}/lib/security/pam_unix.so
+  '';
   myuser.hm = {
     home.packages = [ lock ];
     programs.swaylock = {
       enable = true;
-      package = pkgs.swaylock-effects;
+      package = pkgs.swaylock-security-key;
       settings = {
         # Path interpolation copies the tracked PNG into the store and retains
         # its dependency context. toString alone can leave a dangling source path.

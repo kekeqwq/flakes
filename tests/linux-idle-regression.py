@@ -150,13 +150,19 @@ with tempfile.TemporaryDirectory(prefix="idle-regression-", dir=os.environ["XDG_
                 os.killpg(process.pid, signal.SIGKILL)
                 process.wait()
     manual_lockers = set()
+    test_cgroup = Path("/proc/self/cgroup").read_text()
+    def locker_uid(entry):
+        # Hardened lockers are nondumpable: /proc/<pid> can be root-owned even
+        # though the process still runs as keke. Read its actual UID instead.
+        status = (entry / "status").read_text()
+        return int(next(line for line in status.splitlines() if line.startswith("Uid:")).split()[1])
     def all_lockers():
         found = []
         for entry in Path("/proc").iterdir():
             if not entry.name.isdecimal(): continue
             try:
                 if (entry / "stat").read_text().rsplit(")", 1)[1].split()[0] == "Z": continue
-                if entry.stat().st_uid == os.getuid() and "swaylock" in (entry / "comm").read_text(): found.append(int(entry.name))
+                if locker_uid(entry) == os.getuid() and (entry / "comm").read_text().strip() == "swaylock": found.append(int(entry.name))
             except (FileNotFoundError, PermissionError, ProcessLookupError): pass
         return found
     def owned_lockers():
@@ -166,7 +172,14 @@ with tempfile.TemporaryDirectory(prefix="idle-regression-", dir=os.environ["XDG_
             if not entry.name.isdecimal(): continue
             try:
                 if (entry / "stat").read_text().rsplit(")", 1)[1].split()[0] == "Z": continue
-                if entry.stat().st_uid == os.getuid() and "swaylock" in (entry / "comm").read_text() and (int(entry.name) in manual_lockers or token in (entry / "environ").read_bytes().split(b"\0")):
+                if locker_uid(entry) != os.getuid() or (entry / "comm").read_text().strip() != "swaylock": continue
+                # A transient test unit/cgroup owns its observer-spawned lockers;
+                # hotkey/production lockers additionally require explicit PID
+                # tracking after secure acquisition. Do not require reading the
+                # nondumpable locker's protected environment.
+                if int(entry.name) in manual_lockers or (entry / "cgroup").read_text() == test_cgroup:
+                    found.append(int(entry.name))
+                elif token in (entry / "environ").read_bytes().split(b"\0"):
                     found.append(int(entry.name))
             except (FileNotFoundError, PermissionError, ProcessLookupError):
                 pass
@@ -175,12 +188,8 @@ with tempfile.TemporaryDirectory(prefix="idle-regression-", dir=os.environ["XDG_
     def unlock_owned(allow_auth=True):
         if not args.lock_command or not owned_lockers(): return True
         if not allow_auth:
-            for pid in owned_lockers():
-                try: os.kill(pid, signal.SIGUSR1)
-                except ProcessLookupError: pass
-            for _ in range(20):
-                if not owned_lockers(): break
-                time.sleep(.1)
+            # A failure must leave the secure lock intact for manual recovery,
+            # not bypass authentication with a signal or terminate its cgroup.
             return False
         if auth_checks["singleton_held"] is None:
             existing = set(owned_lockers())
@@ -207,12 +216,7 @@ with tempfile.TemporaryDirectory(prefix="idle-regression-", dir=os.environ["XDG_
         for _ in range(80):
             if not owned_lockers(): return True
             time.sleep(.1)
-        # Recovery only for this test's own locker, never someone else's lock.
-        # This is a TEST FAILURE, not a successful password unlock.
-        for pid in owned_lockers():
-            try: os.kill(pid, signal.SIGUSR1)
-            except ProcessLookupError: pass
-        time.sleep(.3)
+        # Authentication failure: retain the lock for manual recovery.
         return False
     def sample(name, expect_idle, activity=None, playback=None):
         reset_input()
@@ -402,13 +406,8 @@ with tempfile.TemporaryDirectory(prefix="idle-regression-", dir=os.environ["XDG_
             manual_lockers.update(all_lockers())
             present = bool(manual_lockers)
             unlocked = unlock_owned() if present and secured else False
-            if present and not secured:
-                # Recover the new locker requested by our hotkey, WITHOUT ever
-                # typing a password before secure-acquisition confirmation.
-                for pid in manual_lockers:
-                    try: os.kill(pid, signal.SIGUSR1)
-                    except ProcessLookupError: pass
-                time.sleep(1)
+            # No secure-acquisition confirmation means no password injection
+            # and no signal-based recovery. The test must fail closed.
             row = {"case": "win-l-immediate-lock", "elapsed_seconds": round(elapsed, 2), "real_locker_present": present, "secure_ready": secured, "password_unlock": unlocked, "pass": present and secured and unlocked and elapsed < 3}
             results.append(row); print(json.dumps(row), flush=True)
             if args.production_seconds:
@@ -433,7 +432,7 @@ with tempfile.TemporaryDirectory(prefix="idle-regression-", dir=os.environ["XDG_
                 unlocked = unlock_owned() if present and secured else False
                 row = {"case": "production-idle-timeout", "configured_seconds": args.production_seconds, "elapsed_seconds": round(elapsed, 2), "secure_ready": secured, "password_unlock": unlocked, "pass": secured and unlocked and args.production_seconds - 1 <= elapsed < args.production_seconds + 12}
                 results.append(row); print(json.dumps(row), flush=True)
-                # Password unlock (or the token-limited recovery) must precede
+                # A real password/key unlock must precede
                 # stopping this service: its cgroup can contain the locker.
                 if not all_lockers(): run("systemctl", "--user", "stop", "swayidle.service")
     finally:

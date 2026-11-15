@@ -6,6 +6,7 @@
     ./services.nix
     ./qbittorrent.nix
     ./luks.nix
+    ./security-keys.nix
   ];
 
   # Linux-specific, non-graphical account defaults. Shell/editor/Git/Pi and

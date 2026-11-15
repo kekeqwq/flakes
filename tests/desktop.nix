@@ -99,7 +99,20 @@ assert
   ];
 assert lib.hasInfix "Super+L" (builtins.readFile ../NixOS/desktop/niri/config.kdl);
 assert (builtins.head c.home-manager.users.keke.services.swayidle.timeouts).timeout == 300;
-assert c.home-manager.users.keke.programs.swaylock.package == enabled.pkgs.swaylock-effects;
+assert c.home-manager.users.keke.programs.swaylock.package == enabled.pkgs.swaylock-security-key;
+assert c.security.pam.services.sudo.u2f.enable && off.security.pam.services.sudo.u2f.enable;
+assert c.security.pam.services.sudo-i.u2f.enable && off.security.pam.services.sudo-i.u2f.enable;
+assert c.security.pam.services.sudo.u2f.control == "sufficient";
+assert !c.security.pam.u2f.enable && !off.security.pam.u2f.enable;
+assert !c.security.pam.services.swaylock.u2f.enable;
+assert !(off.security.pam.services ? swaylock-key);
+assert lib.hasInfix "auth required" c.security.pam.services.swaylock-key.text;
+assert lib.hasInfix "userpresence=1 pinverification=0 userverification=0"
+  c.security.pam.services.swaylock-key.text;
+assert !(lib.hasInfix "pam_permit" c.security.pam.services.swaylock-key.text);
+assert !(lib.hasInfix "nouserok" c.security.pam.services.swaylock-key.text);
+assert c.security.pam.u2f.settings.authfile == "/etc/security/flakes-u2f-keys";
+assert off.security.pam.u2f.settings.origin == "pam://keke-flakes";
 assert
   c.home-manager.users.keke.programs.swaylock.settings.image
   == "${import ../NixOS/desktop/wallpaper.nix}";
