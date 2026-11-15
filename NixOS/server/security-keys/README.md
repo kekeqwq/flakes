@@ -8,9 +8,17 @@ registered physical authenticator to produce a valid assertion. It does reveal
 credential/identity associations.
 
 This registry is being staged for sudo and desktop-lock integration. **It is not
-yet wired into production PAM.** The first credential was generated successfully;
-touch-only authentication and the full production regressions must pass before
-activation. Do not interpret file presence as successful sudo/lock validation.
+yet wired into production PAM.** Both physical keys passed separate real
+`pam_u2f` authentication with user presence required and PIN/user verification
+disabled. The test conversation rejects every PIN/password input request; neither
+key requested one. Primary passed on its first bounded-window attempt (18.34 s
+including human response time); secondary passed on its third attempt (0.51 s,
+after two approximately 29 s timeouts). The secondary key already has a PIN:
+registration used client-only CTAP1/U2F mode without changing that PIN, and the
+normal, unmodified PAM module successfully verified the resulting credential.
+Full production sudo/password-fallback and concurrent desktop-lock regressions
+are still pending. Do not interpret these isolated results as production unlock
+acceptance or a real unregistered-third-key test.
 
 Add keys by registering each physical device with this same relying-party ID,
 then adding a uniquely named record after validation; do not overwrite existing
