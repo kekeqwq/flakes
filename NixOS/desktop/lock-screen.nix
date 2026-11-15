@@ -31,7 +31,9 @@ in
       enable = true;
       package = pkgs.swaylock-effects;
       settings = {
-        image = toString wallpaper;
+        # Path interpolation copies the tracked PNG into the store and retains
+        # its dependency context. toString alone can leave a dangling source path.
+        image = "${wallpaper}";
         scaling = "fill";
         color = "1e1e2e";
         font = "sans-serif";

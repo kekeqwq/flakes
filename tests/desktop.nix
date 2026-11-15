@@ -90,7 +90,8 @@ assert (builtins.head c.home-manager.users.keke.services.swayidle.timeouts).time
 assert c.home-manager.users.keke.programs.swaylock.package == enabled.pkgs.swaylock-effects;
 assert
   c.home-manager.users.keke.programs.swaylock.settings.image
-  == toString (import ../NixOS/desktop/wallpaper.nix);
+  == "${import ../NixOS/desktop/wallpaper.nix}";
+assert builtins.getContext c.home-manager.users.keke.programs.swaylock.settings.image != { };
 assert c.home-manager.users.keke.systemd.user.services ? snipaste;
 assert lib.hasInfix "screenshot-path null" (builtins.readFile ../NixOS/desktop/niri/config.kdl);
 assert !off.home-manager.users.keke.programs.ghostty.enable;
@@ -150,6 +151,7 @@ pkgs.runCommand "desktop-module-boundaries"
     genericSystem = builtins.unsafeDiscardStringContext c.system.build.toplevel.drvPath;
     headlessSystem = builtins.unsafeDiscardStringContext off.system.build.toplevel.drvPath;
     niriConfig = c.home-manager.users.keke.xdg.configFile."niri/config.kdl".source;
+    lockWallpaper = c.home-manager.users.keke.programs.swaylock.settings.image;
     nativeBuildInputs = [ pkgs.librime ];
     rimeData = builtins.head (
       builtins.filter (p: (p.pname or "") == "fcitx5-rime") c.i18n.inputMethod.fcitx5.addons
@@ -162,6 +164,8 @@ pkgs.runCommand "desktop-module-boundaries"
     test -n "$genericSystem"
     test -n "$headlessSystem"
     test -s "$niriConfig"
+    # Realize and retain the PNG itself, not a discarded source-tree string.
+    test -s "$lockWallpaper"
     # Prove a new instance can build the selected schema without copying any
     # existing user's training database or generated Rime caches.
     export HOME="$TMPDIR/home"

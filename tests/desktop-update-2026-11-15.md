@@ -91,6 +91,17 @@ validation; the final reports use actual kernel uinput devices instead.
   Hammerspoon/Rime lifecycle tests, Linux prefix Lua, real tmux title test,
   prefix lease writer, Pi editor-focus tests and popup geometry tests passed.
 
+## Follow-up: missing lock wallpaper
+
+The idle/PAM acceptance above did **not** prove wallpaper rendering. A later user
+report exposed a dangling `image=` path: `toString` referred to the flake source
+without retaining its store dependency. Fixed by interpolating the tracked PNG
+as a path, copying it into its own store entry. Regression now asserts nonempty
+Nix dependency context and realizes/tests the actual image. Full Deck build and
+boundary check passed; the 3840×2160 PNG exists and is retained in the system's
+closure. No lock was injected into the user's active session for visual testing;
+the next normal lock loads the corrected path.
+
 ## Earlier fresh-install evidence and remaining boundaries
 
 The official-minimal-ISO manual installation reproduction at `7be690a` completed
