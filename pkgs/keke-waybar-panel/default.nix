@@ -43,6 +43,8 @@ stdenv.mkDerivation {
     cp ${./panel.py} "$out/share/keke-waybar-panel/panel.py"
     cp ${./panel.css} "$out/share/keke-waybar-panel/panel.css"
     cp ${./geometry.py} "$out/share/keke-waybar-panel/geometry.py"
+    cp ${./actions.py} "$out/share/keke-waybar-panel/actions.py"
+    ${python}/bin/python3 ${./actions.test.py} ${./actions.py}
     ${python}/bin/python3 ${./geometry.test.py} ${./geometry.py}
     ${python}/bin/python3 -c "import ast; ast.parse(open('${./panel.py}').read())"
     makeWrapper ${python}/bin/python3 "$out/bin/keke-waybar-panel" \

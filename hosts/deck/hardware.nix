@@ -15,7 +15,8 @@
     "usbhid"
     "sdhci_pci"
   ];
-  boot.initrd.kernelModules = [ ];
+  # Early KMS lets the common Plymouth theme render before root is mounted.
+  boot.initrd.kernelModules = [ "amdgpu" ];
   boot.kernelModules = [ "kvm-amd" ];
   boot.extraModulePackages = [ ];
 

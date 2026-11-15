@@ -40,6 +40,18 @@ assert !(disabled.options ? jovian);
 assert c.myuser.name == "keke";
 assert c.networking.hostName == "desktop-module-check";
 assert c.programs.niri.enable && c.services.greetd.enable && !c.services.greetd.restart;
+assert c.boot.plymouth.enable && !off.boot.plymouth.enable;
+assert c.boot.plymouth.theme == "keke";
+assert c.my.desktop.controlCenter.extraActions == [ ];
+assert !(off.home-manager.users.keke.xdg.configFile ? "keke-waybar-panel/actions.json");
+assert map (a: a.id) deck.config.my.desktop.controlCenter.extraActions == [ "steam" ];
+assert
+  (builtins.head deck.config.my.desktop.controlCenter.extraActions).argv == [
+    "${deck.pkgs.jovianPackages.steamos-manager}/bin/steamosctl"
+    "switch-to-game-mode"
+  ];
+assert c.systemd.services.greetd.serviceConfig.StandardOutput == "journal";
+assert !c.systemd.services.greetd.serviceConfig.TTYVTDisallocate;
 assert c.services.greetd.settings.initial_session.user == "keke";
 assert lib.hasInfix "niri-session" c.services.greetd.settings.initial_session.command;
 assert !c.my.luks.enable && !off.my.luks.enable;

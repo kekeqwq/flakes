@@ -1,4 +1,4 @@
-{ config, ... }:
+{ config, pkgs, ... }:
 
 {
   # Avoid memory/thread exhaustion when building the desktop stack on the Deck.
@@ -15,6 +15,20 @@
 
   my.desktop.enable = true;
   my.desktop.niri.outputs = builtins.readFile ./outputs.kdl;
+  # Delegate to Jovian's existing manager: it owns the remembered login mode,
+  # SDDM transition and the return path from Steam to the configured Niri session.
+  my.desktop.controlCenter.extraActions = [
+    {
+      id = "steam";
+      label = "Return to Steam";
+      icon = "󰓓";
+      argv = [
+        "${pkgs.jovianPackages.steamos-manager}/bin/steamosctl"
+        "switch-to-game-mode"
+      ];
+      confirm = true;
+    }
+  ];
 
   # Jovian owns the login/session launcher on this hardware.
   services.greetd.enable = false;

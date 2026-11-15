@@ -431,6 +431,62 @@ class Clock(Gtk.Box):
         return True
 
 
+# ------------------------------------------------------------ control center
+
+
+class Control(Gtk.Box):
+    def __init__(self, close):
+        super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        from actions import load_actions
+        self.close_panel = close
+        path = os.path.join(os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config")),
+                            "keke-waybar-panel", "actions.json")
+        spec = load_actions(path)
+        title = Gtk.Label(label="  Control Center", xalign=0)
+        title.get_style_context().add_class("keke-title")
+        self.pack_start(title, False, False, 0)
+        self.stack = Gtk.Stack()
+        self.stack.set_homogeneous(True)
+        self.pack_start(self.stack, True, True, 0)
+        menu = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        for section in ("common", "private"):
+            if section == "private" and spec[section]:
+                menu.pack_start(Gtk.Separator(), False, False, 6)
+                menu.pack_start(Gtk.Label(label="Device", xalign=0), False, False, 0)
+            for item in spec[section]:
+                button = Gtk.Button(label=f"{item.get('icon', '')}  {item['label']}")
+                button.get_style_context().add_class("keke-action")
+                button.connect("clicked", lambda _button, action=item: self.select(action))
+                menu.pack_start(button, False, False, 0)
+        self.stack.add_named(menu, "menu")
+        confirmation = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        self.question = Gtk.Label(xalign=0, wrap=True)
+        confirmation.pack_start(self.question, False, False, 8)
+        self.confirm = Gtk.Button(label="Confirm")
+        self.confirm.get_style_context().add_class("keke-action")
+        self.confirm.connect("clicked", lambda *_: self.execute(self.pending))
+        confirmation.pack_start(self.confirm, False, False, 0)
+        cancel = Gtk.Button(label="Cancel")
+        cancel.get_style_context().add_class("keke-action")
+        cancel.connect("clicked", lambda *_: self.stack.set_visible_child_name("menu"))
+        confirmation.pack_start(cancel, False, False, 0)
+        self.stack.add_named(confirmation, "confirm")
+        self.stack.set_visible_child_name("menu")
+
+    def select(self, action):
+        if not action["confirm"]:
+            self.execute(action)
+            return
+        self.pending = action
+        self.question.set_text(f"{action['label']}?\nThis will end the current session. Save your work first.")
+        self.confirm.set_label(action["label"])
+        self.stack.set_visible_child_name("confirm")
+
+    def execute(self, action):
+        from actions import execute_action
+        execute_action(action, self.close_panel, spawn)
+
+
 # -------------------------------------------------------------------- window
 
 
@@ -520,7 +576,7 @@ class Panel(Gtk.Window):
         card.connect("draw", self.paint_card)
         # Clicks inside the card must not dismiss it.
         card.connect("button-press-event", lambda *_: True)
-        page = {
+        page = Control(group.close) if section == "control" else {
             "brightness": Brightness,
             "audio": Audio,
             "network": Network,
@@ -639,8 +695,8 @@ def main():
             "monitors": Gdk.Display.get_default().get_n_monitors(),
         }))
         return
-    if section not in {"brightness", "audio", "network", "bluetooth", "clock"}:
-        sys.exit("Expected brightness, audio, network, bluetooth or clock")
+    if section not in {"brightness", "audio", "network", "bluetooth", "clock", "control"}:
+        sys.exit("Expected brightness, audio, network, bluetooth, clock or control")
     previous = existing_instance()
     if previous:
         try:

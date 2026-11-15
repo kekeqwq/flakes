@@ -1,0 +1,101 @@
+# Indeterminate boot/shutdown animation; no guessed percentages or boot timer.
+Window.SetBackgroundTopColor(0.118, 0.118, 0.180);
+Window.SetBackgroundBottomColor(0.118, 0.118, 0.180);
+background.original = Image("background.png");
+background.sprite = Sprite();
+background.sprite.SetZ(-100);
+logo.image = Image("logo.png");
+logo.sprite = Sprite(logo.image);
+spinner.images = [];
+for (i = 0; i < 36; i++) spinner.images[i] = Image("spinner-" + i + ".png");
+spinner.sprite = Sprite(spinner.images[0]);
+entry.image = Image("entry.png");
+entry.sprite = Sprite(entry.image);
+entry.sprite.SetOpacity(0);
+bullet.image = Image("bullet.png");
+bullet.sprites = [];
+prompt.width = 0;
+prompt.sprite = Sprite();
+prompt.sprite.SetOpacity(0);
+message.width = 0;
+message.sprite = Sprite();
+message.sprite.SetOpacity(0);
+global.password = 0;
+global.tick = 0;
+global.frame = 0;
+global.width = 0;
+global.height = 0;
+
+fun layout() {
+  global.width = Window.GetWidth();
+  global.height = Window.GetHeight();
+  scale = global.width / background.original.GetWidth();
+  if (global.height / background.original.GetHeight() > scale)
+    scale = global.height / background.original.GetHeight();
+  width = Math.Int(background.original.GetWidth() * scale);
+  height = Math.Int(background.original.GetHeight() * scale);
+  background.sprite.SetImage(background.original.Scale(width, height));
+  background.sprite.SetPosition((global.width - width) / 2, (global.height - height) / 2, -100);
+  center = global.width / 2;
+  logo.sprite.SetPosition(center - logo.image.GetWidth() / 2, global.height / 2 - 100, 1);
+  spinner.sprite.SetPosition(center - 32, global.height / 2 + 112, 2);
+  entry.x = center - 180;
+  entry.y = global.height / 2 + 56;
+  entry.sprite.SetPosition(entry.x, entry.y, 3);
+  prompt.sprite.SetPosition(center - prompt.width / 2, entry.y + 62, 4);
+  message.sprite.SetPosition(center - message.width / 2, entry.y + 96, 5);
+  for (i = 0; bullet.sprites[i]; i++) {
+    bullet.sprites[i].SetPosition(entry.x + 20 + i * 12, entry.y + 20, 4);
+  }
+}
+fun refresh() {
+  if (global.width != Window.GetWidth() || global.height != Window.GetHeight()) layout();
+  # Animate in boot, reboot, shutdown and resume. A key prompt pauses/hides it.
+  if (global.password == 0) {
+    global.tick++;
+    if (global.tick >= 2) {
+      global.tick = 0;
+      global.frame++;
+      if (global.frame >= 36) global.frame = 0;
+      spinner.sprite.SetImage(spinner.images[global.frame]);
+    }
+  }
+}
+fun normal() {
+  global.password = 0;
+  entry.sprite.SetOpacity(0);
+  prompt.sprite.SetOpacity(0);
+  for (i = 0; bullet.sprites[i]; i++) bullet.sprites[i].SetOpacity(0);
+  spinner.sprite.SetOpacity(1);
+}
+fun password(text, count) {
+  global.password = 1;
+  spinner.sprite.SetOpacity(0);
+  entry.sprite.SetOpacity(1);
+  prompt.image = Image.Text(text, 0.80, 0.84, 0.96);
+  prompt.width = prompt.image.GetWidth();
+  prompt.sprite.SetImage(prompt.image);
+  prompt.sprite.SetOpacity(1);
+  for (i = 0; bullet.sprites[i]; i++) bullet.sprites[i].SetOpacity(0);
+  if (count > 26) count = 26;
+  for (i = 0; i < count; i++) {
+    if (!bullet.sprites[i]) bullet.sprites[i] = Sprite(bullet.image);
+    bullet.sprites[i].SetOpacity(1);
+  }
+  layout();
+}
+fun show_message(text) {
+  message.image = Image.Text(text, 0.95, 0.55, 0.65);
+  message.width = message.image.GetWidth();
+  message.sprite.SetImage(message.image);
+  message.sprite.SetOpacity(1);
+  layout();
+}
+fun hide_message(text) { message.sprite.SetOpacity(0); }
+Plymouth.SetRefreshFunction(refresh);
+Plymouth.SetDisplayNormalFunction(normal);
+Plymouth.SetDisplayPasswordFunction(password);
+Plymouth.SetDisplayMessageFunction(show_message);
+Plymouth.SetHideMessageFunction(hide_message);
+layout();
+normal();

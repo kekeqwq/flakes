@@ -110,6 +110,7 @@
         system = "x86_64-linux";
         modules = [ ./hosts/lab ];
       };
+      nixosConfigurations.secret-lab = mkNixos { modules = [ ./hosts/secret-lab ]; };
       darwinConfigurations.mba = mkDarwin { modules = [ ./hosts/mba ]; };
 
       formatter = forAllSystems (system: treefmtFor.${system}.config.build.wrapper);
@@ -126,6 +127,11 @@
               '';
         }
         // lib.optionalAttrs (system == "x86_64-linux") {
+          secret-lab-boundaries = import ./tests/secret-lab.nix {
+            pkgs = pkgsFor.${system};
+            secretLab = self.nixosConfigurations.secret-lab;
+            lab = self.nixosConfigurations.lab-x86;
+          };
           desktop-boundaries = import ./tests/desktop.nix {
             inherit inputs;
             pkgs = pkgsFor.${system};

@@ -18,6 +18,7 @@
   # options in this folder, default off; hosts only set the differences.
   imports = [
     ./sunshine.nix
+    ./control-center.nix
   ]
   ++
     map
@@ -37,6 +38,7 @@
       )
       [
         ./session.nix
+        ./boot-splash.nix
         ./fonts.nix
         ./theme.nix
         ./pkgs.nix

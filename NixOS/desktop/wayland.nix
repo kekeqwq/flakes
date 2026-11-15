@@ -173,7 +173,14 @@ in
           "custom/audio"
           "custom/brightness"
           "custom/battery"
+          "custom/control-center"
         ];
+
+        "custom/control-center" = {
+          format = "";
+          tooltip-format = "Control Center";
+          on-click = "${panel}/bin/keke-waybar-panel control";
+        };
 
         "custom/clock" = {
           exec = "${clockStatus}";
@@ -300,7 +307,8 @@ in
       #custom-audio,
       #custom-network,
       #custom-bluetooth,
-      #custom-battery {
+      #custom-battery,
+      #custom-control-center {
           background: #313244;
           color: #cdd6f4;
           border-radius: 8px;
@@ -313,6 +321,11 @@ in
           color: #cba6f7;
           font-weight: 600;
           border-radius: 8px;
+          padding: 4px 12px;
+      }
+
+      #custom-control-center {
+          color: #cba6f7;
           padding: 4px 12px;
       }
 

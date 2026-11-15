@@ -73,6 +73,27 @@ The wallpaper, Niri base/display profiles, Rofi theme, GTK/Qt themes and Rime
 configuration are already tracked or fetched with fixed hashes. Audit remaining
 runtime dependencies before the VM test.
 
+## Control Center
+
+The rightmost Waybar NixOS icon opens the existing monitor-local popup system.
+Common lock/restart/poweroff actions are defined once in `control-center.nix`.
+Hosts append argv-based actions via `my.desktop.controlCenter.extraActions`;
+no hostname, Jovian import or reverse read of a host file exists in the shared
+UI. Deck alone adds `steamosctl switch-to-game-mode`, delegating session memory
+and switching to its existing Jovian manager. Restart, poweroff and session
+switch require an inline confirmation; lock is immediate. Outside click and
+Escape dismiss without executing. Nothing calls sudo or a shell command string.
+
+## Graphical boot
+
+Plymouth is desktop-only and uses the same tracked mountain wallpaper as the
+locker, with a Mocha overlay and lavender loading-ring/password UI. Early DRM
+modules are hardware-private (Deck: amdgpu; secret-lab: virtio_gpu). Encryption
+is not enabled by desktop: the instance owns its filesystem/key-prompt policy.
+See `hosts/secret-lab/README.md` for native encrypted/compressed ZFS installation
+and the explicit first-boot viewing gate. `lab` keeps its existing ext4 private
+configuration. Firmware/modesetting black frames cannot be promised away.
+
 ## Clipboard capture and idle lock
 
 Snipaste starts with the x86_64 Linux graphical session. Niri captures native
