@@ -5,14 +5,24 @@
   ...
 }:
 let
-  wallpaper = ./wallpapers/mocha-mountains.png;
+  wallpaper = import ./wallpaper.nix;
   trayIcons = "${
     config.home-manager.users.${config.myuser.name}.gtk.iconTheme.package
   }/share/icons/Papirus-Dark/22x22/panel";
   niriConfig = pkgs.writeText "niri-unchecked.kdl" (
     config.my.desktop.niri.outputs
     + config.my.desktop.niri.extraConfig
-    + builtins.readFile ./niri/config.kdl
+    +
+      builtins.replaceStrings
+        [ "    // SNIPASTE_BINDINGS" ]
+        [
+          (lib.optionalString pkgs.stdenv.hostPlatform.isx86_64 ''
+            F3 hotkey-overlay-title="Pin clipboard with Snipaste" {
+                spawn "${lib.getExe (import ./pin-clipboard.nix { inherit pkgs; })}"
+            }
+          '')
+        ]
+        (builtins.readFile ./niri/config.kdl)
   );
   # Validate the exact complete configuration installed by Home Manager.
   checkedNiriConfig = pkgs.runCommand "niri-config.kdl" { nativeBuildInputs = [ pkgs.niri ]; } ''

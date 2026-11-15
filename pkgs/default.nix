@@ -2,14 +2,25 @@ self: super: {
   xrock = super.callPackage ./xrock { };
   keke-waybar-panel = super.callPackage ./keke-waybar-panel { };
 
+  # The 2.11.3 AppImage's crypto libraries need this in their FHS closure.
+  snipaste = super.snipaste.override {
+    appimageTools = super.appimageTools // {
+      wrapType2 =
+        args:
+        super.appimageTools.wrapType2 (
+          args // { extraPkgs = p: (args.extraPkgs or (_: [ ])) p ++ [ p.libgpg-error ]; }
+        );
+    };
+  };
+
   emacs-head = super.emacs.overrideAttrs (old: {
     pname = "emacs-head";
-    version = "2026-11-08";
+    version = "2026-11-14";
     src = super.fetchFromGitHub {
       owner = "emacs-mirror";
       repo = "emacs";
-      rev = "4e520d63f9d6e148f0c3fd5d5e2448dd9c4334f2";
-      hash = "sha256-n/auZ0sexvPCoU1dhtn4Zsb9O2lraLyIYfHVLr19xE8=";
+      rev = "6fcbd85db7f70488027744d8af3f1446b73ca004";
+      hash = "sha256-Ilqy2CzQXdE9i1xXgOnf/lzu4cm2T2W3hgreUvwI/HI=";
     };
     patches =
       builtins.filter (
@@ -41,6 +52,10 @@ self: super: {
       '';
   });
 
+  # Keep the same immutable head across native macOS, Linux PGTK and nox.
+  emacs-head-pgtk = self.emacs-head.override { withPgtk = true; };
+  emacs-head-nox = self.emacs-head.override { noGui = true; };
+
   weylus-community = super.weylus.overrideAttrs (o: {
     version = "fd1f1f1";
     pname = "weylus-community";
@@ -59,9 +74,9 @@ self: super: {
     src = super.fetchFromGitHub {
       owner = "c0re100";
       repo = "qBittorrent-Enhanced-Edition";
-      # release-5.2.4.10, resolved to an immutable commit.
-      rev = "ec66016a20d4dc7ba0f5bf4587b9d0577f2f886c";
-      hash = "sha256-3eGwURv0kGcuAzUUTaMkplXXgKgi1C/0qcutt3l8mxA=";
+      # Latest v5_2_x maintenance/default-branch commit, not v5_3_x alpha.
+      rev = "dce58732acc7aeb5425b21680b01b4379ea7bf3a";
+      hash = "sha256-FnsGxSS7lYyAGXAELqDnqPx4+dU4BO00OGsRwokIBrk=";
     };
   });
 

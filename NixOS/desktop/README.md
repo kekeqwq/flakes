@@ -73,6 +73,17 @@ The wallpaper, Niri base/display profiles, Rofi theme, GTK/Qt themes and Rime
 configuration are already tracked or fetched with fixed hashes. Audit remaining
 runtime dependencies before the VM test.
 
+## Clipboard capture and idle lock
+
+Snipaste starts with the x86_64 Linux graphical session. Niri captures native
+Wayland regions/windows/screens directly to the clipboard without saving PNGs;
+see `System/Common/desktop/SCREENSHOTS.md` for Pi/Telegram paste shortcuts and
+macOS equivalents. Win+L locks immediately. The Niri-only idle timer is 300
+seconds and respects keyboard/mouse activity and video playback inhibition in
+windows as well as fullscreen. The lock screen shares the desktop wallpaper.
+See `LOCK-SCREEN.md` and `tests/linux-idle-regression.py` for the real regression
+procedure; fullscreen alone is deliberately not an idle exemption.
+
 ## Niri configuration
 
 - `niri/config.kdl` is the main template. Home Manager installs a read-only store symlink at `~/.config/niri/config.kdl` and replaces older hand-edited copies.

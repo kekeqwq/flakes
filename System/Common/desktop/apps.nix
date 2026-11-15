@@ -10,6 +10,7 @@
   myuser.hm.xdg.configFile."mpv/mpv.conf".text = ''
     save-position-on-quit
     volume-max=300
+    stop-screensaver=yes
   '';
 
   environment.systemPackages =

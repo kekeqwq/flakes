@@ -4,6 +4,6 @@
   # graphical backend without duplicating the editor's configuration per OS.
   myuser.hm.programs.emacs = {
     enable = true;
-    package = lib.mkDefault pkgs.emacs-nox;
+    package = lib.mkDefault pkgs.emacs-head-nox;
   };
 }

@@ -44,6 +44,8 @@
         ./mimeapps.nix
         ./emacs-rime.nix
         ./wayland.nix
+        ./lock-screen.nix
+        ./snipaste.nix
         ./yazi.nix
       ];
 }

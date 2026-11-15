@@ -37,6 +37,8 @@ layout {
         color "#f9e2af80"
     }
 }
+// Niri still owns image/png on the clipboard, but never writes a PNG file.
+screenshot-path null
 hotkey-overlay {
     skip-at-startup
 }
@@ -68,12 +70,34 @@ window-rule {
     clip-to-geometry true
     draw-border-with-background false
 }
+// Snipaste image pins must retain their requested size, not become tiled.
+window-rule {
+    match app-id=r#"(?i)snipaste"#
+    open-floating true
+}
+
 binds {
+    // SNIPASTE_BINDINGS
     Mod+Return {
         spawn "ghostty"
     }
     Mod+D {
         spawn "rofi" "-show" "drun"
+    }
+    Super+L hotkey-overlay-title="Lock screen" {
+        spawn "screen-lock"
+    }
+    Print hotkey-overlay-title="Copy screenshot region" {
+        screenshot
+    }
+    Super+Shift+S hotkey-overlay-title="Copy screenshot region" {
+        screenshot
+    }
+    Ctrl+Print hotkey-overlay-title="Copy full screen" {
+        screenshot-screen
+    }
+    Alt+Print hotkey-overlay-title="Copy focused window" {
+        screenshot-window
     }
     XF86AudioRaiseVolume allow-when-locked=true {
         spawn "wpctl" "set-volume" "@DEFAULT_AUDIO_SINK@" "0.1+"

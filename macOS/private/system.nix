@@ -101,7 +101,9 @@ in
     onActivation = {
       autoUpdate = false;
       upgrade = false;
-      cleanup = "zap";
+      # Updating declarative packages must not erase unrelated casks or data.
+      # Removal/zap remains an explicit, separately requested operation.
+      cleanup = "none";
     };
     taps = [
       {
@@ -123,6 +125,7 @@ in
       "pikpak"
       "surge"
       "squirrel-app"
+      "snipaste"
       "localsend"
       "telegram"
       "tinycast"

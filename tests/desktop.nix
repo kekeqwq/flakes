@@ -74,7 +74,25 @@ assert off.home-manager.users.keke.programs.yazi.enable;
 assert off.home-manager.users.keke.programs.pi.coding-agent.enable;
 assert off.home-manager.users.keke.programs.emacs.enable;
 assert
-  toString off.home-manager.users.keke.programs.emacs.package == toString disabled.pkgs.emacs-nox;
+  toString off.home-manager.users.keke.programs.emacs.package
+  == toString disabled.pkgs.emacs-head-nox;
+assert !off.home-manager.users.keke.programs.swaylock.enable;
+assert !off.home-manager.users.keke.services.swayidle.enable;
+assert !(off.home-manager.users.keke.systemd.user.services ? snipaste);
+assert c.home-manager.users.keke.services.swayidle.enable;
+assert
+  c.home-manager.users.keke.systemd.user.services.swayidle.Unit.ConditionEnvironment == [
+    "WAYLAND_DISPLAY"
+    "XDG_CURRENT_DESKTOP=niri"
+  ];
+assert lib.hasInfix "Super+L" (builtins.readFile ../NixOS/desktop/niri/config.kdl);
+assert (builtins.head c.home-manager.users.keke.services.swayidle.timeouts).timeout == 300;
+assert c.home-manager.users.keke.programs.swaylock.package == enabled.pkgs.swaylock-effects;
+assert
+  c.home-manager.users.keke.programs.swaylock.settings.image
+  == toString (import ../NixOS/desktop/wallpaper.nix);
+assert c.home-manager.users.keke.systemd.user.services ? snipaste;
+assert lib.hasInfix "screenshot-path null" (builtins.readFile ../NixOS/desktop/niri/config.kdl);
 assert !off.home-manager.users.keke.programs.ghostty.enable;
 assert !off.home-manager.users.keke.programs.wezterm.enable;
 assert c.home-manager.users.keke.programs.ghostty.enable;

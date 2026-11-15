@@ -24,5 +24,6 @@
         ./emacs.nix
         ./emacs-rime.nix
         ./ghostty.nix
+        ./snipaste.nix
       ];
 }
