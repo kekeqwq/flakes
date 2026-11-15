@@ -98,9 +98,10 @@ local function terminalRecord(bundle)
           tty=tty, sourceTitle=title, updated=hs.timer.secondsSinceEpoch()}
         if schedule then schedule() end
       end, {'-e', [[with timeout of 1 seconds
+        set fieldSeparator to character id 9
         tell application id "com.mitchellh.ghostty"
           set t to focused terminal of selected tab of front window
-          return (id of t) & tab & ((pid of t) as text) & tab & (tty of t)
+          return (id of t) & fieldSeparator & ((pid of t) as text) & fieldSeparator & (tty of t)
         end tell
       end timeout]]})
       ghosttyFocusTask = task

@@ -52,6 +52,9 @@ hs = {
     inputSourceChanged=function() end},
   task={new=function(path, callback, args, ...)
     if path=='/usr/bin/osascript' then
+      assert(args[2]:find('set fieldSeparator to character id 9', 1, true),
+        'Ghostty defines a tab class: use an explicit ASCII TAB, not bare tab')
+      assert(not args[2]:find('& tab &', 1, true), 'application tab class is not a field separator')
       focusReads=focusReads+1
       local task=object()
       function task:start()

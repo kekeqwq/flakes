@@ -63,3 +63,18 @@ tmux shell receives English, Pi typing composes Chinese, menus/prefix commands
 use English, and Escape restores Chinese. Include multiple windows/clients,
 copy mode, tabs and nested tmux. No credentials, training dictionaries or live
 Rime user databases are managed by these reporters.
+
+Read-only native Ghostty identity regression (requires one running window):
+
+```sh
+python3 tests/macos-ghostty-identity.py
+```
+
+This executes the manager's **actual AppleScript**, without focusing a window
+or reading terminal text. Ghostty's dictionary defines a `tab` class, shadowing
+AppleScript's bare `tab` constant inside `tell application`. Therefore the query
+must construct `character id 9` outside the application block. Literal `tab`
+words break the surface/PID/TTY parser and leave a plain shell unidentified.
+The build-time mock also asserts the unambiguous delimiter. A real isolated
+login-fish window was verified to return to ABC after selecting Rime; existing
+user terminals were not used for injected input.
