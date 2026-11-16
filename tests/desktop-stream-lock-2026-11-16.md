@@ -55,3 +55,20 @@ further Sunshine investigation is paused until the VM regression is complete.
 Need identify the blocked secure-service path and repeat
 real lock/unlock/reconnect plus input/output regression before closing this
 incident. Do not change pairing state, client certificates or private keys.
+
+## Further observations / end-of-day handoff
+
+The owner encountered the same lock/unlock failure again. The 47984 accept queue
+was 5 and TLS again timed out; another authorized Sunshine-only restart restored
+TLS. Later the owner reported a frozen view/input even with an empty 47984 queue.
+A host-native capture of only QEMU at 22:31 showed the guest desktop while the
+owner's earlier stream frame showed the 22:22 password console. Therefore do not
+reduce the whole incident to HTTPS alone or call alive IPC proof of healthy
+presentation. Rendering/capture/transport/input still need separate isolation.
+
+The owner accepted the separately measured disk-unlock results and stopped work
+for the night. Niri's environment-import warning has a code/test fix but no
+updated-session acceptance; it is not a demonstrated Sunshine fix. No stream
+stability patch was deployed. Public repos are to be synchronized and guest/host
+normally powered off; shutdown outcome must be reported separately, not assumed.
+See [`HANDOFF-2026-11-16.md`](HANDOFF-2026-11-16.md).
