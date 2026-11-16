@@ -65,6 +65,24 @@ signalled, nor its swayidle cgroup restarted while it held the compositor lock.
 - Owner confirmed guest lock-screen touch unlock works after correcting an
   initially missed physical touch. This is not a timed 300-second regression.
 
+### Recovery after the stalled/black-screen attempt: passed
+
+After streaming access was restored, the owner confirmed the QEMU window was
+visible and authorized recovery testing. Guest ACPI powerdown did not exit the
+initrd, so only the test VM received a hardware reset. With no USB Key attached,
+the owner entered the correct recovery password and confirmed desktop access.
+Guest-agent checks again verified all three encrypted Btrfs subvolumes with
+zstd:3. Disk formatting, slot changes, password reset or reenrollment were not
+needed. The earlier attempts did not permanently lock the disk.
+
+The original installed image still uses systemd's default bounded retry count.
+The new shared module policy adds **`tries=0`**, with a boundary assertion, to
+allow unlimited recovery-password retries. This is a process-local unlock retry
+policy, not a LUKS header/keyslot operation and not a change to YubiKey PIN retry
+limits. Source evaluation passed; the updated initrd is **not yet deployed or
+runtime-tested**. Multiple wrong passwords followed by a correct password on
+that updated image remains pending.
+
 ### Late insertion: expected boundary, not an unconditional hotplug promise
 
 Key was attached after **124.6 seconds**, with no guest agent/unlocked root
@@ -103,6 +121,7 @@ acceptance of the new positions is not claimed.
 
 ## Pending — do not report as passed
 
+- Updated `tries=0` initrd deployment and repeated-wrong-password recovery test.
 - Unregistered physical Key denial; independently timed in-window hotplug test.
 - Secondary Key per-volume enrollment and independent add/revoke tests.
 - Post-install 300-second idle/lock/password/Key regression in the guest.

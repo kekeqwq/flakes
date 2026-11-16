@@ -33,6 +33,18 @@ Primary-Key touch-only cold boot and no-Key recovery-password boot passed; the
 > results and remaining untested cases in
 > [`tests/secret-lab-2026-11-16.md`](../../tests/secret-lab-2026-11-16.md).
 
+### Recovery-password retry tolerance
+
+New builds explicitly use **`tries=0`**: wrong recovery passwords do not exhaust
+the current boot's unlock service. Systemd's default bounded attempts only stop
+that activation process; they do **not** permanently lock/wipe the LUKS volume
+or disable its recovery slot. Rebooting permits another attempt. This does not
+remove or reset a hardware Key's independent PIN anti-guessing policy.
+
+The originally installed test VM does not acquire this change from a repository
+pull: it needs an updated initrd and a subsequent boot. Deployment/runtime test
+status is recorded in the report above.
+
 ## Installation — only inside the new official-ISO guest
 
 The launch helper pins the official minimal ISO:

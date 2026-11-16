@@ -35,7 +35,12 @@ in
     ];
     boot.initrd.luks.devices.${cfg.name} = {
       device = cfg.device;
-      crypttabExtraOpts = lib.optionals cfg.fido2.enable [
+      # Wrong recovery passwords must not exhaust this boot's unlock service.
+      # This is a transient cryptsetup retry policy, not a LUKS keyslot change.
+      crypttabExtraOpts = [
+        "tries=0"
+      ]
+      ++ lib.optionals cfg.fido2.enable [
         "fido2-device=auto"
         "fido2-pin=no"
         "fido2-up=yes"

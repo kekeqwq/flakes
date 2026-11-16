@@ -16,6 +16,7 @@ assert c.boot.initrd.systemd.fido2.enable;
 assert c.boot.initrd.luks.devices.cryptroot.device == "/dev/disk/by-partlabel/secret-lab-cryptroot";
 assert c.boot.initrd.luks.devices.cryptroot.keyFile == null;
 assert lib.all (opt: builtins.elem opt c.boot.initrd.luks.devices.cryptroot.crypttabExtraOpts) [
+  "tries=0"
   "fido2-device=auto"
   "fido2-pin=no"
   "fido2-up=yes"
