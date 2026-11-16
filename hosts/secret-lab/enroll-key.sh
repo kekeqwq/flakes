@@ -12,7 +12,8 @@ hidraw=$2
 label=$4
 device=/dev/disk/by-partlabel/secret-lab-cryptroot
 [[ $(id -u) == 0 ]]
-[[ $(systemd-detect-virt --vm) == qemu ]]
+case $(systemd-detect-virt --vm) in qemu | kvm) ;; *) exit 1 ;; esac
+[[ $(</sys/class/dmi/id/sys_vendor) == QEMU ]]
 [[ -c $hidraw ]]
 cryptsetup isLuks --type luks2 "$device"
 # Password slot 0 is deliberately retained by the fresh-volume installer.

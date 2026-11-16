@@ -17,7 +17,8 @@ elif [[ $# != 0 ]]; then
   exit 2
 fi
 [[ $(id -u) == 0 ]]
-[[ $(systemd-detect-virt --vm) == qemu ]]
+case $(systemd-detect-virt --vm) in qemu | kvm) ;; *) exit 1 ;; esac
+[[ $(</sys/class/dmi/id/sys_vendor) == QEMU ]]
 [[ -d /sys/firmware/efi ]]
 [[ -b /dev/vda ]]
 [[ $(lsblk -dnro TYPE /dev/vda) == disk ]]
