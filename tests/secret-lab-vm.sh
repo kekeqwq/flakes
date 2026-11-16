@@ -36,6 +36,10 @@ if [[ -n ${USB_BUS:-}${USB_ADDR:-} ]]; then
     echo 'Unlock Deck normally before handing this Key to QEMU' >&2
     exit 1
   fi
+  if pgrep -u "$(id -u)" -x scdaemon >/dev/null || systemctl is-active --quiet pcscd.service; then
+    echo 'A host smartcard daemon may own CCID. Close card clients; explicitly release idle scdaemon with gpgconf --kill scdaemon and let pcscd auto-exit before whole-device USB passthrough. No daemon is stopped automatically.' >&2
+    exit 1
+  fi
   usb+=(-device "usb-host,id=security-key,bus=xhci.0,hostbus=$USB_BUS,hostaddr=$USB_ADDR")
 fi
 [[ -f $work/OVMF_VARS.fd ]] || cp "$OVMF_ROOT/FV/OVMF_VARS.fd" "$work/OVMF_VARS.fd"

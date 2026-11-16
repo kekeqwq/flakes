@@ -100,6 +100,12 @@ refuses USB capture while the host's locker/key worker is active. Direct USB
 passthrough temporarily removes the whole Key from host applications. It does
 not change the Key's enabled functions. Replugging can change its bus/address;
 reselect explicitly. Without USB arguments the VM can test password recovery.
+Whole-device passthrough also needs the CCID interface: a host `scdaemon` can
+cause guest `can't set config #1, error -32` even though OTP/FIDO interfaces were
+claimed. Close smartcard clients, explicitly release the idle user's connection
+with `gpgconf --kill scdaemon` (not the whole gpg-agent), and let pcscd auto-exit.
+This closes a connection, not a FIDO factory reset or PIV/OpenPGP credential
+change. The launcher refuses competing card daemons rather than killing them.
 
 **Do not start the installed disk until the owner confirms they are watching
 Deck's desktop/window.** Only then:
