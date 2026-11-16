@@ -14,17 +14,15 @@
   networking.hostId = "5ec04ab1";
   system.stateVersion = "26.11";
 
-  # ZFS 2.4.4 supports this LTS kernel. Do not bypass the compatibility gate
-  # to follow baseline.nix's newest kernel on an encrypted-root instance.
+  # One LUKS2 container protects all Btrfs subvolumes. Use the standard
+  # systemd/Plymouth FIDO2 integration, with a separately retained password.
   boot.kernelPackages = pkgs.linuxPackages_6_18;
   boot.initrd.kernelModules = [ "virtio_gpu" ];
-  boot.supportedFilesystems = [ "zfs" ];
-  boot.zfs = {
-    devNodes = "/dev/disk/by-id";
-    forceImportRoot = false;
-    # One encryption root, one graphical question, all children inherit its key.
-    requestEncryptionCredentials = [ "secret-lab/secure" ];
-    passwordTimeout = 0;
+  my.luks = {
+    enable = true;
+    name = "cryptroot";
+    device = "/dev/disk/by-partlabel/secret-lab-cryptroot";
+    fido2.enable = true;
   };
 
   fileSystems = {
@@ -34,21 +32,39 @@
       options = [ "umask=0077" ];
     };
     "/" = {
-      device = "secret-lab/secure/nixos";
-      fsType = "zfs";
+      device = "/dev/mapper/cryptroot";
+      fsType = "btrfs";
+      options = [
+        "subvol=@root"
+        "compress=zstd:3"
+        "noatime"
+      ];
     };
     "/nix" = {
-      device = "secret-lab/secure/nix";
-      fsType = "zfs";
+      device = "/dev/mapper/cryptroot";
+      fsType = "btrfs";
+      options = [
+        "subvol=@nix"
+        "compress=zstd:3"
+        "noatime"
+      ];
     };
     "/home" = {
-      device = "secret-lab/secure/home";
-      fsType = "zfs";
+      device = "/dev/mapper/cryptroot";
+      fsType = "btrfs";
+      options = [
+        "subvol=@home"
+        "compress=zstd:3"
+        "noatime"
+      ];
     };
   };
-  # No unencrypted swap/hibernation image. ZFS root disables unsafe hibernation.
+  # No unencrypted swap or hibernation image in this fresh regression guest.
   swapDevices = [ ];
+  boot.kernelParams = [ "nohibernate" ];
   networking.firewall.enable = true;
+  # Private virtio/Unix management channel, available only after root unlock.
+  services.qemuGuest.enable = true;
   services.openssh.settings = {
     PasswordAuthentication = false;
     KbdInteractiveAuthentication = false;
@@ -64,13 +80,6 @@
     }
   '';
 
-  # Reuse shared streaming integration, without host LAN aliases, port forwards,
-  # credentials or copied pairing state. This test is viewed on Deck's display.
-  my.sunshine = {
-    enable = true;
-    settings = {
-      sunshine_name = "secret-lab";
-      capture = "kms";
-    };
-  };
+  # View QEMU directly in a Deck desktop window. No guest streaming/pairing.
+  my.sunshine.enable = false;
 }

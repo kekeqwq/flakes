@@ -1,102 +1,136 @@
-# secret-lab: encrypted ZFS desktop reference
+# secret-lab: LUKS2 + Btrfs zstd / FIDO2 desktop regression
 
-`lab` / `lab-x86` remain the existing **unencrypted ext4** reference; their private
-files are unchanged. `secret-lab` is a separate x86_64 QEMU instance importing the
-same desktop baseline, with its own storage/identity/virtio output. Plymouth is
-now part of the public Linux desktop layer, not a host-specific package list.
+This is a **new QEMU disk**, not a conversion of Deck. `lab` / `lab-x86` remain
+unencrypted ext4. The earlier uninstalled native-ZFS reference is replaced here
+by standard LUKS2 + Btrfs integration. Deck's disks, kernel and services are not
+changed by these scripts.
 
-## Boot design
+## Boot and authorization
 
-Firmware → systemd-boot → systemd initrd + early virtio KMS → Plymouth ZFS key
-question → mount encrypted root/Nix/home → Niri autologin → ordinary 300-second
-true-idle PAM lock. The disk passphrase and account password are independent.
-There is no LUKS container: OpenZFS encrypts `secret-lab/secure`; all three
-children inherit this single encryption root. `keylocation=prompt` means no
-secret key file is embedded in initrd or the public store.
+UEFI → systemd-boot → systemd initrd / virtio KMS → shared Plymouth → LUKS2
+unlock → Btrfs `@root`, `@nix`, `@home` → shared Niri desktop. All three
+subvolumes share one encrypted container and use `compress=zstd:3`. The ESP is
+unencrypted, mounted with `umask=0077`; there is no swap or hibernation image.
 
-The common Plymouth design uses our tracked mountain wallpaper, a Catppuccin
-Mocha veil, lavender Nix snowflake and an indeterminate loading ring. Password
-entry replaces the ring; it resumes after unlock. Boot, reboot and poweroff use
-the same animation, with no guessed percentage or artificial progress timer.
-ZFS unlocks a key; it does not decrypt the entire filesystem at boot.
-Unencrypted desktops also animate without a password step.
+Unlock requires **the recovery password OR an individually enrolled Key's
+physical touch**, without a daily PIN or biometric requirement. No insertion-only
+unlock. `my.luks.fido2.enable` adds native systemd crypttab options and initrd USB
+support; it does not format, enroll, or read the PAM public registry. Every
+volume needs separate physical enrollment. Only the private LUKS header carries
+its credential/salt/slot metadata; no disk key enters Git, initrd or Nix store.
 
-Omarchy reference: `basecamp/omarchy@74de10479d3bf7aa7865408e33219064cfe45432`,
-`default/plymouth/omarchy.script`. Its graphic prompt and progress come from
-Plymouth in the initramfs, while its disk encryption uses LUKS. NixOS's native
-ZFS import service already uses `systemd-ask-password`; Plymouth services supply
-the graphical agent. No Arch/Hyprland boot framework is imported here.
+An absent device has a 10-second discovery timeout before password fallback.
+This is **not** the touch timeout, nor a claim that systemd's disk password and
+FIDO prompts are concurrent like our independent lock-screen backends. The actual
+Plymouth touch/password interaction must be verified at cold boot.
 
-## Fresh installation — destructive steps only in the NEW QEMU guest
+## Installation — only inside the new official-ISO guest
 
-Use a fresh 64 GiB qcow2 and the official minimal ISO. Never run the following
-against Deck or an existing disk. The helper requires QEMU, an entirely blank
-`/dev/vda`, and an explicit erase flag; rebuild never calls it.
+The helper refuses physical/non-QEMU systems, non-EFI boot, any existing vda
+signature/partition/mount, existing mapper/labels, or an installed target. It is
+never invoked by a rebuild. Choose a strong independent recovery password in a
+local private prompt; it is not the login password.
 
 ```sh
 sudo bash hosts/secret-lab/partition-and-mount.sh --erase-fresh-qemu-vda
-# Secret prompt: choose at least eight characters (OpenZFS requirement).
+```
+
+`--key-fd N` is available for private provisioning: one password line on an
+inherited private FD, never argv/environment/chat/logs. The minimum is 12
+characters. The helper leaves password slot **0** intact. Do not supply secrets
+through tool arguments, QMP keystrokes, screenshots or shell tracing.
+
+### Enroll each owner-designated Key separately
+
+First confirm Deck is unlocked, insert the specified Key, and grant the VM that
+exact USB bus/address. Never select all Yubico devices or treat a USB serial as
+authentication. Do not reset FIDO/PIN, disable OTP, or overwrite PIV/OpenPGP.
+
+Inside the guest, list FIDO devices with `systemd-cryptenroll --fido2-device=list`.
+Use the pinned flake's `pkgs.python3`, `pkgs.cryptsetup` and `pkgs.systemd` tools
+if the live ISO lacks any helper. Then, on a local interactive terminal:
+
+```sh
+sudo bash hosts/secret-lab/enroll-key.sh --fido2-device /dev/hidrawN --label primary
+# Later, with the other physical Key, repeat using --label secondary.
+```
+
+The helper tests recovery password slot 0 before changes, saves root-only header
+backups under the encrypted target's `/var/backups/flakes-luks`, and enrolls with
+client PIN **no**, user presence **yes**, user verification **no**. It does not
+wipe slots. **Explicitly prompt the owner to touch when the LED flashes**; a
+second enrollment touch may be required. Stop if a Key demands an unknown PIN;
+never guess/reset it. Enrollment is not a successful cold-boot test.
+
+It verifies one added slot, retained existing slots and the recorded touch/no-PIN
+policy. Private `inventory.json` links the owner label to the new slot/token IDs.
+Export backups **privately off this virtual disk**: an encrypted in-volume copy
+alone cannot recover a damaged header. Never commit/copy these files into the
+public store. Protect both before/after headers as recovery materials.
+
+Install and set the independent login password privately:
+
+```sh
 sudo nixos-install --flake /root/flakes#secret-lab --root /mnt --no-root-passwd
 sudo passwd --root /mnt keke
 sudo umount -R /mnt
-sudo zpool export secret-lab
+sudo cryptsetup close cryptroot
 sudo poweroff
 ```
 
-For unattended provisioning the helper also accepts `--key-fd N`: provide the
-passphrase over a private pipe, not argv, environment, Git, a boot parameter or a
-Nix option. Set the account password in the target shadow database at install
-time. Trivial regression credentials are supplied privately, not in this file.
-All future real installations must select strong independent passwords.
+Only after installation, unmount, close and VM shutdown create the private
+`installed-and-closed` marker. The ISO must be detached for installed-disk boot.
 
-The script enables `compression=zstd` at the pool root; descendants inherit it.
-Compression is transparent and precedes encryption. Changing compression only
-affects newly written blocks; it does not rewrite existing data. Deck already
-has `zstd` on its pool/root/Nix/home; no live property change was necessary.
+## Display / USB / networking
 
-## VM control / viewing gate
+`tests/secret-lab-vm.sh installer PRIVATE_DIR` opens the official minimal ISO in
+an actual **GTK/VirGL window on Deck**. Installer-only SSH management is bound to
+**127.0.0.1:22323**, not LAN. Guest outbound NAT can fetch installation packages.
+There is no bridge, LAN alias, Sunshine proxy, pairing state or guest streaming.
+The guest's Sunshine is disabled; Deck's existing Sunshine is not modified.
 
-`tests/secret-lab-vm.sh installer PRIVATE_DIR` starts only the ISO, with no local
-window, Unix QMP/VNC sockets and installer SSH forwarded on **127.0.0.1:22323**.
-Supply `QEMU_ROOT` and `OVMF_ROOT` from this flake's Nix packages. This is test
-infrastructure, never a `build-vm` installation or a NixOS service.
+Provide `QEMU_ROOT`, `OVMF_ROOT`, and optionally the owner-approved `USB_BUS` /
+`USB_ADDR`. The helper checks permissions/vendor only as a sanity check and
+refuses USB capture while the host's locker/key worker is active. Direct USB
+passthrough temporarily removes the whole Key from host applications. It does
+not change the Key's enabled functions. Replugging can change its bus/address;
+reselect explicitly. Without USB arguments the VM can test password recovery.
 
-After successful installation, unmount and export, create the private
-`installed-and-exported` marker. The emulator is then **off**. Do not start the
-installed disk before the user confirms that Moonlight is showing Deck's
-existing desktop. Only then run:
+**Do not start the installed disk until the owner confirms they are watching
+Deck's desktop/window.** Only then:
 
 ```sh
-QEMU_ROOT=/nix/store/...-qemu OVMF_ROOT=/nix/store/...-OVMF-fd \
-  bash tests/secret-lab-vm.sh desktop PRIVATE_DIR
+VIEWING_CONFIRMED=yes QEMU_ROOT=/nix/store/... OVMF_ROOT=/nix/store/... \
+  USB_BUS=1 USB_ADDR=2 bash tests/secret-lab-vm.sh desktop PRIVATE_DIR
 ```
 
-This opens the new VM as a GTK/VirGL window on Deck, with the ISO detached. No
-LAN alias, DNAT, bridge, guest remote-desktop pairing or public port forwarding
-is created. The guest retains shared Sunshine integration for future private
-provisioning, but it is not used for this boot/crypto test.
+Installed-disk mode has **no network adapter**. A private virtio guest-agent Unix
+socket becomes usable only after root unlock for non-secret status checks. QMP,
+VNC, serial and agent sockets/logs stay inside the owner-only VM directory. Do
+not use QMP/guest-agent argv for passwords. Shut down gracefully from the guest
+or QMP power button; do not kill QEMU while filesystems are mounted.
 
-## Acceptance / limits
+## Add / revoke / acceptance
 
-Before unlock: see the wallpaper/password UI, no desktop, key unavailable.
-Wrong passphrase must not continue. Correct passphrase should ask only once,
-mount all three encrypted children and proceed directly into Niri. Check
-`encryptionroot`, `keylocation`, `keystatus`, `compression`, mounts and kernel;
-verify a real PAM lock at 300 seconds and password unlock with the account
-password, not the disk key. Also test a static fullscreen window and playing
-window/fullscreen video against the shared idle policy.
+Adding a later Key repeats per-volume enrollment without touching existing slots.
+For revocation, first independently test the recovery password, privately back up
+the current header, identify the **exact slot** from private inventory, then use
+`systemd-cryptenroll --wipe-slot=NUMBER DEVICE` for that slot only. Never use
+`--wipe-slot=fido2` to remove one of several Keys. Verify remaining Key(s) and
+password afterward. PAM authorization is separate and must be revoked separately.
+Old headers/snapshots/disk copies can restore old authority: synchronize private
+backup handling, and never claim current revocation invalidates previous copies.
 
-Build/evaluation and installation are not a successful cold-boot regression.
-When the user requests an installation-only handoff, report the cold-boot/UI
-acceptance as **pending**, and do not boot the disk to silently collect evidence.
+Cold-boot matrix: no Key/password, wrong password denial, correct password;
+registered Key touch without PIN; unregistered Key denial; unplug/replug and
+second-Key enrollment; no desktop before unlock; all Btrfs mounts/compression;
+shared 300-second lock and independent login-password recovery. Tests involving
+physical third Keys or cold boots remain pending until actually performed.
+Build/evaluation/metadata checks do not establish hardware/GUI acceptance.
 
-This protects data at rest, **not against an evil-maid bootloader replacement**:
-ESP/initrd are unencrypted, Secure Boot/signing/measured boot are not configured,
-ZFS exposes some dataset/pool metadata, and autologin leaves the unlocked session
-accessible until screen lock. No unencrypted swap or unsafe hibernation is
-configured. Keep private key backups/recovery material outside Git/Nix store.
-
-Firmware logos, GPU modesetting and monitor link training can still cause a
-brief physical black frame; quiet kernel/systemd settings do not control those.
-Failures remain diagnosable (Esc for Plymouth details; Space at power-on for the
-boot menu). No fake claim of guaranteed zero black frames on every GPU is made.
+The shared mountain/Mocha Plymouth, lavender Nix logo, loading ring and password
+UI are unchanged. Esc exposes boot diagnostics. Unencrypted desktops still have
+no disk prompt. Secure Boot/signing/measured boot are **not** configured: this
+protects data at rest, not an evil-maid replacement of ESP/initrd. Autologin leaves
+the unlocked desktop accessible until lock. Firmware/GPU link training can still
+produce black frames; no guaranteed zero-black-frame claim is made.
