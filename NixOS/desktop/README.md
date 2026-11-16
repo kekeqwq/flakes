@@ -19,6 +19,15 @@ Ordinary hosts use greetd to start `niri-session` for keke, with no user
 login prompt. A host that sets `my.luks.enable` asks for the disk passphrase
 before that. Deck disables greetd and uses Jovian's Steam/Niri session selector.
 
+The selected Niri package retains the upstream compositor binary and session
+lifecycle, but patches `niri-session` to pass explicit exported variable names
+to `systemctl --user import-environment`. This removes systemd 262's deprecated
+bare-import warning without dropping login/IME variables or suppressing stderr.
+`checks.x86_64-linux.niri-session` exercises the real launcher with a fake user
+manager/DBus command, including multiline environment values; it starts no real
+session. The change takes effect through a system update on subsequent login,
+not by restarting an existing compositor.
+
 `hosts/deck/` owns Jovian, Deck hardware/kernel/storage, hostname/host ID,
 resource limits, power-button behavior, display profiles, KMS/VA-API capture,
 and its private LAN services. Nothing in `NixOS/desktop/` imports Deck files or

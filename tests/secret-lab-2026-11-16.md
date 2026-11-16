@@ -52,7 +52,7 @@ running system, persistent profile and loader default were verified against:
 This is **not** a successful host cold-reboot test. No locker was killed or
 signalled, nor its swayidle cgroup restarted while it held the compositor lock.
 
-## Core regression: passed within the primary-Key scope
+## Disk-unlock functions passed; graphical acceptance remains incomplete
 
 - No-Key cold boot: no ISO/network adapter/USB Key, visible shared Plymouth
   password UI. Owner confirmed wrong password denied and correct recovery
@@ -75,13 +75,62 @@ Guest-agent checks again verified all three encrypted Btrfs subvolumes with
 zstd:3. Disk formatting, slot changes, password reset or reenrollment were not
 needed. The earlier attempts did not permanently lock the disk.
 
-The original installed image still uses systemd's default bounded retry count.
-The new shared module policy adds **`tries=0`**, with a boundary assertion, to
-allow unlimited recovery-password retries. This is a process-local unlock retry
-policy, not a LUKS header/keyslot operation and not a change to YubiKey PIN retry
-limits. Source evaluation passed; the updated initrd is **not yet deployed or
-runtime-tested**. Multiple wrong passwords followed by a correct password on
-that updated image remains pending.
+### Updated `tries=0`: six wrong passwords, then success
+
+The original image used systemd's bounded retry count. The shared module now
+adds **`tries=0`**, with a boundary assertion. This is a process-local unlock
+retry policy, not a LUKS header/keyslot operation or a hardware PIN policy change.
+Full system build and Linux secret-lab boundary build succeeded. Updated system:
+`/nix/store/3ip3z7ls0w7a8lzs2b37x0x5b0gjpwin-nixos-system-secret-lab-26.11.20261115.5da7db4`.
+
+Five public store paths (37,679,704 bytes) were transferred using the private
+local guest-agent socket, imported and installed for **boot**, without live
+activation, a NIC, ISO, formatting, password reset or reenrollment. Initial
+query/transfer helper errors were corrected before import/boot installation.
+The built crypttab contained `tries=0`; default loader entry referenced the new
+system. Guest OS reboot then entered that exact system, verified via agent.
+
+Initrd journal records **six** incorrect-passphrase failures at 22:21:23,
+22:21:27, 22:21:31, 22:21:36, 22:22:19 and 22:22:28, followed by successful
+cryptroot setup at **22:24:10**. No password values were read or recorded.
+The unbounded retry function is runtime-verified, not just source-evaluated.
+
+**Prior graphical-crash suspicion remains unconfirmed:** owner reported that repeated errors made
+the graphical password UI disappear into a text prompt and later could not
+operate through Moonlight. Plymouth start/quit commands returned success; no
+Plymouth crash/OOM was found in the inspected journal. That does not establish
+theme health or explain the graphical-to-text transition. A host-native capture
+of only QEMU at 22:31 showed the actual guest desktop; owner confirmed Moonlight
+had frozen again. Thus a stale streaming view also interfered with observation;
+it does not establish the cause of the earlier graphical complaint.
+
+In the later no-Key repeat, the owner reported many entries without a graphical
+failure and suspected an accidental TTY switch previously. A paused host-native
+QEMU capture confirmed an intact graphical password screen. The subsequently
+read boot journal, however, contains only a successful unlock at 23:06:06 and no
+incorrect-passphrase records, so it cannot substantiate six submitted failures
+for that observation. We did not continue testing after the owner asked to stop.
+Do not call this a confirmed Plymouth crash, a repaired bug, or a quantitatively
+verified six-error graphical test. The earlier six-error **disk retry** result
+is independently established; Sunshine's repeated failures remain open.
+
+### In-window Key insertion: touch-only success on the updated image
+
+Primary serial rechecked read-only; host unlocked and idle card clients released
+before whole-device handoff. Normal guest reboot was observed through QMP RESET,
+then the real primary Key was hot-added to the guest after 8.054 seconds. This
+is a guest USB hotplug test, not a separately measured physical cable replug.
+
+- 22:52:37.297545: initrd reports no token and starts waiting.
+- 22:52:41.625425: host requests actual Key attachment, about **4.3 seconds**
+  after the wait began (not merely an estimate from reboot).
+- 22:52:42.485813: FIDO2 authentication/presence request, about **5.2 seconds**
+  after the wait began; no discovery timeout occurred.
+- 22:53:11.487546: successful cryptroot setup, same updated system, encrypted
+  Btrfs root with zstd:3. Owner explicitly confirmed **touch only, no recovery
+  password or PIN**. The Key was then detached and returned to the host.
+
+This also demonstrates that discovery timeout is not the physical-touch timeout.
 
 ### Late insertion: expected boundary, not an unconditional hotplug promise
 
@@ -107,22 +156,44 @@ Source review uses the actual initrd's **systemd v262**, pinned source hash
 Our `token-timeout=10s` therefore permits insertion **during the discovery
 window**, not arbitrary insertion after password fallback. The observed >2-minute
 case matches this implementation. No special retry/concurrent-unlock patch or
-longer/infinite wait is added. A true manual insert inside the 10-second window
-was not separately measured; support there is established by source behavior,
-not claimed as another completed physical test.
+longer/infinite discovery wait is added. The separate in-window guest hotplug
+test above now confirms that supported path with actual hardware authentication.
 
 The owner accepts this boundary. The core primary-Key/password regression above
 is passed; this does not turn the following untested cases into passes.
 
-Plymouth password group is moved down 48px in source; touch/error message has
-another 24px of clearance below it, avoiding the loading ring. Per owner request
-there is **no VM rebuild or deployment** for this layout-only change; visual
-acceptance of the new positions is not claimed.
+Plymouth password group is moved down 48px; touch/error message has another
+24px of clearance. Initially this was code-only as requested; the subsequently
+authorized `tries=0` initrd update included those positions. Visual acceptance
+is **not** claimed, particularly given the unresolved graphical retry issue.
+
+## Pre-desktop environment warning: source fix verified
+
+Owner's later screenshot clearly showed systemd's warning:
+`Calling import-environment without a list of variable names is deprecated.`
+The pinned upstream `niri-session` contained a bare import. The shared Linux
+desktop now selects a lightweight package that preserves the compositor binary
+and upstream lifecycle, but explicitly enumerates exported variable names for
+that call. Environment values are not placed in argv and stderr is not hidden.
+Both greetd session commands use the selected package; display-manager sessions
+also receive it through `programs.niri.package`.
+
+The original launcher reproduces the warning in an isolated fake-manager test;
+the patched launcher passes, including multiline values and unchanged start/
+shutdown/DBus behavior. Linux `niri-session`, ordinary desktop/headless boundaries
+and secret-lab boundaries built successfully; full Deck system evaluation passed.
+This is **not** a claim of a live session update: no running compositor was
+restarted or activated for this warning fix. It takes effect after deployment
+and subsequent session startup. This warning is not established as the cause of
+Sunshine's separate failure.
 
 ## Pending — do not report as passed
 
-- Updated `tries=0` initrd deployment and repeated-wrong-password recovery test.
-- Unregistered physical Key denial; independently timed in-window hotplug test.
+- Optional quantified graphical retry observation; prior suspected crash was
+  not reproduced, and the owner suspects manual TTY switching.
+- Lock/unlock/stream-resume failure, tracked in
+  [`desktop-stream-lock-2026-11-16.md`](desktop-stream-lock-2026-11-16.md).
+- Unregistered physical Key denial.
 - Secondary Key per-volume enrollment and independent add/revoke tests.
 - Post-install 300-second idle/lock/password/Key regression in the guest.
 - Host cold reboot persistence and renewed physical lock-screen acceptance.
