@@ -11,7 +11,11 @@ work=$(realpath "$work")
 [[ $(stat -c %u "$work") == "$(id -u)" && $(stat -c %a "$work") == 700 ]]
 # Validate media/viewing before creating even an empty disk or NVRAM file.
 case "$mode" in
-installer) [[ -f $work/installer.iso ]] ;;
+installer)
+  [[ -f $work/installer.iso ]]
+  checksum=$(sha256sum "$work/installer.iso")
+  [[ ${checksum%% *} == 927b3102d3d1e2e7339803e2055c7511eb693e9869f7cc5202829341dfc0119e ]]
+  ;;
 desktop) [[ -f $work/installed-and-closed && ${VIEWING_CONFIRMED:-} == yes ]] ;;
 *) exit 2 ;;
 esac
@@ -67,7 +71,6 @@ done < <(systemctl --user show-environment)
   -device virtio-serial-pci \
   -chardev "socket,id=qga,path=$work/qga.sock,server=on,wait=off" \
   -device virtserialport,chardev=qga,name=org.qemu.guest_agent.0 \
-  -vnc "unix:$work/vnc.sock" \
   -chardev "socket,id=serial0,path=$work/serial.sock,server=on,wait=off,logfile=$work/serial.log,logappend=on" \
   -serial chardev:serial0 -qmp "unix:$work/qmp.sock,server=on,wait=off" \
   -pidfile "$work/qemu.pid" >"$work/qemu-launch.log" 2>&1

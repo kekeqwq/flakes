@@ -26,6 +26,11 @@ Plymouth touch/password interaction must be verified at cold boot.
 
 ## Installation — only inside the new official-ISO guest
 
+The launch helper pins the official minimal ISO:
+`nixos-minimal-26.11pre1119549.d5cc68339997-x86_64-linux.iso`, SHA256
+`927b3102d3d1e2e7339803e2055c7511eb693e9869f7cc5202829341dfc0119e`.
+Source: `https://releases.nixos.org/nixos/unstable/nixos-26.11pre1119549.d5cc68339997/`.
+
 The helper refuses physical/non-QEMU systems, non-EFI boot, any existing vda
 signature/partition/mount, existing mapper/labels, or an installed target. It is
 never invoked by a rebuild. Choose a strong independent recovery password in a
@@ -106,7 +111,8 @@ VIEWING_CONFIRMED=yes QEMU_ROOT=/nix/store/... OVMF_ROOT=/nix/store/... \
 
 Installed-disk mode has **no network adapter**. A private virtio guest-agent Unix
 socket becomes usable only after root unlock for non-secret status checks. QMP,
-VNC, serial and agent sockets/logs stay inside the owner-only VM directory. Do
+serial and agent sockets/logs stay inside the owner-only VM directory. There is
+no VNC listener (GTK/VirGL and VNC cannot share this QEMU GL display). Do
 not use QMP/guest-agent argv for passwords. Shut down gracefully from the guest
 or QMP power button; do not kill QEMU while filesystems are mounted.
 
