@@ -126,6 +126,12 @@
                 touch "$out"
               '';
         }
+        // lib.optionalAttrs (system == "aarch64-darwin") {
+          sudo-touchid = import ./tests/macos-sudo-auth.nix {
+            pkgs = pkgsFor.${system};
+            darwin = self.darwinConfigurations.mba;
+          };
+        }
         // lib.optionalAttrs (system == "x86_64-linux") {
           secret-lab-boundaries = import ./tests/secret-lab.nix {
             pkgs = pkgsFor.${system};

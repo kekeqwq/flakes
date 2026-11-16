@@ -47,6 +47,58 @@ that still executes the env-clearing shebang. Explicitly invoking Bash is
 essential. Only use `sudo darwin-rebuild switch --flake .#mba` when activation
 is intended; it can reload applications and run Homebrew cleanup.
 
+## sudo: Touch ID or account password
+
+`security.nix` enables nix-darwin's `sudo_local.touchIdAuth` and `reattach`.
+The generated local stack contains an **optional** `pam_reattach` adapter followed
+by **sufficient** `pam_tid.so`. It does not replace the macOS-owned sudo stack:
+its existing required `pam_opendirectory.so` password route remains available.
+The adapter covers GUI bootstrap-session differences in tmux/screen. No fingerprint
+image/template or account password is exported or stored by this repository.
+`watchIdAuth` is not enabled as an additional PAM module.
+
+The complete Darwin system and `checks.aarch64-darwin.sudo-touchid` were built.
+Biometric unlock is configured in the actual Mac's system settings, but that
+alone is not proof of successful sudo fingerprint authentication.
+
+For this deployment, use a narrow sudo-local update rather than running the whole
+Darwin activation (which could reload applications and run Homebrew). The coding
+agent's administrator-authorized deployment was denied by macOS System Policy;
+the existing sudo/PAM files stayed unchanged in those rejected attempts. The
+owner then completed the same narrow deployment from the local terminal; the
+actual generated PAM file and unchanged macOS password stack were verified.
+Do not disable SIP or weaken system protections to work around a deployment
+denial.
+
+A scoped GC root at `/nix/var/nix/gcroots/flakes-macos-sudo-touchid` retains the
+built system and module closure. Root-only backups of the previous symlink,
+content and macOS sudo reference are under `/var/root/flakes-pam-backups/`.
+The exact generated local-file hash is declared as a known hash so a later normal
+nix-darwin activation can recognize this narrow deployment and restore its
+canonical `/etc/static` link. The exact deployed hash is also retained so a later
+package/store-path change does not prevent that migration. This is **not** a full
+Darwin generation switch.
+
+Actual fingerprint acceptance passed on the Mac: `/usr/bin/sudo -k ... true` in
+an isolated PTY returned 0, with no password input, no password-fallback prompt,
+and sudo cache explicitly ignored. Total elapsed time including the human
+response was 5.08 seconds; this is not a fingerprint-sensor latency benchmark.
+This test was launched from the agent's tmux context with the adapter enabled.
+The reproducible no-secret PTY fixture is `tests/macos-sudo-touchid.py` (requires a
+human response to the macOS biometric prompt; do not run as root).
+Password fallback retains the original OpenDirectory rule. The owner separately
+confirmed successful password authentication after a fresh sudo invocation and
+choosing/cancelling the biometric prompt to use the password route.
+
+After deploying, run `/usr/bin/sudo -k; /usr/bin/sudo /usr/bin/true` in Ghostty,
+including tmux, to request fresh fingerprint authentication. Separately test the
+password choice/fallback in a visible terminal; do not send a password to the
+agent or put it in argv/history/reports. A cancelled prompt or timed-out test is
+not a successful authentication. GUI-session availability, biometric policy or
+sensor availability can cause password fallback; remote/SSH biometric behavior
+is not guaranteed. Administrator authorization for deployment is not itself a
+sudo Touch ID test.
+
 ## Remaining clean-machine reproduction gaps
 
 These were observed on the actual MBA and are **not** supplied completely by
