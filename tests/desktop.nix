@@ -53,7 +53,12 @@ assert
 assert c.systemd.services.greetd.serviceConfig.StandardOutput == "journal";
 assert !c.systemd.services.greetd.serviceConfig.TTYVTDisallocate;
 assert c.services.greetd.settings.initial_session.user == "keke";
-assert lib.hasInfix "niri-session" c.services.greetd.settings.initial_session.command;
+assert c.programs.niri.package.explicitSessionEnvironment;
+assert
+  c.services.greetd.settings.initial_session.command == "${c.programs.niri.package}/bin/niri-session";
+assert
+  c.services.greetd.settings.default_session.command == "${c.programs.niri.package}/bin/niri-session";
+assert deck.config.programs.niri.package.explicitSessionEnvironment;
 assert !c.my.luks.enable && !off.my.luks.enable;
 assert !deck.config.services.greetd.enable;
 assert c.programs.steam.enable && !c.services.sunshine.enable;

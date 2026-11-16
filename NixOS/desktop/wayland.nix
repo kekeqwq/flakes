@@ -84,7 +84,10 @@ in
 
   security.polkit.enable = true;
 
-  programs.niri.enable = true;
+  programs.niri = {
+    enable = true;
+    package = import ./niri/session-package.nix { inherit pkgs; };
+  };
   # Validate again before Home Manager changes any files.
   myuser.hm.home.activation.validateNiriConfig = {
     after = [ ];

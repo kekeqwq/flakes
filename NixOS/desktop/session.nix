@@ -31,11 +31,11 @@
     enable = lib.mkDefault true;
     restart = false;
     settings.initial_session = {
-      command = "${pkgs.niri}/bin/niri-session";
+      command = "${config.programs.niri.package}/bin/niri-session";
       user = config.myuser.name;
     };
     settings.default_session = {
-      command = "${pkgs.niri}/bin/niri-session";
+      command = "${config.programs.niri.package}/bin/niri-session";
       user = config.myuser.name;
     };
   };

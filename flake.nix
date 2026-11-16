@@ -151,6 +151,7 @@
           };
         }
         // lib.optionalAttrs (system == "x86_64-linux") {
+          niri-session = import ./tests/niri-session.nix { pkgs = pkgsFor.${system}; };
           secret-lab-boundaries = import ./tests/secret-lab.nix {
             pkgs = pkgsFor.${system};
             secretLab = self.nixosConfigurations.secret-lab;

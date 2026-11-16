@@ -48,6 +48,11 @@ assert c.users.mutableUsers;
 assert c.users.users.keke.hashedPassword == null;
 assert c.users.users.keke.initialPassword == null;
 assert c.services.greetd.settings.initial_session.user == "keke";
+assert c.programs.niri.package.explicitSessionEnvironment;
+assert
+  c.services.greetd.settings.initial_session.command == "${c.programs.niri.package}/bin/niri-session";
+assert
+  c.services.greetd.settings.default_session.command == "${c.programs.niri.package}/bin/niri-session";
 assert (builtins.head c.home-manager.users.keke.services.swayidle.timeouts).timeout == 300;
 assert !c.my.sunshine.enable && !c.services.sunshine.enable;
 assert c.services.qemuGuest.enable;
