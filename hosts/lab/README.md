@@ -1,9 +1,8 @@
 # lab (aarch64) and lab-x86
 
-这里仍是未加密 ext4 实例。LUKS2 + Btrfs **zstd:3** / YubiKey 加密回归的完整操作手册
-（从官方 ISO 下载、校验、安装到逐卷登记与验证）在
-[`hosts/secret-lab/README.md`](../secret-lab/README.md)。不要用本文件的目标或网络转发流程
-替代加密实验；加密目标是 `.#nixosConfigurations.secret-lab`，安装后没有网卡或客体 Sunshine。
+这里仍是未加密 ext4 测试实例。**新电脑直接安装 LUKS2 + Btrfs zstd:3 + YubiKey 解锁**
+请看 [`hosts/secret-lab/README.md`](../secret-lab/README.md)。虚拟机只是验证工具，
+新电脑不需要搭建本文件的虚拟网络，也不要直接安装带虚拟硬件配置的 `secret-lab`。
 
 One private host file, `default.nix`, for throwaway QEMU guests. It imports
 `NixOS/desktop/baseline.nix` (desktop + newest stable kernel) and adds only this
