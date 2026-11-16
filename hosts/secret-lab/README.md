@@ -20,9 +20,18 @@ volume needs separate physical enrollment. Only the private LUKS header carries
 its credential/salt/slot metadata; no disk key enters Git, initrd or Nix store.
 
 An absent device has a 10-second discovery timeout before password fallback.
-This is **not** the touch timeout, nor a claim that systemd's disk password and
-FIDO prompts are concurrent like our independent lock-screen backends. The actual
-Plymouth touch/password interaction must be verified at cold boot.
+Systemd v262 watches for insertion during that window; after timeout it disables
+FIDO2 for the rest of that activation process, so later insertion does **not**
+automatically restart touch authentication, even on password retries. This is
+**not** the touch timeout, nor concurrent password/Key authentication like our
+independent lock-screen backends. Only touch when the LED requests it; otherwise
+an enabled OTP interface may type into the password prompt.
+
+Primary-Key touch-only cold boot and no-Key recovery-password boot passed; the
+
+> 2-minute late-insert case matches the source-defined limitation. See the scoped
+> results and remaining untested cases in
+> [`tests/secret-lab-2026-11-16.md`](../../tests/secret-lab-2026-11-16.md).
 
 ## Installation — only inside the new official-ISO guest
 

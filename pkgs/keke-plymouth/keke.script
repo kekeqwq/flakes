@@ -40,10 +40,12 @@ fun layout() {
   logo.sprite.SetPosition(center - logo.image.GetWidth() / 2, global.height / 2 - 100, 1);
   spinner.sprite.SetPosition(center - 32, global.height / 2 + 112, 2);
   entry.x = center - 180;
-  entry.y = global.height / 2 + 56;
+  # Move the entire password group down, preserving spacing within the group.
+  entry.y = global.height / 2 + 104;
   entry.sprite.SetPosition(entry.x, entry.y, 3);
   prompt.sprite.SetPosition(center - prompt.width / 2, entry.y + 62, 4);
-  message.sprite.SetPosition(center - message.width / 2, entry.y + 96, 5);
+  # Leave clear space below the 64px loading ring for touch/error messages.
+  message.sprite.SetPosition(center - message.width / 2, entry.y + 120, 5);
   for (i = 0; bullet.sprites[i]; i++) {
     bullet.sprites[i].SetPosition(entry.x + 20 + i * 12, entry.y + 20, 4);
   }

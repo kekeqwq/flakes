@@ -1,6 +1,6 @@
 # LUKS2/FIDO2 lab deployment — 2026-11-16
 
-## Completed evidence (not cold-boot acceptance)
+## Installation and enrollment evidence
 
 - Both repositories synchronized. New 64 GiB qcow2 on Deck, private directory;
   official minimal ISO SHA256
@@ -36,7 +36,7 @@
   Owner still needs an appropriate private off-machine backup for durability.
 - Target cleanly unmounted, mapper closed, installer gracefully powered off.
   USB returned to host. `installed-and-closed` marker created only afterward.
-  Installed-disk first boot awaits explicit viewing confirmation.
+  Subsequent installed-disk boots were explicitly viewed/approved by the owner.
 
 ## Build and host persistence
 
@@ -52,12 +52,58 @@ running system, persistent profile and loader default were verified against:
 This is **not** a successful host cold-reboot test. No locker was killed or
 signalled, nor its swayidle cgroup restarted while it held the compositor lock.
 
+## Core regression: passed within the primary-Key scope
+
+- No-Key cold boot: no ISO/network adapter/USB Key, visible shared Plymouth
+  password UI. Owner confirmed wrong password denied and correct recovery
+  password entered the desktop; supplied a screenshot of the graphical prompt.
+- Separate cold boot with the registered primary Key: owner confirmed **one
+  touch only, no recovery password or PIN**, then desktop. Initrd journal shows
+  FIDO2 authentication/presence request followed by successful cryptroot setup.
+  Guest-agent checks confirmed `/`, `/nix`, `/home` on their encrypted mapper's
+  Btrfs subvolumes, all with zstd:3. No prior guest RAM/keyring was reused.
+- Owner confirmed guest lock-screen touch unlock works after correcting an
+  initially missed physical touch. This is not a timed 300-second regression.
+
+### Late insertion: expected boundary, not an unconditional hotplug promise
+
+Key was attached after **124.6 seconds**, with no guest agent/unlocked root
+before attachment. Owner reported no LED challenge; agent remained unavailable.
+Later touches without a challenge may have produced OTP keyboard input. A host
+locker was also observed during the black-screen report, so that screen alone
+is **not** evidence of a guest crash. Key was returned to the host; no locker
+was killed or signalled.
+
+Source review uses the actual initrd's **systemd v262**, pinned source hash
+`sha256-oGzFW2dD8abLXBwDczr1hvl712s03CHTUqOz6uPfhmQ=`:
+
+- [`crypttab.xml`, token-timeout](https://github.com/systemd/systemd/blob/v262/man/crypttab.xml#L962-L973)
+  says device discovery waits until timeout, then falls back to password.
+- [`make_security_device_monitor` / `run_security_device_monitor`](https://github.com/systemd/systemd/blob/v262/src/cryptsetup/cryptsetup.c#L1318-L1396)
+  install a udev security-device monitor plus timeout; timeout returns EAGAIN.
+- [`verb_attach`, FIDO2 fallback](https://github.com/systemd/systemd/blob/v262/src/cryptsetup/cryptsetup.c#L2698-L2702)
+  clears `arg_fido2_device` and `arg_fido2_device_auto` before continuing to the
+  password path. The same activation process does not automatically re-arm
+  FIDO2 after a late insert; even password retries do not restore those flags.
+
+Our `token-timeout=10s` therefore permits insertion **during the discovery
+window**, not arbitrary insertion after password fallback. The observed >2-minute
+case matches this implementation. No special retry/concurrent-unlock patch or
+longer/infinite wait is added. A true manual insert inside the 10-second window
+was not separately measured; support there is established by source behavior,
+not claimed as another completed physical test.
+
+The owner accepts this boundary. The core primary-Key/password regression above
+is passed; this does not turn the following untested cases into passes.
+
+Plymouth password group is moved down 48px in source; touch/error message has
+another 24px of clearance below it, avoiding the loading ring. Per owner request
+there is **no VM rebuild or deployment** for this layout-only change; visual
+acceptance of the new positions is not claimed.
+
 ## Pending — do not report as passed
 
-- First installed-disk boot, without ISO or network adapter; visible Plymouth
-  password UI, wrong-password denial and successful recovery-password unlock.
-- Cold boot with registered Key: physical touch, no PIN, correct mounts/desktop.
-- Unregistered physical Key denial, boot hotplug/fallback behavior.
+- Unregistered physical Key denial; independently timed in-window hotplug test.
 - Secondary Key per-volume enrollment and independent add/revoke tests.
 - Post-install 300-second idle/lock/password/Key regression in the guest.
 - Host cold reboot persistence and renewed physical lock-screen acceptance.
