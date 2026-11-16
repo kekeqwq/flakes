@@ -67,5 +67,8 @@ for subvolume in nix home; do
   mount -o "subvol=@$subvolume,compress=zstd:3,noatime" /dev/mapper/cryptroot "/mnt/$subvolume"
 done
 mount -o umask=0077 /dev/disk/by-label/SECRETEFI /mnt/boot
+# umask protects secret handling, but normal root/nix/home traversal must work
+# for nixos-install and the target's non-root user. Private backup dirs stay 0700.
+chmod 0755 /mnt /mnt/nix /mnt/home
 printf '%s\n' 'LUKS2 + Btrfs zstd mounted. Recovery password retained; FIDO2 enrollment is a separate, physical operation.'
 findmnt -R /mnt -o TARGET,FSTYPE,OPTIONS
