@@ -106,8 +106,11 @@ this flake. Do not claim a perfect fresh-machine reproduction until they are
 resolved separately:
 
 - **Manual fonts:** `~/Library/Fonts` contains MonoLisa Nasy, Bookerly, Source
-  Han Serif SC and 仓耳今楷 files. `LXGWWenKaiIME-Medium.ttf` is an intentional
-  Nix-generated copy and is not a missing source. Audit the other fonts'
+  Han Serif SC and 仓耳今楷 files. `LXGWWenKaiIME-Medium.ttf` and
+  `KekeCJKTerminal-Regular.ttf` are intentional Nix-generated copies, not missing
+  sources. The latter contains unchanged WenKai Mono Medium outlines for
+  Ghostty's CJK fallback; ATS requires a real file rather than a store symlink.
+  Audit the other fonts'
   licenses; use pinned public sources for open fonts and an explicit private
   provisioning mechanism for proprietary ones. Do not publish the binaries.
 - **Emacs configuration/state:** `~/.emacs.d` is an independent Git checkout,

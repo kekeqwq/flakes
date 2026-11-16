@@ -19,9 +19,11 @@
     package = if pkgs.stdenv.hostPlatform.isDarwin then null else pkgs.ghostty;
 
     settings = {
-      # MonoLisa for Latin, WenKai for CJK.
+      # Keep MonoLisa's weight; CJK uses the original WenKai Medium outlines
+      # exposed in a dedicated regular-slot family (not global font-thicken).
       font-family = [
         "MonoLisa Nasy"
+        "Keke CJK Terminal Medium"
         "LXGW WenKai Mono"
         "DejaVu Sans Mono"
         "Symbols Nerd Font Mono"
@@ -30,8 +32,9 @@
       font-size = if pkgs.stdenv.hostPlatform.isDarwin then 16 else 12;
       background-opacity = 0.95;
       unfocused-split-opacity = 1;
-      window-padding-x = 1;
-      window-padding-y = 0;
+      # Give both the tmux bar and terminal content room inside rounded edges.
+      window-padding-x = 12;
+      window-padding-y = 10;
       confirm-close-surface = false;
       cursor-style = "block";
       cursor-style-blink = false;

@@ -118,6 +118,20 @@
         system:
         {
           treefmt = treefmtFor.${system}.config.build.check self;
+          wenkai-mono-terminal = pkgsFor.${system}.callPackage ./pkgs/wenkai-mono-terminal { };
+          pi-native-theme = import ./System/Common/pi-native-theme.nix {
+            pkgs = pkgsFor.${system};
+            raw = inputs.pi.packages.${system}.coding-agent;
+          };
+          pi-catppuccin = import ./System/Common/pi-catppuccin.nix {
+            pkgs = pkgsFor.${system};
+            pi = self.checks.${system}.pi-native-theme;
+          };
+          pi-theme-cli = import ./tests/pi-theme-cli.nix {
+            pkgs = pkgsFor.${system};
+            pi = self.checks.${system}.pi-native-theme;
+            themes = self.checks.${system}.pi-catppuccin;
+          };
           qbittorrent-policy =
             pkgsFor.${system}.runCommand "qbittorrent-policy-check"
               { nativeBuildInputs = [ pkgsFor.${system}.python3 ]; }
@@ -127,6 +141,10 @@
               '';
         }
         // lib.optionalAttrs (system == "aarch64-darwin") {
+          tmux-theme = import ./tests/tmux-theme.nix {
+            pkgs = pkgsFor.${system};
+            darwin = self.darwinConfigurations.mba;
+          };
           sudo-touchid = import ./tests/macos-sudo-auth.nix {
             pkgs = pkgsFor.${system};
             darwin = self.darwinConfigurations.mba;

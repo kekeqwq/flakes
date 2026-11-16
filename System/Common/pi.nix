@@ -5,6 +5,14 @@
   ...
 }:
 let
+  piPackage = import ./pi-native-theme.nix {
+    inherit pkgs;
+    raw = inputs.pi.packages.${pkgs.stdenv.hostPlatform.system}.coding-agent;
+  };
+  catppuccinThemes = import ./pi-catppuccin.nix {
+    inherit pkgs;
+    pi = piPackage;
+  };
   # Discoverable extension, not a wrapper --extension flag: child Pi processes
   # launched with --no-extensions must keep their restricted loadout. This
   # package publishes loopback account routes for those children itself.
@@ -60,17 +68,34 @@ in
     ];
   };
 
-  myuser.hm = {
+  myuser.hm = { config, ... }: {
     imports = [
       inputs.pi.homeModules.default
     ];
+    # Prefer only this Pi wrapper in new shells (no unrelated PATH shadowing).
+    # useUserPackages otherwise leaves a narrow HM deployment on the old system
+    # profile's Pi until a full system switch. The local link also serves shells
+    # that were already running before this activation.
+    home.sessionPath = [ "${config.programs.pi.coding-agent.finalPackage}/bin" ];
+    home.file.".local/bin/pi".source = "${config.programs.pi.coding-agent.finalPackage}/bin/pi";
     # home.file.".pi/agent/extensions/pi-multi-account".source = multiAccount;
     home.file.".pi/agent/extensions/input-method.ts".source = "${inputMethod}/input-method.ts";
+    home.file.".pi/agent/themes/catppuccin-latte.json".source =
+      "${catppuccinThemes}/catppuccin-latte.json";
+    home.file.".pi/agent/themes/catppuccin-mocha.json".source =
+      "${catppuccinThemes}/catppuccin-mocha.json";
     programs.pi.coding-agent = {
       enable = true;
       # Ghostty/tmux support native appearance notifications (mode 2031).
       # No WezTerm-specific periodic palette-query patch is needed.
-      package = inputs.pi.packages.${pkgs.stdenv.hostPlatform.system}.coding-agent;
+      package = piPackage;
+      # Upstream merges these public display preferences into mutable settings.json;
+      # accounts, models, extensions and other private settings remain untouched.
+      settings = {
+        theme = "catppuccin-latte/catppuccin-mocha";
+        # Native cursor inherits Ghostty's color/shape across appearance changes.
+        showHardwareCursor = true;
+      };
       extensions = [ ];
     };
   };

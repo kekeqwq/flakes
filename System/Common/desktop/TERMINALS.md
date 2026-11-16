@@ -11,6 +11,18 @@ retains shared opacity 0.95 without macOS glass settings. Unfocused native
 splits do not dim (`unfocused-split-opacity = 1`). Ghostty 1.4 exposes no
 independent setting to pin SwiftUI Liquid Glass's whole-window inactive state;
 this split option does not promise identical glass rendering on window blur.
+Shared content padding is 12 horizontally and 10 vertically (Ghostty points),
+including space around the tmux status bar.
+
+Chinese fallback uses **WenKai Mono Medium**, while MonoLisa's Latin weight stays
+unchanged. `pkgs/wenkai-mono-terminal/` exposes the original Medium font as the
+regular slot of a distinct `Keke CJK Terminal Medium` family: only naming/style-selection
+metadata changes, not outlines, hinting, character coverage or advance widths.
+Copyright/license records are preserved. This avoids applying Ghostty's global
+`font-style`/macOS `font-thicken` to Latin too. The original WenKai family remains
+as an additional fallback. Linux installs the shared font package; macOS also
+copies the identical Nix-built file into the user's Fonts directory for narrow
+Home Manager updates (ATS can ignore nix-store symlinks there). Emacs and Rime keep their separate font selections.
 
 ## Integration
 
@@ -19,9 +31,44 @@ this split option does not promise identical glass rendering on window blur.
   No appearance subprocess rewrites global hex colors, and no OS appearance
   guess competes with terminal notifications. Reload removes the old hook at
   index 92. Home Manager reloads an existing default tmux server on config changes.
-- Pi uses its upstream mode-2031 appearance handling; the periodic palette-query
-  patch used for WezTerm has been removed. Running Pi processes must be restarted
-  by the user to use the new package; `/reload` does not replace application code.
+  The leftmost unboxed marker denotes the **session name**, not the window:
+  numeric names `0`/`1`/`2` render `0️⃣`/`1️⃣`/`2️⃣`; custom names retain their text.
+  Window tabs remain plain `1.name`, `2.name` labels, bold with the current label
+  underlined. Only the light palette's accent slot changes to vivid pink
+  `#d81b80`; dark Mocha colors are unchanged. The marker stays fixed when changing
+  windows within one session, and appearance remains native/per-client.
+  A transparent second status row draws a thin `─` separator below the bar;
+  native `#{R:─,#{client_width}}` adapts it to each client's width on resize.
+  Its color and both Pi editor borders share `System/Common/terminal-colors.nix`:
+  light pink `#d81b80`, dark blue `#89b4fa`, with no extra dim attribute or
+  thinking-level color changes.
+- Pi uses native mode-2031 appearance handling with
+  `theme = "catppuccin-latte/catppuccin-mocha"` (light first, dark second).
+  `System/Common/pi-catppuccin.nix` pins the original theme JSON from
+  [otahontas/pi-coding-agent-catppuccin](https://github.com/otahontas/pi-coding-agent-catppuccin)
+  at commit `9a716a630c911a4d29d9520a8d5f87e3b8867f93` plus a fixed hash.
+  Only the two JSON themes and upstream attribution are extracted; the editor
+  border/thinking/bash-mode color roles are then explicitly set to the shared
+  accent. Other content, syntax and panel colors retain the upstream palette.
+  Its flake is not imported and no extension/package is installed at runtime.
+  Upstream Pi merges only this theme preference into mutable settings;
+  accounts/models stay private.
+  `System/Common/pi-native-theme.nix` patches source **before bundling**: request
+  initial appearance with DSR 996 when enabling mode 2031; discard stale RGB
+  defaults on a native appearance switch; ignore superseded/after-dispose color
+  replies. Fresh actual RGB remains authoritative when a query succeeds.
+  No polling, OS appearance guess or global tmux palette rewrite is used.
+  **This application-code fix requires a Pi restart**, not just `/reload`.
+  Leave the existing session intact and resume it with `~/.local/bin/pi --resume`.
+  The user entrypoint links the same declarative package used by full systems,
+  allowing narrow Home Manager deployments without a Darwin/Homebrew switch.
+  New shells prioritize only that wrapper's `bin` through `home.sessionPath`;
+  existing shells can use the explicit local entrypoint without changing PATH.
+  Theme-only JSON/settings changes still support `/reload`.
+  `showHardwareCursor = true` disables Pi's inverse-video imitation cursor;
+  Ghostty owns the real cursor color/shape (Latte pink `#ea76cb`, Mocha pink
+  `#f5c2e7`, steady block). Pi still positions it for IME. No second cursor
+  palette or appearance observer is needed.
 - tmux pushes `tmux:<socket_path>:<client_tty>` as its title. Hammerspoon/Niri
   match this token to fresh tmux/Pi metadata, including nested tmux. Names of
   sessions/windows are not client identities.
@@ -68,4 +115,29 @@ bash tests/tmux-theme.sh "$HOME/.config/tmux/tmux.conf"
 
 The tmux tests use isolated servers, never the user's server. The title test
 checks OSC output from a real attached PTY; the palette test checks generated
-config reload and native theme options. Neither replaces GUI color testing.
+config reload, session-only emoji, unchanged markers across window switches,
+plain window labels, underline/bold and native light/dark theme options. The
+native macOS check is `nix build .#checks.aarch64-darwin.tmux-theme --no-link`.
+Neither replaces GUI color testing.
+
+`nix build .#checks.aarch64-darwin.pi-catppuccin --no-link` validates the prepared
+JSON (including shared border roles) against the installed Pi schema and exercises its real theme controller
+with simulated terminal background/appearance changes (Latte ↔ Mocha), including
+a stale appearance hint. It makes no model calls and reads no private Pi state;
+it is not a claim of a live GUI appearance-switch test.
+
+`checks.aarch64-darwin.pi-native-theme` covers initial appearance requests,
+missing/partial OSC replies, superseded/late replies, rapid changes, fixed theme
+selection and disposal. The unmodified Pi reproduces the stale-background
+failure. `checks.aarch64-darwin.pi-theme-cli` runs the **actual bundled CLI** in
+isolated PTYs in fullscreen and regular modes, with synthetic terminal replies:
+initial DSR plus five transitions per renderer, including absent OSC defaults.
+It uses empty HOME/agent directories, `--offline`, no extensions/tools, no
+prompts or saved sessions, and never changes the user's terminal/OS appearance.
+Manual Ghostty/tmux rapid switching and background-tab acceptance remain separate.
+
+`nix build .#checks.aarch64-darwin.wenkai-mono-terminal --no-link` verifies the
+entire original Medium outline/hinting table, metrics, coverage and license
+metadata, and compares two independently prepared files for byte reproducibility.
+Ghostty's `+show-face --string='A中文，。'` checks actual Latin/CJK family selection;
+it does not replace visual acceptance of font weight on the display.

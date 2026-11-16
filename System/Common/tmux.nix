@@ -1,4 +1,25 @@
-{ pkgs, ... }:
+{ lib, pkgs, ... }:
+let
+  colors = import ./terminal-colors.nix;
+  # Match the session name shown by `tmux ls`, not the selected window index.
+  # Numeric sessions get keycap emoji; custom session names retain their text.
+  numberedSessions = lib.imap0 (number: symbol: { inherit number symbol; }) [
+    "0️⃣"
+    "1️⃣"
+    "2️⃣"
+    "3️⃣"
+    "4️⃣"
+    "5️⃣"
+    "6️⃣"
+    "7️⃣"
+    "8️⃣"
+    "9️⃣"
+    "🔟"
+  ];
+  sessionMarker = lib.foldr (
+    item: rest: "#{?#{==:#{session_name},${toString item.number}},${item.symbol},${rest}}"
+  ) "#{session_name}" numberedSessions;
+in
 {
 
   # Installing the new file alone leaves existing servers on their old title,
@@ -115,16 +136,22 @@
       set -g dark-theme-black '#1e1e2e'
       set -g dark-theme-white '#cdd6f4'
       set -g dark-theme-light-grey '#a6adc8'
-      set -g dark-theme-blue '#89b4fa'
+      set -g dark-theme-blue '${colors.dark.accent}'
       set -g light-theme-black '#eff1f5'
       set -g light-theme-white '#4c4f69'
       set -g light-theme-light-grey '#6c6f85'
-      set -g light-theme-blue '#7287fd'
+      # Keep the native per-client accent slot; vivid pink only in light mode.
+      set -g light-theme-blue '${colors.light.accent}'
       set -g status-style 'bg=default,fg=default'
-      set -g status-left '#[fg=themeblack,bg=themeblue,bold] #S #[bg=default] '
+      # One transparent separator row below the top bar, sized per client.
+      set -g status 2
+      set -g status-format[1] '#[fg=themeblue,bg=default]#{R:─,#{client_width}}'
+      set -g status-left '#[fg=themeblue,bg=default,bold] ${sessionMarker} '
       set -g status-right '#[fg=themeblue]#{?pane_in_mode,COPY ,}#{?client_prefix,PREFIX ,}#{?window_zoomed_flag,ZOOM ,}#[fg=themelightgrey]#h '
-      set -g window-status-format '#[fg=themelightgrey] #I:#W '
-      set -g window-status-current-format '#[fg=themeblue,bold] #I:#W '
+      set -g window-status-style 'fg=themelightgrey,bg=default,bold,nounderscore'
+      set -g window-status-current-style 'fg=themeblue,bg=default,bold,underscore'
+      set -g window-status-format '#[fg=themelightgrey,bg=default,bold,nounderscore] #I.#W '
+      set -g window-status-current-format '#[fg=themeblue,bg=default,bold,nounderscore] #[underscore]#I.#W#[nounderscore] '
       set -g pane-border-style 'fg=themelightgrey'
       set -g pane-active-border-style 'fg=themeblue'
       set -g message-style 'bg=default,fg=themeblue'
