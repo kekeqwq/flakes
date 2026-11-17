@@ -548,6 +548,51 @@ relaxed; combined prototype rebuild and stream regression passed, no physical
 positive was repeated. The blocked runtime result remains a failure, NOT a working
 storage/login bridge.
 
+## 11. No developer team; read-only PIV alternative review
+
+Owner confirmed no Apple developer team/signing setup and requested continuing.
+Scope here is READ-ONLY research, not permission for a new PIV key/certificate,
+policy/PIN change, account pairing, MDM enrollment, signing identity or UI automation.
+No hardware PIV inventory/authentication/write was performed, no extra touch tests
+or private-key operations, and no service/cache refresh commands were run.
+
+Sources reviewed:
+
+- [Apple: Use a smart card on Mac](https://support.apple.com/guide/deployment/use-a-smart-card-on-mac-depc705651a9/web),
+  current published page dated 2026-09-17: native local pairing/login procedure
+  explicitly uses a smart-card PIN and authentication/encryption identities.
+  This is NOT a documented pure-touch/no-submit path.
+- [Yubico PIN/touch policy reference](https://docs.yubico.com/yesdk/users-manual/application-piv/pin-touch-policies.html):
+  per-key PIN Never and Touch Always are distinct policies. Policies are selected
+  at generation/import and cannot subsequently be changed on that key; enabling
+  PIN Never removes the knowledge factor (vendor explicitly warns of the security
+  reduction). Hardware policy support does not establish native Mac UI support.
+  No assumption was made that existing PIV slots are empty or safe to replace.
+- [OpenSCToken PR59](https://github.com/frankmorgner/OpenSCToken/pull/59), OPEN and
+  UNMERGED as observed, head `82b359430fe2fe54d49090cdbb94aed1811c047d`,
+  [pinned guide](https://github.com/frankmorgner/OpenSCToken/blob/82b359430fe2fe54d49090cdbb94aed1811c047d/docs/YUBIKEY_PIV_MACOS_LOGIN.md):
+  author reports macOS26.6 no-PIN PIV 9A login/9D keychain wrap after custom driver
+  fixes. It explicitly says loginwindow still needs a SUBMIT ACTION before card
+  crypto starts; touch is not an unsolicited login input event. Guide's actual
+  test sequence is submit, then touch, with a possible second touch for keychain
+  unwrap. It also calls for valid app/extension signing. These are third-party
+  claims, NOT reproduced/accepted on this macOS27.3 host and not proof no other
+  route could exist. We did NOT build/install/run its provisioning/cache-reset
+  commands or weaken its PIN checks in our code.
+- Local public `TKToken.h` describes callbacks for a PENDING requested operation
+  (`beginAuthForOperation`, sign/decrypt/exchange, `finishWithError`), not an
+  external “FIDO verified → unlock current screen” API. Inspection of native PIV
+  binary metadata/strings alone is NOT a functional proof of PIN/UI behavior.
+
+Conclusion: PIN-free hardware crypto and native no-Enter, one-touch screen unlock
+are different gates. PIV provisioning is NOT justified by these sources for the
+requested UX; it may introduce irreversible slot replacement/security tradeoffs
+without solving caller dispatch or number-of-touches. No working supported native
+auto-dispatch/unlock path is established. Do not present paid signing, new PIV keys,
+PIN Never, a simulated Enter, or an arbitrary successful SecKey call as a solved
+native unlock. Current scope pauses provisioning and preserves password/Touch ID;
+read-only research must first find evidence of a legitimate native initiation path.
+
 ## Next gates
 
 - Combined non-login fresh FIDO → disposable SE positive and physical no-Key
@@ -558,6 +603,10 @@ storage/login bridge.
   requirements before further creation attempts. Do not widen entitlements or
   create a signing identity/certificate/account pairing without new consent.
   Preserve narrow recovery metadata and its app GC root; deletion is unverified.
+- Native automatic initiation without Enter remains an independent unresolved
+  requirement; prioritize documented evidence before more key creation/pairing.
+  PIV alternatives reviewed so far do not demonstrate this. Owner has no developer
+  team; do not ask them to purchase one on an unproved unlock premise.
 - Investigate a native token bridge with fresh registered-FIDO authorization and
   a separately protected native signing/key-management identity. Existing FIDO
   signatures are not raw X.509/PIV signatures; do not relabel existing credentials

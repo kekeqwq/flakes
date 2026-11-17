@@ -243,6 +243,25 @@ A paid account alone is not an established solution: native locker/keybag behavi
 still needs separate acceptance. Details/source references in the chronological
 record; do not call this storage test successful.
 
+## Native automatic initiation is still unresolved
+
+Owner has no developer team; do not recommend purchasing signing credentials on
+an unproved unlock premise. Read-only PIV review found hardware PIN Never / Touch
+Always policies, but that alone does NOT establish native no-Enter screen unlock.
+Apple documents smart-card PIN login. OpenSCToken's unmerged PR59 (pinned head and
+sources in the chronological record) reports no-PIN login/keychain wrapping on
+macOS26.6, yet explicitly requires loginwindow SUBMIT before touch and may require
+a second touch for keychain unwrap. This is external reported behavior, not a
+functional acceptance on this host. Public TKToken APIs service pending operations;
+no legitimate external “verified FIDO → unlock screen” entry was established.
+
+Do not provision PIV, replace slots/change policies, install that driver, pair an
+account or automate the locker to paper over this gap. No such actions were taken.
+Further investigation should first establish native automatic initiation, not
+repeat crypto positives or trade away the no-PIN/no-Enter/one-touch requirement.
+Current native unlocking remains original Touch ID/password; custom Key unlocking
+is NOT deployed. Temporary SE storage recovery metadata/root remain retained.
+
 ## Evidence and next gate
 
 - Native module builds, signature verification passes, and Apple PAM handle tests
