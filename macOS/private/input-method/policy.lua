@@ -59,15 +59,25 @@ local function shellIdentity(title)
   local surface = (title or ''):match('^ghostty%-shell:([%w%-]+)$')
   return surface and #surface <= 64
 end
+-- PID is an optimistic preference, never a condition. Container identity
+-- (tmux pane/socket, WezTerm pane, Ghostty surface) plus editing/freshness is
+-- authoritative: however Pi was started, a focused editing Pi gets Chinese.
+local function prefer(matches, pid)
+  for _, ctx in ipairs(matches) do
+    if ctx.pid == pid then return ctx end
+  end
+  return matches[1]
+end
 function M.piContext(terminal, clients, contexts, now)
   if not terminal or terminal.blocked then return nil end
   local directPid, surface = directIdentity(terminal.title)
   if directPid then
+    local matches = {}
     for _, ctx in ipairs(contexts) do
-      if ctx.pid == directPid and ctx.ghosttySurface == surface and not ctx.tmuxPane
-          and ctx.editing == true and fresh(ctx, now) then return ctx end
+      if ctx.ghosttySurface == surface and not ctx.tmuxPane
+          and ctx.editing == true and fresh(ctx, now) then matches[#matches+1] = ctx end
     end
-    return nil
+    return prefer(matches, directPid)
   end
   local tty, pid, tmuxPane, socket
   if terminal.title then
@@ -90,15 +100,25 @@ function M.piContext(terminal, clients, contexts, now)
       tmuxPane, socket = nil, nil
     end
   end
+  local fallback
   for _, ctx in ipairs(contexts) do
-    if ctx.pid == pid and ctx.editing == true and type(ctx.updated) == 'number'
-        and now - ctx.updated < 7 and now >= ctx.updated - 1 then
+    if ctx.editing == true and fresh(ctx, now) then
       if tmuxPane then
-        if ctx.tmuxPane == tmuxPane and socketName(ctx.socket) == socketName(socket) then return ctx end
-      elseif not ctx.tmuxPane and (terminal.native or tostring(ctx.weztermPane) == tostring(terminal.pane)) then return ctx end
+        if ctx.tmuxPane == tmuxPane and socketName(ctx.socket) == socketName(socket) then
+          if ctx.pid == pid then return ctx end
+          fallback = fallback or ctx
+        end
+      elseif not ctx.tmuxPane and (terminal.native or tostring(ctx.weztermPane) == tostring(terminal.pane)) then
+        if ctx.pid == pid then return ctx end
+        -- A fallback must carry its own container key; an unkeyed native
+        -- record can never claim another process's window.
+        if not terminal.native or tostring(ctx.ghosttySurface) == tostring(terminal.pane) then
+          fallback = fallback or ctx
+        end
+      end
     end
   end
-  return nil
+  return fallback
 end
 function M.desired(bundle, terminal, clients, contexts, now, memories, prefixHeld)
   -- Prefix is armed for a shortcut, or the user has not cancelled it yet.

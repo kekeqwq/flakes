@@ -21,7 +21,14 @@ assert want("org.wezfurlong.wezterm", term={**terminal, "pane": 1}) == "ascii"
 assert want("org.wezfurlong.wezterm", contexts=[{**pi, "editing": False}]) == "ascii"
 assert want("org.wezfurlong.wezterm", contexts=[{**pi, "updated": now - 8}]) == "ascii"
 assert want("org.wezfurlong.wezterm", prefix=True) == "ascii"
-assert want("org.wezfurlong.wezterm", contexts=[{**pi, "pid": 43}]) == "ascii"
+# However Pi was started, a fresh editing Pi in the focused pane is Chinese:
+# PID mismatch (fish -c pi job layout, reporter gaps, restarts) must not
+# force ASCII. Container identity + editing + freshness remains required.
+assert want("org.wezfurlong.wezterm", contexts=[{**pi, "pid": 43}]) == "rime"
+assert want("org.wezfurlong.wezterm", contexts=[{**pi, "pid": 43, "updated": now - 8}]) == "ascii"
+assert policy["pi_context"](
+    terminal, [], [{**pi, "pid": 43}, {**pi, "pid": 42}], now
+).get("pid") == 42  # exact PID preferred over the container fallback
 assert want("com.example.other") is None
 
 client = {
@@ -119,7 +126,9 @@ direct = {"title": "pi-ime:42:surface-a"}
 direct_pi = {"pid": 42, "ghosttySurface": "surface-a", "editing": True, "updated": now}
 assert want("com.mitchellh.ghostty", term=direct, contexts=[direct_pi]) == "rime"
 assert want("com.mitchellh.ghostty", term=direct, contexts=[{**direct_pi, "editing": False}]) == "ascii"
-assert want("com.mitchellh.ghostty", term=direct, contexts=[{**direct_pi, "pid": 43}]) == "ascii"
+# Same surface, any fresh editing Pi: Chinese even when the pid drifted.
+assert want("com.mitchellh.ghostty", term=direct, contexts=[{**direct_pi, "pid": 43}]) == "rime"
+assert want("com.mitchellh.ghostty", term=direct, contexts=[{**direct_pi, "pid": 43, "updated": now - 8}]) == "ascii"
 assert want("com.mitchellh.ghostty", term=direct, contexts=[{**direct_pi, "ghosttySurface": "surface-b"}]) == "ascii"
 assert want("com.mitchellh.ghostty", term=direct, contexts=[{**direct_pi, "updated": now - 8}]) == "ascii"
 assert want("com.mitchellh.ghostty", term=direct, contexts=[{**direct_pi, "updated": now + 2}]) == "ascii"
