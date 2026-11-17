@@ -97,11 +97,11 @@ checking and connection timeout. Host/user verified as `deck` / `keke`.
 
 Around 20:01, one unauthenticated local probe per endpoint:
 
-| endpoint | result |
-| --- | --- |
+| endpoint                  | result                                                                        |
+| ------------------------- | ----------------------------------------------------------------------------- |
 | HTTPS 47984 `/serverinfo` | TLS established in 0.0072s; no HTTP response (no client certificate supplied) |
-| HTTP 47989 `/serverinfo` | HTTP 200, 0.0005s total |
-| HTTPS 47990 `/serverinfo` | TLS 0.0057s, HTTP 404 (route is not the Web UI root) |
+| HTTP 47989 `/serverinfo`  | HTTP 200, 0.0005s total                                                       |
+| HTTPS 47990 `/serverinfo` | TLS 0.0057s, HTTP 404 (route is not the Web UI root)                          |
 
 47984 listener queue was zero before and during later samples. No repeated
 TLS probes or authenticated requests were issued. This does **not** reproduce

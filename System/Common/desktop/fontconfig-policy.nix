@@ -1,7 +1,10 @@
 { lib }:
 let
   fonts = import ./font-policy.nix;
-  defaults = [ fonts.latin fonts.cjk ];
+  defaults = [
+    fonts.latin
+    fonts.cjk
+  ];
 in
 {
   defaultFonts = {
@@ -16,9 +19,18 @@ in
       <test name="postscriptname" compare="eq"><string>${fonts.cjkBoldPostscript}</string></test>
       <edit name="weight" mode="assign"><const>bold</const></edit>
     </match>
-  '' + lib.concatMapStringsSep "\n" (generic: ''
-    <alias binding="strong"><family>${generic}</family><prefer>
-      <family>${fonts.latin}</family><family>${fonts.cjk}</family>
-    </prefer></alias>
-  '') [ "sans" "sans-serif" "serif" "monospace" ];
+  ''
+  +
+    lib.concatMapStringsSep "\n"
+      (generic: ''
+        <alias binding="strong"><family>${generic}</family><prefer>
+          <family>${fonts.latin}</family><family>${fonts.cjk}</family>
+        </prefer></alias>
+      '')
+      [
+        "sans"
+        "sans-serif"
+        "serif"
+        "monospace"
+      ];
 }

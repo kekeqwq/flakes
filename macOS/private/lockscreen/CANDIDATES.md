@@ -5,12 +5,12 @@
 
 ## 筛选结果
 
-| 候选/固定源码参考 | 查到的能力 | 阻挡正式选择的证据 |
-| --- | --- | --- |
-| authentik Platform v0.73.0，源码标签参考 `c17da2e00f028bb27086edb7974df6c63b27f84b` | 有固定哈希的 ARM64 Apple 签名/公证发布包；对应桥接源码在27+配置 dynamicOpenID | 外部 Key 无 PIN/无点击/一次触摸、独立恢复未测；README 明示 pre-alpha；PSSO 位于 EE 许可范围，生产须符合订阅条款；示例不安全照搬 |
-| UiO Weblogin SSO `119f395624ff460a77e0ea615edc6e04af3cecdd` + Keycloak 扩展 `57b9803f1fb87f6bab2dd5e5ba0c2c13d0abe12e` | 可自托管的协议实现；Weblogin 对27+也配置 dynamicOpenID，不只 SE 登录 | GitHub release 查询未找到客户端发布资产，README 要求自行 Xcode 编译并配置 MDM；未建立无自有签名身份下可复现获取受信任客户端的渠道；UX/恢复未测 |
-| XCreds `6d70acaf1ed20dd98ca2c0b7b591359752c8f843` | 提供 OIDC 登录代理和 app | 该固定 README 明确保存当前本地密码、同步账户/钥匙串密码；不据此冒充原生外部 Key 方案，不在本轮部署。未声称所有未来版本都相同 |
-| Microsoft Entra/Company Portal | 有受管理的正式扩展和文档 | 已读文档的“Mac 凭据作为 passkey”不等于 YubiKey 解锁 Mac；智能卡说明含 PIN；未据此通过完整目标，不注册租户/Intune |
+| 候选/固定源码参考                                                                                                      | 查到的能力                                                                    | 阻挡正式选择的证据                                                                                                                             |
+| ---------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| authentik Platform v0.73.0，源码标签参考 `c17da2e00f028bb27086edb7974df6c63b27f84b`                                    | 有固定哈希的 ARM64 Apple 签名/公证发布包；对应桥接源码在27+配置 dynamicOpenID | 外部 Key 无 PIN/无点击/一次触摸、独立恢复未测；README 明示 pre-alpha；PSSO 位于 EE 许可范围，生产须符合订阅条款；示例不安全照搬                |
+| UiO Weblogin SSO `119f395624ff460a77e0ea615edc6e04af3cecdd` + Keycloak 扩展 `57b9803f1fb87f6bab2dd5e5ba0c2c13d0abe12e` | 可自托管的协议实现；Weblogin 对27+也配置 dynamicOpenID，不只 SE 登录          | GitHub release 查询未找到客户端发布资产，README 要求自行 Xcode 编译并配置 MDM；未建立无自有签名身份下可复现获取受信任客户端的渠道；UX/恢复未测 |
+| XCreds `6d70acaf1ed20dd98ca2c0b7b591359752c8f843`                                                                      | 提供 OIDC 登录代理和 app                                                      | 该固定 README 明确保存当前本地密码、同步账户/钥匙串密码；不据此冒充原生外部 Key 方案，不在本轮部署。未声称所有未来版本都相同                   |
+| Microsoft Entra/Company Portal                                                                                         | 有受管理的正式扩展和文档                                                      | 已读文档的“Mac 凭据作为 passkey”不等于 YubiKey 解锁 Mac；智能卡说明含 PIN；未据此通过完整目标，不注册租户/Intune                               |
 
 来源：
 

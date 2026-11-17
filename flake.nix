@@ -143,6 +143,7 @@
             pi = self.checks.${system}.pi-native-theme;
             themes = self.checks.${system}.pi-catppuccin;
           };
+          tmux-foreground = import ./tests/tmux-foreground.nix { pkgs = pkgsFor.${system}; };
           qbittorrent-policy =
             pkgsFor.${system}.runCommand "qbittorrent-policy-check"
               { nativeBuildInputs = [ pkgsFor.${system}.python3 ]; }

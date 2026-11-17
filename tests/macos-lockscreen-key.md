@@ -18,13 +18,13 @@ account checking. Password-oriented profile retains required OpenDirectory auth.
 
 Minimal local unified-log timing (local +0800):
 
-| Event | First cycle: native LA service | Second cycle: directory/password service |
-| --- | --- | --- |
-| loginwindow `setCGScreenLocked` | 11:58:28.481488 | 11:59:04.580246 |
-| native `_authCopyRights…` request | 11:58:48.086492 | 11:59:24.746816 |
-| observer PAM entry | 11:58:48.159658 `screensaver_new_la` | 11:59:24.835082 `screensaver_new` |
-| root authorizationhost PID | 65105 | 65367 |
-| native auth return 0 | 11:58:48.191063 | 11:59:25.020120 |
+| Event                             | First cycle: native LA service       | Second cycle: directory/password service |
+| --------------------------------- | ------------------------------------ | ---------------------------------------- |
+| loginwindow `setCGScreenLocked`   | 11:58:28.481488                      | 11:59:04.580246                          |
+| native `_authCopyRights…` request | 11:58:48.086492                      | 11:59:24.746816                          |
+| observer PAM entry                | 11:58:48.159658 `screensaver_new_la` | 11:59:24.835082 `screensaver_new`        |
+| root authorizationhost PID        | 65105                                | 65367                                    |
+| native auth return 0              | 11:58:48.191063                      | 11:59:25.020120                          |
 
 PAM entry occurred 19.678 / 20.255 seconds after secure-lock marking, after the
 native authentication request, not automatically at lock establishment in these
@@ -58,7 +58,7 @@ Findings:
    **zero keychain items**, then removed it in `@finally`. Readback count was 0.
 4. At **12:29:51.433**, native `ctkd` actually launched `ctk-empty-driver`, PID77494,
    UID/eUID501, in App Sandbox; our `Flakes empty CTK driver initialized (no
-   credentials)` message confirms custom driver code executed. This is execution
+credentials)` message confirms custom driver code executed. This is execution
    evidence, not authentication or screen-unlock evidence.
 5. Because the factory intentionally returns nil, cleanup logged an attempt to
    release a nonexistent token. No successful token/session was created.
