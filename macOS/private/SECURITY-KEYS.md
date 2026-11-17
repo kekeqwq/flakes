@@ -28,6 +28,13 @@ Key-first sudo 策略已窄范围安装，实际加载的只读凭据表已核�
 
 ## macOS 原生锁屏：目前不能按 sudo 的简单配置方案承诺
 
+用户已要求继续推进。下一步是确认真实认证入口及调用时机，而不是把 sudo
+模块直接设成锁屏的 sufficient。已准备、构建并隔离测试
+[`lockscreen/`](lockscreen/README.md) 的短期 `PAM_IGNORE` 观察器；**尚未安装，
+原生锁屏策略未改，Key 解锁功能尚未实现**。安装观测器前须确认本机密码恢复
+可用并取得用户对短期 PAM 观测的明确同意。最终仍要求安全锁屏后才启动 Key
+认证、无需先按 Enter、密码与 Key 独立并行、成功由原生 locker 正常解锁。
+
 ### 本机只读证据
 
 检查时本机为 macOS **27.3**。`security authorizationdb read system.login.screensaver`
