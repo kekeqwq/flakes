@@ -111,17 +111,20 @@ pkgs.runCommand "flakes-ctk-${probeKind}-probe"
     cp ${hostInfo} "$app/Contents/Info.plist"
     cp ${driverInfo} "$driver/Contents/Info.plist"
     cc -Wall -Wextra -Werror -fobjc-arc ${flags} -I${./.} ${hostSource} \
-      -framework Foundation -framework CryptoTokenKit -framework Security -framework LocalAuthentication -framework CoreGraphics \
+      -framework Foundation -framework CryptoTokenKit -framework Security -framework LocalAuthentication -framework CoreGraphics -framework IOKit \
       -o "$app/Contents/MacOS/${hostBin}"
     cc -Wall -Wextra -Werror -fobjc-arc ${flags} -I${./.} ${driverSource} \
-      -framework Foundation -framework CryptoTokenKit -framework Security -framework CoreGraphics \
+      -framework Foundation -framework CryptoTokenKit -framework Security -framework CoreGraphics -framework IOKit \
       -o "$driver/Contents/MacOS/${driverBin}"
     ${pkgs.lib.optionalString fido ''
+      cc -Wall -Wextra -Werror -fobjc-arc -I${./.} ${../../../tests/macos-lock-gate.m} \
+        -framework Foundation -framework CoreGraphics -framework IOKit -o lock-gate-test
+      ./lock-gate-test
       mkdir -p "$driver/Contents/Resources"
       cp ${shared.mapping} "$driver/Contents/Resources/public-u2f-keys"
       python3 ${./bundle-pam.py} ${nativePam}/lib/security/pam_u2f.so "$driver/Contents/Frameworks"
       cc -Wall -Wextra -Werror -fobjc-arc -I${./.} -I${pkgs.pam}/include ${./ctk-fido-worker.m} \
-        -framework Foundation -framework CoreGraphics -o "$driver/Contents/MacOS/ctk-fido-worker"
+        -framework Foundation -framework CoreGraphics -framework IOKit -o "$driver/Contents/MacOS/ctk-fido-worker"
       /usr/bin/codesign --force --sign - --timestamp=none --entitlements ${workerEntitlements} "$driver/Contents/MacOS/ctk-fido-worker"
     ''}
     /usr/bin/codesign --force --sign - --timestamp=none --identifier ${driverID} --entitlements ${driverEntitlements} "$driver"

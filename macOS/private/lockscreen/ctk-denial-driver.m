@@ -97,7 +97,14 @@ static void Deny(NSError **error) {
 @implementation FlakesDenialTokenDriver
 - (instancetype)init {
     self = [super init];
-    if (self) { self.delegate = self; Trace("driver_initialized"); }
+    if (self) {
+        self.delegate = self;
+        Trace("driver_initialized");
+#ifdef FLAKES_FIDO_PROBE
+        Trace(ProbeLockDiagnostic().UTF8String);
+        Trace(ProbeGlobalLockDiagnostic().UTF8String);
+#endif
+    }
     (void)ProbeDriverID;
     return self;
 }

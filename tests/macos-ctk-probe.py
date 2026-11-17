@@ -161,7 +161,10 @@ if args.kind in ("denial", "fido"):
         assert events.count("finish_without_pin_CANCELLED") == count, events
         if args.kind == "fido":
             if args.lock_touch:
-                assert events.count("hardware_signature_VERIFIED_native_signature_STILL_DENIED") == 1, "Hardware verification did not pass; this is not a lock-screen unlock failure/success."
+                if events.count("hardware_signature_VERIFIED_native_signature_STILL_DENIED") != 1:
+                    reason = "native lock gate closed; hardware authentication did not start" if "hardware_gate_CLOSED_no_auth" in events else "hardware verification was not established"
+                    print("NOT VERIFIED:", reason, "; native signature denied, fixture cleaned, no screen-unlock result.")
+                    raise SystemExit(13)
             else:
                 assert events.count("hardware_not_opted_in_no_auth") == 1
                 assert "hardware_worker_started_after_native_lock" not in events

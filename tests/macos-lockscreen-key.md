@@ -195,6 +195,43 @@ Rebuilt fido bundle and no-opt-in sandbox/module/cancellation regression passed
 at 14:33:26 with no hardware auth, 65.026 ms, zero retained objects/registration.
 Actual revised locked access/FIDO outcome is pending owner test.
 
+### Second owner attempt: host lock confirmed, extension has no Quartz session
+
+Owner ran `lsiw6s…-flakes-ctk-fido-probe`. Reference lookup succeeded while
+unlocked; at 14:40:45 the host confirmed lock and requested the operation. The
+provider reached `begin_auth` but returned `hardware_gate_CLOSED_no_auth` and
+terminal cancellation (-4, 22.697 ms). **No hardware worker started or FIDO
+signature was checked.** Own objects/advertisement/registrations were cleaned.
+
+Read-only diagnostics reproduced the discrepancy without asking the owner to
+lock again: the GUI host had a complete Quartz dictionary, while the CTK XPC
+provider, UID/eUID501, had `session=0` from CGSessionCopyCurrentDictionary. It was
+not a false unlocked flag or a Key/PIN error.
+
+Investigated the authoritative kernel registry-root `IOConsoleUsers` property
+via public IOKit APIs, reading ONLY scalar matching/lock flags, never dumping
+names, audit IDs, session UUIDs or other registry data. Initial IOService-plane
+root lookup found no such property; corrected to `IORegistryGetRootEntry` (the
+actual registry root). Host AND sandboxed provider then observed one matching
+active console, correct UID/name/login, and unlocked/missing-lock state. No SIP,
+sandbox exception, OS accessory preference or account change was needed.
+
+The revised gate requires a unique active global console with exact ordinary
+UID/user, logged-in status, lock-field presence and true lock flag. A local
+Quartz dictionary, when available, must ALSO agree fully. When a daemon has no
+Quartz session, it uses this independent authoritative global observation—not
+the GUI caller's claim. Missing/ambiguous/global-unlocked state or a local conflict
+still refuses. Both provider and worker independently perform these reads.
+The property schema remains undocumented/platform-specific and production
+acceptance still requires actual locked/unlock calibration and security review.
+
+`tests/macos-lock-gate.m` exhaustively checks **65,536** boolean snapshot pairs,
+plus ambiguous/missing console-owner counts, in an isolated pure decision test.
+No OS query/authentication in that unit test. Sandbox observations plus no-opt-in
+module/cancellation regression passed; actual revised locked FIDO is still pending.
+The runner now reports an expected unverified/gate-closed result without implying
+that a Python assertion traceback is a Key authentication failure.
+
 ## Next gates
 
 - Owner-operated locked hardware verification with the carried secondary Key;

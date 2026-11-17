@@ -11,6 +11,8 @@ int main(int argc, const char *argv[]) {
         setbuf(stdout, NULL);
 #ifdef FLAKES_FIDO_PROBE
         if (argc == 2 && strcmp(argv[1], "--gate-check") == 0) {
+            puts(ProbeLockDiagnostic().UTF8String);
+            puts(ProbeGlobalLockDiagnostic().UTF8String);
             printf("{\"native_locked_gate\":%s,\"authentication_started\":false}\n", ProbeNativeLocked() ? "true" : "false");
             return 0;
         }

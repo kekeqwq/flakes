@@ -127,10 +127,13 @@ proxy remains unsuitable for login and never produces a native signature.
 
 `--dispatch` is a no-hardware negative test plus sandboxed library-loader check.
 Only the explicit visible-terminal `--lock-touch` mode marks hardware opt-in and
-waits up to 90 seconds for native WindowServer lock state. Missing/unknown lock,
-wrong UID/console state, prompts for secrets or loss of lock fail closed. The
-undocumented session-lock key still needs actual owner calibration; do not treat
-this research gate as production acceptance.
+waits up to 90 seconds for native lock state. The kernel registry-root global
+console table is mandatory: exactly one active console, matching UID/name,
+logged-in state and a present true lock flag. Local Quartz state, when available,
+must also agree; CTK XPC providers can have no local Quartz dictionary. No caller
+assertion replaces the independent global read. Missing/ambiguous/global-unlocked
+state, a local conflict, secret prompts or loss of lock fail closed. The property
+schema still needs actual owner calibration/review; this is not production acceptance.
 
 The immutable output provides `bin/flakes-test-locked-key` (no sudo, no arguments).
 With the registered secondary Key already inserted and no other pending Key/sudo

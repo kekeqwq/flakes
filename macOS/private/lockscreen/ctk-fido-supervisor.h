@@ -8,6 +8,8 @@
 #import <dispatch/dispatch.h>
 
 static void ProbeFidoVerification(BOOL authenticate) {
+    Trace(ProbeLockDiagnostic().UTF8String);
+    Trace(ProbeGlobalLockDiagnostic().UTF8String);
     if (authenticate && !ProbeNativeLocked()) { Trace("hardware_gate_CLOSED_no_auth"); return; }
     NSString *root = NSBundle.mainBundle.bundlePath;
     NSString *worker = [root stringByAppendingPathComponent:@"Contents/MacOS/ctk-fido-worker"];
