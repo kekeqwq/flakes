@@ -134,7 +134,9 @@ this research gate as production acceptance.
 
 The immutable output provides `bin/flakes-test-locked-key` (no sudo, no arguments).
 With the registered secondary Key already inserted and no other pending Key/sudo
-request, run it locally, then Ctrl-Cmd-Q on `Ready`. **Touch only when the Key
+request, run it locally while UNLOCKED. Wait for the host's **`READY_TO_LOCK`**
+after successful own-reference lookup, then Ctrl-Cmd-Q. A preparatory banner is
+not the ready signal. **Touch only when the Key
 flashes. This test deliberately does NOT unlock**: use original native Touch ID
 or account password afterward and wait for cleanup/output. Never send a password
 or PIN to the terminal/chat. If no touch request appears within about 25 seconds

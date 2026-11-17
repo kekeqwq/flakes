@@ -38,11 +38,8 @@ int main(int argc, const char *argv[]) {
 #ifdef FLAKES_FIDO_PROBE
         BOOL hardwareOptIn = argc == 2 && strcmp(argv[1], "--dispatch-locked-fido") == 0;
         if (hardwareOptIn) {
-            puts("Waiting up to 90s: lock manually with Ctrl-Cmd-Q. Touch ONLY when Key flashes. This test will NOT unlock. Recover with native Touch ID/password.");
-            double deadline = NSProcessInfo.processInfo.systemUptime + 90;
-            while (!ProbeNativeLocked() && NSProcessInfo.processInfo.systemUptime < deadline)
-                [NSThread sleepForTimeInterval:0.1];
-            if (!ProbeNativeLocked()) { puts("Native lock not confirmed; no authentication started."); return 12; }
+            if (ProbeNativeLocked()) { puts("Start unlocked; reference preparation must precede lock."); return 12; }
+            puts("Preparing non-login reference while unlocked. Do NOT lock until READY_TO_LOCK.");
             dispatch = YES;
         }
 #endif
@@ -93,11 +90,19 @@ int main(int argc, const char *argv[]) {
                         NSData *message = [@"public denial-only test message" dataUsingEncoding:NSUTF8StringEncoding];
                         outcome = 0;
 #ifdef FLAKES_FIDO_PROBE
+                        if (hardwareOptIn) {
+                            puts("READY_TO_LOCK: Ctrl-Cmd-Q within 90s. Touch ONLY when Key flashes. No unlock is granted; afterward use native Touch ID/password.");
+                            double deadline = NSProcessInfo.processInfo.systemUptime + 90;
+                            while (!ProbeNativeLocked() && NSProcessInfo.processInfo.systemUptime < deadline)
+                                [NSThread sleepForTimeInterval:0.1];
+                            printf("{\"native_lock_confirmed_before_request\":%s}\n", ProbeNativeLocked() ? "true" : "false");
+                            if (!ProbeNativeLocked()) outcome = 12;
+                        }
                         const int attempts = 1; // One physical touch request, never a second cached attempt.
 #else
                         const int attempts = 2;
 #endif
-                        for (int attempt = 1; attempt <= attempts; attempt++) {
+                        for (int attempt = 1; attempt <= attempts && outcome == 0; attempt++) {
                             CFErrorRef error = NULL;
                             NSTimeInterval start = NSDate.timeIntervalSinceReferenceDate;
                             CFDataRef signature = SecKeyCreateSignature(ref, kSecKeyAlgorithmECDSASignatureMessageX962SHA256,

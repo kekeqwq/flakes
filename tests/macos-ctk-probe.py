@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""User-scoped CTK probe; no account pairing, real private key, hardware or UI auth.
+"""User-scoped non-login CTK probe; no pairing or real private signing keys.
+Hardware verification only with --lock-touch plus native lock gates; never unlocks.
 Registers only the supplied immutable probe app/extension, then unregisters them.
 """
 import argparse
@@ -11,6 +12,8 @@ from pathlib import Path
 import plistlib
 import subprocess
 import time
+import queue
+import threading
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("bundle", type=Path)
@@ -45,6 +48,49 @@ def run(command, timeout=25):
     return subprocess.run(command, capture_output=True, text=True, timeout=timeout)
 
 
+def run_live(command, timeout):
+    """Show the host's validated READY barrier before asking the owner to lock."""
+    child = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                             text=True, bufsize=1)
+    lines = queue.Queue()
+    output = []
+
+    def reader():
+        try:
+            for line in child.stdout:
+                lines.put(line)
+        finally:
+            lines.put(None)
+
+    thread = threading.Thread(target=reader, daemon=True)
+    thread.start()
+    deadline = time.monotonic() + timeout
+    try:
+        while True:
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                raise subprocess.TimeoutExpired(command, timeout, output="".join(output))
+            try:
+                line = lines.get(timeout=min(0.1, remaining))
+            except queue.Empty:
+                continue
+            if line is None:
+                break
+            output.append(line)
+            print(line, end="", flush=True)
+        code = child.wait(timeout=max(0.1, deadline - time.monotonic()))
+        return subprocess.CompletedProcess(command, code, "".join(output), "")
+    except BaseException:
+        if child.poll() is None:
+            child.kill()  # Only the Popen child, never a locker/auth daemon.
+        child.wait(timeout=2)
+        raise
+    finally:
+        thread.join(timeout=0.2)
+        if not thread.is_alive():
+            child.stdout.close()
+
+
 def matches():
     return run(["/usr/bin/pluginkit", "-m", "-i", identifier + ".driver"]).stdout.strip()
 
@@ -71,16 +117,17 @@ try:
             "--dispatch-locked-fido" if args.lock_touch else (
                 "--empty-instance" if args.kind == "empty" else "--dispatch-denial"))
         if args.lock_touch:
-            print("Ready: manually Ctrl-Cmd-Q within 90s. Touch the registered Key ONLY when it flashes. This test NEVER unlocks; afterward use native Touch ID/password. No PIN/password goes into this terminal.", flush=True)
+            print("Preparing reference: keep the screen UNLOCKED until the host prints READY_TO_LOCK. No PIN/password goes into this terminal.", flush=True)
         try:
-            result = run(host + [option], timeout=135 if args.lock_touch else 25)
+            result = run_live(host + [option], timeout=135) if args.lock_touch else run(host + [option])
         except (subprocess.TimeoutExpired, KeyboardInterrupt) as error:
             if args.kind in ("denial", "fido"):
                 recovery = run(host + ["--cleanup-own-fixture"])
                 print("Own non-login fixture recovery after timeout:", recovery.stdout.strip())
                 assert recovery.returncode == 0, "Recovery needs review; do not touch other token classes."
             raise RuntimeError("Own probe timed out/interrupted; this is NOT a passing rejection test.") from error
-        print(result.stdout, end="")
+        if not args.lock_touch:
+            print(result.stdout, end="")
         if result.stderr:
             print(result.stderr[:2000])
     remaining = run(host)

@@ -171,6 +171,30 @@ locked-state FIDO access, successful touch, no-Key/other-Key and unlock-during-w
 behavior are **pending owner operation**. No new native private key/certificate or
 account pairing has been performed.
 
+### First owner hardware attempt and reference-preparation revision
+
+Owner ran immutable `51p579x…-flakes-ctk-fido-probe`. At 14:24:51–14:24:57 the
+native driver/session loaded, but **own key lookup returned -25300** (item not
+found), test exit7. No `begin_auth` or hardware-worker start occurred, so no FIDO
+verification happened. Own instance count returned to 0; advertisement and active
+registrations were removed. Do not describe this as Key/PIN failure or success.
+
+Hypothesis: querying this user-scoped transient DP-keychain proxy only after lock
+made it unavailable to the ordinary-user host. Not yet established as root cause.
+The revised host prepares/validates the opaque non-login reference while unlocked,
+then emits **READY_TO_LOCK** and only afterward waits for lock to request the
+operation. Keychain accessibility/ACLs, system policy and account pairing remain
+unchanged; the API can still refuse use after lock. Driver/worker lock checks stay
+independent and mandatory. This is a normal reference, not exported key material.
+
+The runner now streams the host output rather than printing an early, misleading
+ready message before preparation. Its existing outer timeout and exact-fixture
+recovery remain. Stream-helper unit tests verified that READY arrives before child
+exit, timeout terminates only the own child, and nonzero status is preserved.
+Rebuilt fido bundle and no-opt-in sandbox/module/cancellation regression passed
+at 14:33:26 with no hardware auth, 65.026 ms, zero retained objects/registration.
+Actual revised locked access/FIDO outcome is pending owner test.
+
 ## Next gates
 
 - Owner-operated locked hardware verification with the carried secondary Key;
