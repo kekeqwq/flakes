@@ -4,7 +4,19 @@
 #include <string.h>
 #include <stdlib.h>
 
-#ifdef FLAKES_SE_PROBE
+#ifdef FLAKES_BRIDGE_PROBE
+#define FLAKES_FIDO_PROBE 1
+#define FLAKES_SE_PROBE 1
+static NSString *const ProbeDriverID = @"com.keke.flakes.ctk-bridge-probe.driver";
+#define FlakesDenialTokenDriver FlakesBridgeTokenDriver
+static NSData *ProbeHardwareOptInData(void) {
+    return [@"locked-bridge-opt-in-v1" dataUsingEncoding:NSUTF8StringEncoding];
+}
+#define ProbeSEOptInData ProbeHardwareOptInData
+static NSData *ProbeBridgeDeniedData(void) {
+    return [@"bridge-no-hardware-opt-in-denial-v1" dataUsingEncoding:NSUTF8StringEncoding];
+}
+#elif defined(FLAKES_SE_PROBE)
 static NSString *const ProbeDriverID = @"com.keke.flakes.ctk-se-probe.driver";
 #define FlakesDenialTokenDriver FlakesSETokenDriver
 static NSData *ProbeSEOptInData(void) {

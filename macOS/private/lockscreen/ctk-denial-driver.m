@@ -2,7 +2,9 @@
 #import <os/log.h>
 
 static void Trace(const char *event) {
-#ifdef FLAKES_SE_PROBE
+#ifdef FLAKES_BRIDGE_PROBE
+    os_log_t log = os_log_create("com.keke.flakes.ctk-bridge", "callback");
+#elif defined(FLAKES_SE_PROBE)
     os_log_t log = os_log_create("com.keke.flakes.ctk-se", "callback");
 #elif defined(FLAKES_FIDO_PROBE)
     os_log_t log = os_log_create("com.keke.flakes.ctk-fido", "callback");
@@ -13,8 +15,12 @@ static void Trace(const char *event) {
 }
 #ifdef FLAKES_FIDO_PROBE
 #import "ctk-fido-supervisor.h"
-#elif defined(FLAKES_SE_PROBE)
+#endif
+#ifdef FLAKES_SE_PROBE
 #import "ctk-se-primitive.h"
+#endif
+#ifdef FLAKES_BRIDGE_PROBE
+#import "ctk-bridge-policy.h"
 #endif
 static void Deny(NSError **error) {
     if (error) *error = [NSError errorWithDomain:TKErrorDomain
@@ -23,24 +29,37 @@ static void Deny(NSError **error) {
 @interface FlakesDenyOperation : TKTokenAuthOperation
 #ifdef FLAKES_FIDO_PROBE
 @property BOOL hardwareOptIn;
-#elif defined(FLAKES_SE_PROBE)
+#endif
+#ifdef FLAKES_SE_PROBE
 @property BOOL seLockedOptIn;
 #endif
 @end
 @implementation FlakesDenyOperation
 - (BOOL)finishWithError:(NSError **)error {
 #ifdef FLAKES_FIDO_PROBE
-    if (self.hardwareOptIn) ProbeFidoVerification(YES);
+    BOOL hardwareVerified = NO;
+    if (self.hardwareOptIn) hardwareVerified = ProbeFidoVerification(YES);
     else {
         Trace("hardware_not_opted_in_no_auth");
         ProbeFidoVerification(NO); // Library/whitelist selfcheck, never HID enumeration/auth.
     }
+    (void)hardwareVerified;
     // Even verified hardware NEVER authorizes this token.
 #endif
 #ifdef FLAKES_SE_PROBE
     if (self.seLockedOptIn) {
+#ifdef FLAKES_BRIDGE_PROBE
+        BOOL permitted = ProbeBridgeMayUseSE(hardwareVerified, ProbeNativeLocked(), ProbeSEKey.ready);
+        BOOL result = NO;
+        if (permitted) {
+            Trace("bridge_fresh_FIDO_accepted_before_SE");
+            result = [ProbeSEKey runLockedTest];
+        } else Trace("bridge_rejected_SE_NOT_CALLED");
+        Trace(result ? "bridge_FIDO_then_SE_PASSED_native_output_STILL_DENIED" : "bridge_no_native_output");
+#else
         BOOL result = [ProbeSEKey runLockedTest];
         Trace(result ? "se_locked_primitives_PASSED_native_output_STILL_DENIED" : "se_locked_primitives_FAILED");
+#endif
     } else {
         Trace(ProbeSEKey.ready ? "se_creation_selfcheck_PASSED_no_operations" : "se_creation_selfcheck_FAILED");
     }
@@ -88,8 +107,12 @@ static void Deny(NSError **error) {
     FlakesDenyOperation *auth = [[FlakesDenyOperation alloc] init];
 #ifdef FLAKES_FIDO_PROBE
     auth.hardwareOptIn = [self.token.configuration.configurationData isEqual:ProbeHardwareOptInData()];
-#elif defined(FLAKES_SE_PROBE)
+#endif
+#ifdef FLAKES_SE_PROBE
     auth.seLockedOptIn = [self.token.configuration.configurationData isEqual:ProbeSEOptInData()];
+#ifdef FLAKES_BRIDGE_PROBE
+    auth.seLockedOptIn |= [self.token.configuration.configurationData isEqual:ProbeBridgeDeniedData()];
+#endif
 #endif
     return auth; // Not a PIN/password operation.
 }

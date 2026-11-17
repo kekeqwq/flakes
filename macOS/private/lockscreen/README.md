@@ -170,7 +170,8 @@ completion/failure or a 120-second expiry releases the opaque reference.
 The unlocked creation/release smoke test passed in the actual sandbox. Copied
 IsPermanent=true is a generic Apple token-key attribute, NOT accepted as evidence
 of a stored item; see the dated record/source reference and independent tag checks.
-No signature/key exchange has yet been accepted while locked.
+Owner-operated locked signing/self-verification and ECDH/KDF passed at 16:40:11;
+the native facade still returned cancellation, not a signature/unlock.
 
 The SE output offers `bin/flakes-test-locked-se`: run without sudo while unlocked,
 wait for **READY_TO_LOCK**, then manually Ctrl-Cmd-Q. **Do NOT touch the YubiKey**;
@@ -178,6 +179,29 @@ this phase tests SE-only signing/self-verification and ECDH/KDF. It will NOT unl
 recover using original native Touch ID/password and wait for cleanup/results.
 Private keys, derived secrets and signatures stay out of logs/store/files. A
 failure is not permission to weaken account policy or substitute software keys.
+
+## Combined FIDO → SE non-login gate
+
+`probeKind = "bridge"` has a separate namespace. Its per-request verified flag is
+false initially; library self-check success cannot set it. Only fresh registered
+FIDO UP verification + independent continuing lock + own SE readiness permit the
+internal SE self-test. Both success and failure still cancel the native request.
+No login identity/certificate, persistent key, account pairing or policy write.
+
+Pure policy truth table, real sandbox preparation and real no-hardware-opt-in
+callback denial passed. The latter (`--dispatch --bridge-denial`) proves no SE
+crypto even when the FIDO library selfcheck succeeds; it does NOT prove physical
+no-Key handling. Positive combined hardware acceptance remains pending.
+
+Its `bin/flakes-test-locked-bridge` requires a visible ordinary-user terminal,
+starts unlocked, streams READY_TO_LOCK, then needs one registered-Key touch ONLY
+when flashing after lock. Recover with native Touch ID/password; it will NOT
+unlock. `bin/flakes-test-locked-bridge-no-key` requires unplugged Keys and changes
+only result expectations, not authentication logic; no-Key acceptance pending.
+
+Persistent native identity/certificate creation and account pairing remain a
+separate consent gate, with signed-code/key access, per-session/lock-transition
+binding, native keybag policy and recovery/revocation still unresolved.
 
 ## Evidence and next gate
 
@@ -207,9 +231,9 @@ ephemeral test keys, not hardware or account credentials.
 Owner's real locked hardware test passed at 15:54:45: verified FIDO assertion,
 worker exit0, no native signature, all transient state cleaned. Do not repeat this
 positive test or label it native screen-unlock acceptance. Primary Mac and physical
-negative cases remain untested. Owner agreed to the isolated SE primitive experiment; creation/release passed.
-Next verify its locked operations before considering any persistent native identity
-or account pairing, which still requires a separate design/consent gate.
+negative cases remain untested. Owner agreed to the isolated SE experiment; creation/release and locked primitives
+passed. Next accept combined fresh FIDO → disposable SE authorization, without
+repeating standalone positives or creating persistent login authority.
 Do not replace required LA/AKS checks or relabel FIDO signatures as raw X.509 signatures.
 Any eventual solution must start hardware authentication only after a confirmed
 secure lock, permit a touch without first pressing Enter, keep password and Key

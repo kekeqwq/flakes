@@ -371,20 +371,86 @@ Next owner mode prepares the reference while unlocked, waits for READY_TO_LOCK,
 and after independently confirmed lock tests: ECDSA signing + own-public-key
 verification, wrong-message rejection, raw ECDH determinism and X9.63/SHA256 KDF
 output length. Secrets/signatures remain local memory and aren't returned to the
-native token caller; the request still cancels. Actual locked primitives are
-**pending owner operation**, and there is still no login-eligible identity/keybag
-integration or account pairing. No YubiKey touch is needed for this SE-only phase.
+native token caller; the request still cancels.
+
+**Owner-operated locked SE primitives PASSED at 16:40:11** using
+`/nix/store/9n7b4i6q6n55f56r8zys7hsyvjns6vxk-flakes-ctk-se-probe`:
+
+- host independently confirmed native lock before dispatch;
+- 16:40:11.110550 `se_sign_and_self_verify_PASSED_no_signature_export` (includes
+  wrong-message rejection in the helper); 16:40:11.133836 ECDH raw-repeat/KDF checks
+  passed; helper independently required continuing lock before each private
+  operation and after completion;
+- 16:40:11.134072 opaque test reference released; own-tag lookup -25300 afterward;
+- 16:40:11.136463 `se_locked_primitives_PASSED_native_output_STILL_DENIED`;
+- native facade still cancelled -4, no returned signature, 61.303 ms whole request
+  (not an isolated signing benchmark); zero instances/advertisement and exact
+  registrations removed per supplied terminal output.
+
+No Key touch was required or claimed; this confirms SE primitive availability,
+not hardware-factor authorization. No native login identity/keybag integration,
+account pairing or actual unlock is implemented. Do not repeat this accepted
+standalone SE positive test.
+
+## 9. Combined non-login authorization prototype (physical acceptance pending)
+
+Added separate `probeKind = "bridge"` / `FlakesBridgeTokenProbe.app` namespace,
+not imported into activation. It creates the same consented disposable SE key
+while unlocked. Each callback initializes its own FIDO-verified flag to false.
+Only a successful fresh UP assertion from the bounded own worker, continuing
+independent lock and a live own SE key permit the internal SE self-test. Library
+self-check success is NOT hardware authorization. There is no global/cached
+successful-auth flag; final native facade still cancels even after both succeed.
+
+Preparation checks passed:
+
+- pure eight-case FIDO/lock/key-ready truth table, including success followed by
+  missing proof (no cached authorization); no OS/HID/key generation in unit test;
+- actual sandbox no-opt-in smoke: library/whitelist self-check and ephemeral SE
+  creation/release, no HID enumeration/SE crypto, zero retained fixture;
+- actual no-hardware-opt-in denial at 17:01:32: library selfcheck PASSED, but
+  `bridge_rejected_SE_NOT_CALLED`; no SE signing/ECDH events, reference released,
+  own-tag lookup -25300, native cancellation in 69.998 ms and no retained fixture.
+  This is a real callback-control-flow test, NOT a physical no-Key test.
+- final no-auth sandbox regressions passed for fido, se and bridge, plus a repeat
+  of the explicit denial fixture and live READY/own-child timeout stream tests.
+  No hardware touch or locked standalone positive was repeated.
+
+Prepared immutable bridge artifact:
+`/nix/store/najcpq6rnh7gi78gp28imv3yq3msbi1m-flakes-ctk-bridge-probe`.
+
+`--kind bridge --dispatch --bridge-denial` selects that no-HID denial fixture.
+Owner-only `--lock-bridge` prepares while unlocked, waits for READY_TO_LOCK, then
+performs one touch request before SE; native output remains denied. Optional
+`--expect-no-key` changes ONLY runner expectations, never driver/verifier behavior;
+its wrapper requires physically unplugged Keys, a started locked worker with exit9
+(no gate-closed/unlock/timeout substitute), and no SE calls. It does not infer USB
+absence from an error; inspect the scoped worker enumeration evidence as needed. Actual
+combined positive, no-Key/wrong-Key/timeout/unlock-during-wait remain pending.
+
+The exposed public-only proxy field is now named `proxy_private_material_created`
+to avoid confusing its lack of private material with the real ephemeral SE test
+key created separately inside the provider.
+
+This is not production login policy. Before any persistent/login-eligible identity
+or pairing: separately obtain consent and resolve stable signed-code/key access,
+per-native-session proof lifetime/lock-transition binding, certificate/keybag
+requirements, negative recovery cases, removal/revocation and original password/
+Touch ID paths. No standing account unlock authority is granted by this prototype.
 
 ## Next gates
 
-- Owner-operated locked Secure Enclave primitive test; do not repeat the accepted
-  FIDO positive test. Failure must remain a reported failure, not software fallback.
+- Combine fresh registered-FIDO verification and SE operations in one NON-LOGIN
+  request; first verify missing authorization never calls SE. Do not repeat the
+  accepted standalone FIDO/SE positive tests. Failure is not software fallback.
 - Investigate a native token bridge with fresh registered-FIDO authorization and
   a separately protected native signing/key-management identity. Existing FIDO
   signatures are not raw X.509/PIV signatures; do not relabel existing credentials
-  as a smart card. Secure Enclave backing is a candidate, not yet implemented.
-- No new native key/certificate, hardware credential or account pairing without
-  explaining the design/recovery implications and obtaining owner agreement.
+  as a smart card. Ephemeral SE primitives work; persistent login-identity backing
+  is not implemented.
+- Beyond the agreed disposable non-login experiment, no new persistent native
+  identity/certificate, hardware credential or account pairing without explaining
+  design/recovery implications and obtaining owner agreement.
 - Before deployment prove secure-lock gating, touch without Enter, independent
   password/Key paths, negative/timeout/EOF behavior, native normal unlock and
   keybag/strong-auth correctness. No stored-password typing, signals, fake unlock

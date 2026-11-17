@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-"""User-scoped non-login CTK probe; no pairing or real private signing keys.
-Hardware verification only with --lock-touch plus native lock gates; never unlocks.
+"""User-scoped non-login CTK probes; no pairing or persistent signing identities.
+Consented SE/bridge variants use disposable enclave keys; never unlocks.
+FIDO verification requires an explicit locked test plus independent native gates.
 Registers only the supplied immutable probe app/extension, then unregisters them.
 """
 import argparse
@@ -17,14 +18,23 @@ import threading
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("bundle", type=Path)
-parser.add_argument("--kind", choices=("empty", "denial", "fido", "se"), required=True)
+parser.add_argument("--kind", choices=("empty", "denial", "fido", "se", "bridge"), required=True)
 mode = parser.add_mutually_exclusive_group()
 mode.add_argument("--dispatch", action="store_true")
 mode.add_argument("--recover-only", action="store_true")
 mode.add_argument("--lock-touch", action="store_true")
 mode.add_argument("--lock-se", action="store_true")
+mode.add_argument("--lock-bridge", action="store_true")
+parser.add_argument("--expect-no-key", action="store_true")
+parser.add_argument("--bridge-denial", action="store_true")
 args = parser.parse_args()
-locked_test = args.lock_touch or args.lock_se
+locked_test = args.lock_touch or args.lock_se or args.lock_bridge
+if args.bridge_denial and (args.kind != "bridge" or not args.dispatch):
+    parser.error("No-hardware-opt-in bridge denial requires --kind bridge --dispatch.")
+if args.lock_bridge and (args.kind != "bridge" or not sys.stdin.isatty()):
+    parser.error("Locked bridge test requires its own variant and a visible local terminal.")
+if args.expect_no_key and not args.lock_bridge:
+    parser.error("No-key expectation is only for a locked bridge test.")
 if args.lock_se and (args.kind != "se" or not sys.stdin.isatty()):
     parser.error("Locked SE test requires the se variant and a visible local terminal.")
 if args.recover_only and args.kind == "empty":
@@ -38,7 +48,7 @@ assert str(app).startswith("/nix/store/")
 info = plistlib.loads((app / "Contents/Info.plist").read_bytes())
 identifier = f"com.keke.flakes.ctk-{args.kind}-probe"
 assert info["CFBundleIdentifier"] == identifier
-name = {"empty": "FlakesEmptyTokenDriver", "denial": "FlakesDenialTokenDriver", "fido": "FlakesFidoTokenDriver", "se": "FlakesSETokenDriver"}[args.kind]
+name = {"empty": "FlakesEmptyTokenDriver", "denial": "FlakesDenialTokenDriver", "fido": "FlakesFidoTokenDriver", "se": "FlakesSETokenDriver", "bridge": "FlakesBridgeTokenDriver"}[args.kind]
 extension = app / f"Contents/PlugIns/{name}.appex"
 extinfo = plistlib.loads((extension / "Contents/Info.plist").read_bytes())
 assert extinfo["CFBundleIdentifier"] == identifier + ".driver"
@@ -118,15 +128,20 @@ try:
         raise RuntimeError("Host configuration not available: " + discovery.stdout)
     if args.dispatch or args.recover_only or locked_test:
         option = "--cleanup-own-fixture" if args.recover_only else (
-            "--dispatch-locked-se" if args.lock_se else (
-                "--dispatch-locked-fido" if args.lock_touch else (
-                    "--empty-instance" if args.kind == "empty" else "--dispatch-denial")))
+            "--dispatch-locked-bridge" if args.lock_bridge else (
+                "--dispatch-locked-se" if args.lock_se else (
+                    "--dispatch-locked-fido" if args.lock_touch else (
+                        "--empty-instance" if args.kind == "empty" else "--dispatch-denial"))))
+        if args.bridge_denial:
+            option = "--dispatch-bridge-denial"
+        if args.expect_no_key:
+            print("Negative bridge test: all Keys must be unplugged; no touch expected. Use native Touch ID/password to return. This expectation does not change the verifier.", flush=True)
         if locked_test:
             print("Preparing reference: keep the screen UNLOCKED until the host prints READY_TO_LOCK. No PIN/password goes into this terminal.", flush=True)
         try:
             result = run_live(host + [option], timeout=135) if locked_test else run(host + [option])
         except (subprocess.TimeoutExpired, KeyboardInterrupt) as error:
-            if args.kind in ("denial", "fido", "se"):
+            if args.kind in ("denial", "fido", "se", "bridge"):
                 recovery = run(host + ["--cleanup-own-fixture"])
                 print("Own non-login fixture recovery after timeout:", recovery.stdout.strip())
                 assert recovery.returncode == 0, "Recovery needs review; do not touch other token classes."
@@ -144,7 +159,7 @@ finally:
     assert removed.returncode == 0 and unlisted.returncode == 0
     assert not matches(), "Probe registration cleanup needs review."
     print("Probe registration removed; no other drivers/settings changed.")
-if args.kind in ("denial", "fido", "se"):
+if args.kind in ("denial", "fido", "se", "bridge"):
     logs = run(["/usr/bin/log", "show", "--start", started, "--style", "json",
                 "--predicate", f'subsystem == "com.keke.flakes.ctk-{args.kind}"'])
     events = []
@@ -164,19 +179,42 @@ if args.kind in ("denial", "fido", "se"):
         assert any(r.get("own_token_advertised_after_cleanup") is False for r in records)
         assert events.count("begin_auth_no_password_operation") == count, events
         assert events.count("finish_without_pin_CANCELLED") == count, events
-        if args.kind == "fido":
-            if args.lock_touch:
+        if args.kind in ("fido", "bridge"):
+            if args.lock_touch or (args.lock_bridge and not args.expect_no_key):
                 if events.count("hardware_signature_VERIFIED_native_signature_STILL_DENIED") != 1:
                     reason = "native lock gate closed; hardware authentication did not start" if "hardware_gate_CLOSED_no_auth" in events else "hardware verification was not established"
                     print("NOT VERIFIED:", reason, "; native signature denied, fixture cleaned, no screen-unlock result.")
                     raise SystemExit(13)
+            elif args.lock_bridge and args.expect_no_key:
+                assert events.count("hardware_worker_started_after_native_lock") == 1, events
+                assert events.count("hardware_worker_exit_9") == 1, events
+                assert "hardware_gate_CLOSED_no_auth" not in events
+                assert "hardware_worker_cancelled_unlock_or_timeout" not in events
+                assert events.count("bridge_rejected_SE_NOT_CALLED") == 1, events
+                assert "hardware_signature_VERIFIED_native_signature_STILL_DENIED" not in events
+                assert not any(e.startswith(("se_sign", "se_ecdh", "bridge_fresh_FIDO_accepted")) for e in events), events
             else:
                 assert events.count("hardware_not_opted_in_no_auth") == 1
                 assert "hardware_worker_started_after_native_lock" not in events
                 assert events.count("sandbox_fido_selfcheck_PASSED_no_auth") == 1, events
-        if args.kind == "se":
-            required = "se_locked_primitives_PASSED_native_output_STILL_DENIED" if args.lock_se else "se_creation_selfcheck_PASSED_no_operations"
+        if args.bridge_denial:
+            assert events.count("bridge_rejected_SE_NOT_CALLED") == 1, events
+            assert "hardware_signature_VERIFIED_native_signature_STILL_DENIED" not in events
+            assert not any(e.startswith(("se_sign", "se_ecdh", "bridge_fresh_FIDO_accepted")) for e in events), events
+        if args.kind in ("se", "bridge"):
+            if args.kind == "bridge" and (args.lock_bridge or args.bridge_denial):
+                required = "bridge_rejected_SE_NOT_CALLED" if (args.expect_no_key or args.bridge_denial) else "bridge_FIDO_then_SE_PASSED_native_output_STILL_DENIED"
+            else:
+                required = "se_locked_primitives_PASSED_native_output_STILL_DENIED" if args.lock_se else "se_creation_selfcheck_PASSED_no_operations"
             assert events.count(required) == 1, events
+            if args.lock_bridge and not args.expect_no_key:
+                ordered = ["hardware_signature_VERIFIED_native_signature_STILL_DENIED",
+                           "bridge_fresh_FIDO_accepted_before_SE",
+                           "se_sign_and_self_verify_PASSED_no_signature_export",
+                           "se_ecdh_raw_and_kdf_PASSED_no_secret_export",
+                           "bridge_FIDO_then_SE_PASSED_native_output_STILL_DENIED"]
+                positions = [events.index(e) for e in ordered]
+                assert all(events.count(e) == 1 for e in ordered) and positions == sorted(positions), events
             assert events.count("se_ephemeral_enclave_key_created_no_private_export") == 1, events
             assert events.count("se_own_tag_keychain_lookup_status_-25300") == 1, events
             assert events.count("se_test_key_reference_released") == 1, events

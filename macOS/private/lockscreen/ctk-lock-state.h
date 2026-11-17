@@ -1,3 +1,4 @@
+#pragma once
 // Read-only native session observation; authoritative global state is mandatory.
 // No caller-provided flag, notification or environment value can open the gate.
 #import <Foundation/Foundation.h>

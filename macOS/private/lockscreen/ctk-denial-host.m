@@ -38,7 +38,14 @@ int main(int argc, const char *argv[]) {
         if (driver.tokenConfigurations.count) return 4;
         BOOL dispatch = argc == 2 && strcmp(argv[1], "--dispatch-denial") == 0;
 #ifdef FLAKES_FIDO_PROBE
-        BOOL hardwareOptIn = argc == 2 && strcmp(argv[1], "--dispatch-locked-fido") == 0;
+#ifdef FLAKES_BRIDGE_PROBE
+        const char *hardwareFlag = "--dispatch-locked-bridge";
+        BOOL bridgeDenial = argc == 2 && strcmp(argv[1], "--dispatch-bridge-denial") == 0;
+        if (bridgeDenial) dispatch = YES;
+#else
+        const char *hardwareFlag = "--dispatch-locked-fido";
+#endif
+        BOOL hardwareOptIn = argc == 2 && strcmp(argv[1], hardwareFlag) == 0;
         if (hardwareOptIn) {
             if (ProbeNativeLocked()) { puts("Start unlocked; reference preparation must precede lock."); return 12; }
             puts("Preparing non-login reference while unlocked. Do NOT lock until READY_TO_LOCK.");
@@ -52,7 +59,7 @@ int main(int argc, const char *argv[]) {
             dispatch = YES;
         }
 #endif
-        if (!dispatch) return 0;
+        if (!dispatch) return argc == 1 ? 0 : 2;
         NSString *instance = [@"nonlogin-denial-" stringByAppendingString:NSUUID.UUID.UUIDString];
         TKTokenKeychainKey *item = ProbeItem(instance);
         if (!item || item.suitableForLogin) return 9;
@@ -65,6 +72,10 @@ int main(int argc, const char *argv[]) {
         @try {
             TKTokenConfiguration *configuration = [driver addTokenConfigurationForTokenInstanceID:instance];
 #ifdef FLAKES_FIDO_PROBE
+#ifdef FLAKES_BRIDGE_PROBE
+            if (bridgeDenial) configuration.configurationData = ProbeBridgeDeniedData();
+            else
+#endif
             if (hardwareOptIn) configuration.configurationData = ProbeHardwareOptInData();
 #elif defined(FLAKES_SE_PROBE)
             if (seOptIn) configuration.configurationData = ProbeSEOptInData();
@@ -79,7 +90,7 @@ int main(int argc, const char *argv[]) {
                 }
                 if (!tokenID) [NSThread sleepForTimeInterval:0.1];
             }
-            printf("{\"nonlogin_proxy_published\":%s,\"certificate_count\":0,\"private_material_created\":false}\n",
+            printf("{\"nonlogin_proxy_published\":%s,\"certificate_count\":0,\"proxy_private_material_created\":false}\n",
                    tokenID ? "true" : "false");
             if (tokenID) {
                 NSDictionary *query = @{

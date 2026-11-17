@@ -8,10 +8,12 @@ assert builtins.elem probeKind [
   "denial"
   "fido"
   "se"
+  "bridge"
 ];
 let
-  se = probeKind == "se";
-  fido = probeKind == "fido";
+  bridge = probeKind == "bridge";
+  se = probeKind == "se" || bridge;
+  fido = probeKind == "fido" || bridge;
   denial = probeKind != "empty";
   shared = import ../../../System/Common/security-keys {
     inherit pkgs;
@@ -20,7 +22,9 @@ let
   hostID = "com.keke.flakes.ctk-${probeKind}-probe";
   driverID = "${hostID}.driver";
   appName =
-    if se then
+    if bridge then
+      "FlakesBridgeTokenProbe"
+    else if se then
       "FlakesSETokenProbe"
     else if fido then
       "FlakesFidoTokenProbe"
@@ -29,7 +33,9 @@ let
     else
       "FlakesEmptyTokenProbe";
   driverName =
-    if se then
+    if bridge then
+      "FlakesBridgeTokenDriver"
+    else if se then
       "FlakesSETokenDriver"
     else if fido then
       "FlakesFidoTokenDriver"
@@ -99,7 +105,10 @@ let
     "com.apple.security.inherit" = true;
   };
   flags =
-    pkgs.lib.optionalString fido "-DFLAKES_FIDO_PROBE" + pkgs.lib.optionalString se "-DFLAKES_SE_PROBE";
+    if bridge then
+      "-DFLAKES_BRIDGE_PROBE"
+    else
+      pkgs.lib.optionalString fido "-DFLAKES_FIDO_PROBE" + pkgs.lib.optionalString se "-DFLAKES_SE_PROBE";
 in
 assert !fido || pkgs.lib.all (a: a.assertion) shared.assertions;
 pkgs.runCommand "flakes-ctk-${probeKind}-probe"
@@ -126,6 +135,11 @@ pkgs.runCommand "flakes-ctk-${probeKind}-probe"
       cc -Wall -Wextra -Werror -fobjc-arc -I${./.} ${../../../tests/macos-lock-gate.m} \
         -framework Foundation -framework CoreGraphics -framework IOKit -o lock-gate-test
       ./lock-gate-test
+      ${pkgs.lib.optionalString bridge ''
+        cc -Wall -Wextra -Werror -fobjc-arc -I${./.} ${../../../tests/macos-bridge-policy.m} \
+          -framework Foundation -o bridge-policy-test
+        ./bridge-policy-test
+      ''}
       ulimit -c 0
       cc -Wall -Wextra -Werror -I${pkgs.libfido2.dev}/include -I${pkgs.openssl.dev}/include ${../../../tests/macos-fido-verify.c} \
         -L${pkgs.libfido2}/lib -L${pkgs.openssl.out}/lib -lfido2 -lcrypto -o fido-verify-test
@@ -146,9 +160,35 @@ pkgs.runCommand "flakes-ctk-${probeKind}-probe"
       printf '%s\n' '#!${pkgs.runtimeShell}' 'set -euo pipefail' \
         'if [ "$#" -ne 0 ]; then echo "Use a local terminal, no arguments, no sudo." >&2; exit 2; fi' \
         "exec ${pkgs.python3}/bin/python3 ${../../../tests/macos-ctk-probe.py} \"$app\" --kind ${probeKind} --${
-          if se then "lock-se" else "lock-touch"
+          if bridge then
+            "lock-bridge"
+          else if se then
+            "lock-se"
+          else
+            "lock-touch"
         }" \
-        > "$out/bin/flakes-test-locked-${if se then "se" else "key"}"
-      chmod 755 "$out/bin/flakes-test-locked-${if se then "se" else "key"}"
+        > "$out/bin/flakes-test-locked-${
+          if bridge then
+            "bridge"
+          else if se then
+            "se"
+          else
+            "key"
+        }"
+      chmod 755 "$out/bin/flakes-test-locked-${
+        if bridge then
+          "bridge"
+        else if se then
+          "se"
+        else
+          "key"
+      }"
+      ${pkgs.lib.optionalString bridge ''
+        printf '%s\n' '#!${pkgs.runtimeShell}' 'set -euo pipefail' \
+          'if [ "$#" -ne 0 ]; then echo "Use a local terminal, no arguments, no sudo." >&2; exit 2; fi' \
+          "exec ${pkgs.python3}/bin/python3 ${../../../tests/macos-ctk-probe.py} \"$app\" --kind bridge --lock-bridge --expect-no-key" \
+          > "$out/bin/flakes-test-locked-bridge-no-key"
+        chmod 755 "$out/bin/flakes-test-locked-bridge-no-key"
+      ''}
     ''}
   ''
