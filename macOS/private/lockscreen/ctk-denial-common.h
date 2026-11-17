@@ -4,7 +4,15 @@
 #include <string.h>
 #include <stdlib.h>
 
+#ifdef FLAKES_FIDO_PROBE
+static NSString *const ProbeDriverID = @"com.keke.flakes.ctk-fido-probe.driver";
+#define FlakesDenialTokenDriver FlakesFidoTokenDriver
+static NSData *ProbeHardwareOptInData(void) {
+    return [@"locked-fido-verification-opt-in-v1" dataUsingEncoding:NSUTF8StringEncoding];
+}
+#else
 static NSString *const ProbeDriverID = @"com.keke.flakes.ctk-denial-probe.driver";
+#endif
 static NSString *const ProbeObjectID = @"denial-only";
 static NSString *const ProbeConstraint = @"always-deny-no-pin";
 static NSData *ProbeHex(const char *hex) {

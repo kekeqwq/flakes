@@ -2,17 +2,35 @@
 #import <os/log.h>
 
 static void Trace(const char *event) {
+#ifdef FLAKES_FIDO_PROBE
+    os_log_t log = os_log_create("com.keke.flakes.ctk-fido", "callback");
+#else
     os_log_t log = os_log_create("com.keke.flakes.ctk-denial", "callback");
+#endif
     os_log(log, "%{public}s", event);
 }
+#ifdef FLAKES_FIDO_PROBE
+#import "ctk-fido-supervisor.h"
+#endif
 static void Deny(NSError **error) {
     if (error) *error = [NSError errorWithDomain:TKErrorDomain
                                           code:TKErrorCodeAuthenticationFailed userInfo:nil];
 }
 @interface FlakesDenyOperation : TKTokenAuthOperation
+#ifdef FLAKES_FIDO_PROBE
+@property BOOL hardwareOptIn;
+#endif
 @end
 @implementation FlakesDenyOperation
 - (BOOL)finishWithError:(NSError **)error {
+#ifdef FLAKES_FIDO_PROBE
+    if (self.hardwareOptIn) ProbeFidoVerification(YES);
+    else {
+        Trace("hardware_not_opted_in_no_auth");
+        ProbeFidoVerification(NO); // Library-loader selfcheck, never pam_start/auth.
+    }
+    // Even verified hardware NEVER authorizes this token.
+#endif
     Trace("finish_without_pin_CANCELLED");
     // AuthenticationFailed means retry to CTK. This no-UI negative probe must
     // terminate, not spin asking for another credential that it will never use.
@@ -52,7 +70,11 @@ static void Deny(NSError **error) {
     if (operation != TKTokenOperationSignData || ![constraint isEqual:ProbeConstraint]) {
         Deny(error); return nil;
     }
-    return [[FlakesDenyOperation alloc] init]; // Not a PIN/password operation.
+    FlakesDenyOperation *auth = [[FlakesDenyOperation alloc] init];
+#ifdef FLAKES_FIDO_PROBE
+    auth.hardwareOptIn = [self.token.configuration.configurationData isEqual:ProbeHardwareOptInData()];
+#endif
+    return auth; // Not a PIN/password operation.
 }
 @end
 

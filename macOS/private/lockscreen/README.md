@@ -118,6 +118,34 @@ a passing auth result. After an interrupted run use the same command with
 exact non-login fixture. Never remove unrelated tokens or native driver settings.
 See the dated record for the initial retry-loop failure and final regression.
 
+## Locked FIDO verification-only probe (owner test pending)
+
+Build with `probeKind = "fido";` and a distinct output link. The bundle contains
+exactly the existing public mapping and fixed native PAM/FIDO libraries; no Key
+enrollment, PIN/PIV/OTP change, native private key or account pairing. Its public
+proxy remains unsuitable for login and never produces a native signature.
+
+`--dispatch` is a no-hardware negative test plus sandboxed library-loader check.
+Only the explicit visible-terminal `--lock-touch` mode marks hardware opt-in and
+waits up to 90 seconds for native WindowServer lock state. Missing/unknown lock,
+wrong UID/console state, prompts for secrets or loss of lock fail closed. The
+undocumented session-lock key still needs actual owner calibration; do not treat
+this research gate as production acceptance.
+
+The immutable output provides `bin/flakes-test-locked-key` (no sudo, no arguments).
+With the registered secondary Key already inserted and no other pending Key/sudo
+request, run it locally, then Ctrl-Cmd-Q on `Ready`. **Touch only when the Key
+flashes. This test deliberately does NOT unlock**: use original native Touch ID
+or account password afterward and wait for cleanup/output. Never send a password
+or PIN to the terminal/chat. If no touch request appears within about 25 seconds
+after locking, return normally with native auth and report the result; don't
+restart loginwindow, ctkd or a locker. No automatic screen locking occurs.
+
+The worker is bounded and cancelled on observed unlock. Even verified FIDO still
+returns native cancellation, preserving the non-login test's lack of authority.
+A terminal timeout/interrupt invokes only exact-fixture recovery, not broad token
+or account cleanup. Full design/evidence/limits are in the dated record.
+
 ## Evidence and next gate
 
 - Native module builds, signature verification passes, and Apple PAM handle tests
@@ -138,8 +166,9 @@ See the dated record for the initial retry-loop failure and final regression.
   callback, returned cancellation in 3.042–31.082 ms and produced no signatures;
   each cycle verified cleanup. This still is not lock-screen auto-start or Key auth.
 
-Next prepare compositor-confirmed-lock gating and a bounded verification-only
-FIDO worker, then test actual token-sandbox hardware access with owner touch.
+Lock gating, an own-child watchdog and a verification-only FIDO worker are now
+prepared; unlocked/no-opt-in checks and actual sandboxed module loading passed.
+Next test real locked token-sandbox hardware access with owner touch.
 Only later assess a protected native identity with explicit owner agreement.
 Do not replace required LA/AKS checks or relabel FIDO signatures as raw X.509 signatures.
 Any eventual solution must start hardware authentication only after a confirmed

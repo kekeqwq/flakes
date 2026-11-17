@@ -125,12 +125,58 @@ this **user-scoped, explicitly requested, non-login** operation. It does not pro
 native lock-screen auto-start, actual YubiKey/HID access, wrong-Key behavior,
 password parallelism, Secure Enclave/keybag integration or real unlock.
 
+## 4. Locked FIDO verification-only probe prepared (hardware test pending)
+
+Builder `probeKind = "fido"` retains the same non-login public-only object. It
+copies the EXISTING shared public mapping and native-linked `pam_u2f` into the
+immutable bundle. `bundle-pam.py` recursively copies fixed Nix library dependencies,
+rewrites them to bundle-relative loader paths and re-signs/verifies them. No
+foreign OpenPAM library, home-directory static dependency or runtime download.
+Only this driver adds the public USB sandbox capability; the worker inherits its
+sandbox. No macOS accessory-security preference is relaxed.
+
+Two modes are deliberately separate:
+
+- `--dispatch` / no hardware opt-in: the driver spawns its own **module-loader
+  selfcheck**, which only dlopens the native PAM/module and checks symbols. It
+  never starts a PAM handle or calls authentication. Actual sandbox selfcheck
+  passed at 14:03:30, worker exit 0, cancellation 66.345 ms, no signature, all
+  own instances/advertisement/registrations removed.
+- `--lock-touch`: visible local terminal only, no sudo; host waits up to 90 seconds
+  for native lock observation and explicitly marks this one verification request.
+  Worker checks the WindowServer session dictionary, UID/eUID/name, console/login
+  state and `CGSSessionScreenIsLocked == true` before PAM/HID authentication,
+  repeats the check just before authentication and after return. Missing/unknown
+  state closes the gate. The screen-lock key is undocumented and needs actual
+  owner lock/unlock calibration on this OS; it is NOT yet an accepted production
+  security boundary. No fake environment flag or distributed notification can
+  supply lock state to this implementation.
+
+The worker uses Apple PAM handles, fixed RP/AppID, UP=1/PIN=0/UV=0 and the exact
+existing public authfile. All secret/PIN/password conversation requests are
+rejected; no such input is collected or supplied. It never enrolls or edits a Key.
+Hardware verification success STILL leads to `NO + CanceledByUser`; it cannot
+produce a native signature or unlock. Native Touch ID/password remain the only
+recovery/unlock paths during this test.
+
+Supervisor waits only for its exact posix_spawn child, cancels on observed unlock
+or after 20 seconds, TERM then own-child KILL after one second, and defers reaping
+if still pending after two more seconds. It never targets a locker/daemon/cgroup.
+The ordinary-user runner has a 135-second outer bound and fixture-specific
+recovery; timeout/interruption is failure, not successful rejection.
+
+Local unlocked gate readback: false, authentication_started=false. Negative fido
+mode demonstrated `hardware_not_opted_in_no_auth` and no hardware worker. Actual
+locked-state FIDO access, successful touch, no-Key/other-Key and unlock-during-wait
+behavior are **pending owner operation**. No new native private key/certificate or
+account pairing has been performed.
+
 ## Next gates
 
-- Verify registered FIDO hardware access from the token sandbox while native
-  compositor-confirmed secure lock is active. This must remain verification-only:
-  no native signature/login authority, no PIV changes or new hardware enrollment.
-  Prepare lock-state gating and a bounded own worker before owner touch testing.
+- Owner-operated locked hardware verification with the carried secondary Key;
+  touch only when it flashes, then normal native fingerprint/password unlock.
+  This is deliberately NOT a Key screen-unlock test. Do not claim its outcome
+  until actual worker/parent evidence is returned.
 - Investigate a native token bridge with fresh registered-FIDO authorization and
   a separately protected native signing/key-management identity. Existing FIDO
   signatures are not raw X.509/PIV signatures; do not relabel existing credentials

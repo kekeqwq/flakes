@@ -2,10 +2,19 @@
 #import <LocalAuthentication/LocalAuthentication.h>
 #include <stdio.h>
 #include <string.h>
+#ifdef FLAKES_FIDO_PROBE
+#import "ctk-lock-state.h"
+#endif
 
 int main(int argc, const char *argv[]) {
     @autoreleasepool {
         setbuf(stdout, NULL);
+#ifdef FLAKES_FIDO_PROBE
+        if (argc == 2 && strcmp(argv[1], "--gate-check") == 0) {
+            printf("{\"native_locked_gate\":%s,\"authentication_started\":false}\n", ProbeNativeLocked() ? "true" : "false");
+            return 0;
+        }
+#endif
         TKTokenDriverConfiguration *driver = TKTokenDriverConfiguration.driverConfigurations[ProbeDriverID];
         printf("{\"configuration_visible\":%s,\"existing_instances\":%lu}\n",
                driver ? "true" : "false", (unsigned long)driver.tokenConfigurations.count);
@@ -25,7 +34,19 @@ int main(int argc, const char *argv[]) {
             return driver.tokenConfigurations.count == 0 ? 0 : 10;
         }
         if (driver.tokenConfigurations.count) return 4;
-        if (argc != 2 || strcmp(argv[1], "--dispatch-denial") != 0) return 0;
+        BOOL dispatch = argc == 2 && strcmp(argv[1], "--dispatch-denial") == 0;
+#ifdef FLAKES_FIDO_PROBE
+        BOOL hardwareOptIn = argc == 2 && strcmp(argv[1], "--dispatch-locked-fido") == 0;
+        if (hardwareOptIn) {
+            puts("Waiting up to 90s: lock manually with Ctrl-Cmd-Q. Touch ONLY when Key flashes. This test will NOT unlock. Recover with native Touch ID/password.");
+            double deadline = NSProcessInfo.processInfo.systemUptime + 90;
+            while (!ProbeNativeLocked() && NSProcessInfo.processInfo.systemUptime < deadline)
+                [NSThread sleepForTimeInterval:0.1];
+            if (!ProbeNativeLocked()) { puts("Native lock not confirmed; no authentication started."); return 12; }
+            dispatch = YES;
+        }
+#endif
+        if (!dispatch) return 0;
         NSString *instance = [@"nonlogin-denial-" stringByAppendingString:NSUUID.UUID.UUIDString];
         TKTokenKeychainKey *item = ProbeItem(instance);
         if (!item || item.suitableForLogin) return 9;
@@ -37,6 +58,9 @@ int main(int argc, const char *argv[]) {
         NSString *tokenID = nil;
         @try {
             TKTokenConfiguration *configuration = [driver addTokenConfigurationForTokenInstanceID:instance];
+#ifdef FLAKES_FIDO_PROBE
+            if (hardwareOptIn) configuration.configurationData = ProbeHardwareOptInData();
+#endif
             configuration.keychainItems = @[item]; // No certificate or real key material.
             NSDate *deadline = [NSDate dateWithTimeIntervalSinceNow:8.0];
             while (!tokenID && deadline.timeIntervalSinceNow > 0) {
@@ -68,7 +92,12 @@ int main(int argc, const char *argv[]) {
                     } else {
                         NSData *message = [@"public denial-only test message" dataUsingEncoding:NSUTF8StringEncoding];
                         outcome = 0;
-                        for (int attempt = 1; attempt <= 2; attempt++) {
+#ifdef FLAKES_FIDO_PROBE
+                        const int attempts = 1; // One physical touch request, never a second cached attempt.
+#else
+                        const int attempts = 2;
+#endif
+                        for (int attempt = 1; attempt <= attempts; attempt++) {
                             CFErrorRef error = NULL;
                             NSTimeInterval start = NSDate.timeIntervalSinceReferenceDate;
                             CFDataRef signature = SecKeyCreateSignature(ref, kSecKeyAlgorithmECDSASignatureMessageX962SHA256,
