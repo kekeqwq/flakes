@@ -697,6 +697,58 @@ per-device registration still remains distinct and provider-specific. No claim o
 zero-interaction deployment or successful native unlock. No infrastructure, host,
 VM, account, key, certificate or policy was created by this review.
 
+## 14. Supplier shortlist and reproducible signed-artifact audit
+
+Continued evaluation, NOT enrollment/provisioning. See
+[fixed candidate evidence](../macOS/private/lockscreen/CANDIDATES.md).
+
+- XCreds README at `6d70acaf1ed20dd98ca2c0b7b591359752c8f843` explicitly describes
+  retaining/synchronizing the local password/keychain; not accepted as the requested
+  native external-Key route or installed.
+- UiO Weblogin client `119f395624ff460a77e0ea615edc6e04af3cecdd` with Keycloak
+  provider `57b9803f1fb87f6bab2dd5e5ba0c2c13d0abe12e` is a plausible self-hosted
+  protocol reference and has macOS27 dynamicOpenID source. No client release asset
+  was found in the GitHub releases response; README requires Xcode build/MDM, so a
+  trusted reproducible client-distribution route without own signing is unproved.
+- authentik Platform has an actual fixed supplier-signed artifact. Selected ONLY
+  for artifact audit, not production or enrollment: v0.73.0 PKG, SHA256
+  `37aaed47183fa20bc903f1358e33af4f5b7a866be19b4bcacca44660bf8fff67`, source tag
+  reference `c17da2e00f028bb27086edb7974df6c63b27f84b`. Source bridge sets
+  dynamicOpenID on27+ using backend registration configuration; no backend started.
+
+Actual downloaded artifact checks: expected SHA matches; pkgutil reports trusted
+Apple Developer ID Installer Authentik Security Inc. / Team232G855Y8N, trusted
+notarization/timestamp. Application `io.goauthentik.platform.agent` and extension
+`io.goauthentik.platform.psso` have version0.73.0, ARM64 only. Native strict/deep
+signature verification and explicit Apple anchor + identifier + certificate OU
+Team requirements passed. PSSO extension point matches `com.apple.AppSSO.idp-extension`.
+No supplier private signing key is needed to download/check these bytes; this does
+not solve the whole native unlock flow. Source tag is not binary/source-equivalence
+proof, and fixed bytes do not freeze Apple's trust/revocation decisions.
+
+Implemented standalone `macOS/private/lockscreen/authentik-artifact-audit.nix`,
+`tests/macos-authentik-artifact.py` and mocked guard tests. No system imports,
+activation/profile/installer/daemon commands; only fixed fetch, signature tools,
+metadata extraction and JSON report. Output explicitly denies deployment/unlock
+acceptance. Initial build + repeat `--rebuild` passed with matching output; actual
+host signature checks passed. Mocks prove checksum rejection before native tools,
+signer rejection before extraction, wrong bundle rejection, metadata-only success
+never claiming installation/unlock. No supplier payload was executed in tests.
+
+Important stop gates: matching release README explicitly says PRE-ALPHA. `ee/`
+PSSO production use needs compliance with EE subscription terms; development/test
+permission is not production approval or proof feature gating is satisfied. Example
+profile enables account creation/authorization/permission changes/attestation and
+RequireAuthentication across multiple scopes; method combinations also need schema
+review. Installer scripts stop/start agents and modify system/browser settings;
+we inspected, never ran them. No subscription purchased/accepted, no profile
+applied, no account/password/PIN/key change, no app/extension registration.
+
+Next meaningful functional test needs an approved MDM/IdP/HTTPS RP scope and
+recovery design, plus valid evaluation/production conditions. Artifact green is
+not a reason to manage the owner's normal account blindly; external-Key UX and
+independent offline password/Touch ID recovery remain untested.
+
 ## Next gates
 
 - Reproducible managed integration is acceptable to EVALUATE. Select a verifiable

@@ -303,6 +303,22 @@ profile. Public fixed-version software/policy belongs in configuration; secrets,
 machine-bound SE/registration/account state must remain private and be created or
 reconciled via approved APIs. Reproducibility cannot mean cloning those credentials.
 
+## Fixed candidate artifact check (not deployment)
+
+[Candidate review](CANDIDATES.md) now contains pinned supplier/source references.
+`authentik-artifact-audit.nix` fetches ONLY authentik0.73.0's fixed SHA256 ARM64 PKG,
+checks Apple installer trust/notarization, application/extension Apple anchor +
+Team/ID requirements, versions and architectures, and produces a report. Native
+checks, build/rebuild and mocked failure guards passed. No installer/payload,
+launchd, registration, profile or account operation is performed. This derivation
+is standalone and NOT imported into activation.
+
+This establishes an auditable vendor-signed artifact without the owner's developer
+team, not a working unlock solution. Upstream is explicitly pre-alpha; PSSO EE
+production terms need review. Do not use its account/permission/mandatory-auth
+example profile or invasive installer scripts as our deployment. External-Key
+no-PIN/no-click/one-touch and independent offline recovery remain unverified.
+
 ## Evidence and next gate
 
 - Native module builds, signature verification passes, and Apple PAM handle tests

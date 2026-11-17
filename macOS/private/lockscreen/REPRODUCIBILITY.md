@@ -84,6 +84,15 @@ Apple device-management schema 固定参考：
 智能卡解锁说明包含 PIN。未从该文档证实所需的 OpenID/外部 Key UX，不选择
 供应商、不注册租户、不安装 Company Portal 或管理 profile。
 
+## 已有可重放的发布物检查
+
+[候选审查](CANDIDATES.md) 已核对 authentik v0.73.0 固定 ARM64 发布包的哈希、
+Apple 安装签名/公证和应用/扩展 Team/identifier 约束，并实现独立 Nix 审计。
+普通构建及重复构建通过；仅生成报告，不安装/运行负载、不生成下发 profile。
+这把“每台机器手工找下载源、猜 Team ID”变成了固定输入的检查，但不等于
+生产选型或锁屏能力通过。EE 许可、pre-alpha 状态、外部 Key UX、IdP/MDM 和
+本地恢复依然是阻挡项。没有为此启用任何系统模块。
+
 ## 5. 交付前必须实际通过
 
 - 先选出有明确版本/签名/发布渠道、支持所需 OpenID 与外部 Key UX、恢复策略
