@@ -3,6 +3,7 @@ self: super: {
   xrock = super.callPackage ./xrock { };
   keke-waybar-panel = super.callPackage ./keke-waybar-panel { };
   swaylock-security-key = super.callPackage ./swaylock-security-key { };
+  opensctoken-pin-never = super.callPackage ./opensctoken-pin-never { };
 
   # The 2.11.3 AppImage's crypto libraries need this in their FHS closure.
   snipaste = super.snipaste.override {

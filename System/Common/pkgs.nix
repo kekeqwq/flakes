@@ -43,6 +43,7 @@ in
   environment.systemPackages = with pkgs; [
     btop
     zip
+    yubikey-manager # ykman: PIV provisioning, key management
     stylua
     prettier # Emacs: HTML/JSON/JS/TS/CSS/YAML/Markdown formatting.
     ruff # Emacs: Python / Org notebook cell formatting.

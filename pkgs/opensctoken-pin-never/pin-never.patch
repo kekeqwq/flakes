@@ -1,0 +1,27 @@
+--- a/OpenSCToken/Token.h	2026-11-17 22:15:14
++++ b/OpenSCToken/Token.h	2026-11-17 21:37:15
+@@ -39,9 +39,6 @@
+     if (p15card == NULL || p15card->card == NULL || obj == NULL || obj->data == NULL)
+         return NO;
+ 
+-    if (p15card->card->type != SC_CARD_TYPE_PIV_II_YUBIKEY4)
+-        return NO;
+-
+     if ((obj->type & SC_PKCS15_TYPE_CLASS_MASK) != SC_PKCS15_TYPE_PRKEY)
+         return NO;
+ 
+--- a/OpenSCToken/Token.m	2026-11-17 22:15:15
++++ b/OpenSCToken/Token.m	2026-11-17 21:51:07
+@@ -157,9 +157,11 @@
+ 
+         NSMutableDictionary<NSNumber *, TKTokenOperationConstraint> *constraints = [NSMutableDictionary dictionary];
+         TKTokenOperationConstraint constraint;
+-        if (isPINNeverYubiKeyKey(p15card, prkey_obj) || prkey_obj->auth_id.len == 0) {
++        BOOL pinNever = isPINNeverYubiKeyKey(p15card, prkey_obj);
++        if (pinNever || prkey_obj->auth_id.len == 0) {
+             /* true, indicating that the operation is always allowed, without any authentication necessary. */
+             constraint = @YES;
++            if (pinNever) prkey_obj->auth_id.len = 0; // Skip OpenSC internal VERIFY PIN
+         } else {
+             /* Any other property list compatible value defined by the implementation of the token extension. Any such constraint is required to stay constant for the entire lifetime of the token. */
+             constraint = idToData(TYPE_AUTH, &prkey_obj->auth_id);

@@ -10,7 +10,9 @@ _: {
     ./emacs-client.nix
     ./rime-squirrel.nix
     ./shell.nix
+    ./opensctoken.nix
     ./yazi.nix
   ];
   my.desktop.enable = true;
+  my.opensctoken.enable = true;
 }
