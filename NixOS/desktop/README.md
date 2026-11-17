@@ -57,8 +57,9 @@ can be reproduced on a fresh host. The following still need separate work:
   personal/non-commercial and must not be redistributed via public caches.
   The legacy LXGW/WenKai package, user font files and helper definitions were
   removed entirely on the owner's request.
-  No Japanese font policy is requested. Other manually installed fonts such as
-  Source Han Serif SC can still exist for out-of-scope user programs.
+  No Japanese font policy is requested. All previously manual user fonts
+  (Source Han Serif SC, PingFang, Hiragino, 今楷01 and duplicates) were
+  removed on the owner's request; user font dirs keep only managed copies.
 - Ghostty replaces WezTerm and its bar plugin. Shared fonts, Fish and themes
   are declared in Common; native macOS glass stays private. See
   `System/Common/desktop/TERMINALS.md` for remaining interactive acceptance tests.

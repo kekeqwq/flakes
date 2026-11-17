@@ -51,7 +51,7 @@
 - [x] Linux sans/sans-serif/serif/monospace 为 MonoLisa → TsangerJinKai05；强别名与 W05 scan 字重规则不修改字体文件；emoji 由 Linux Noto Color Emoji 提供。
 - [x] 新隔离 Fontconfig 回归验证西文、简繁中文与 CJK 正常/粗体选择；vendor 字体 SHA-256 与源码保持一致。
 - [ ] 本次更新后的 Deck / macOS 运行态字体选择需独立验收，不能继承旧字体回归的结论。
-- [x] 旧 Deck 字体文件未删；其 MonoLisa 正/斜体与受管包逐字节相同。旧副本优先匹配不等于新机器缺文件。
+- [x] 手动安装字体已全量清除（Bookerly、Source Han Serif SC、PingFang、ヒラギノ、今楷01 等）；两端用户字体目录仅保留受管副本。
 - 例外：MonoLisa 为专有字体，纳管不授予公开分发权；仓耳今楷固定字体源也限制个人/非商业使用与再分发，不纳管二进制、不发公共缓存。
 - macOS 无同等 Fontconfig 的全系统 UI 字体开关；安装字体并让受管应用显式选择，不替换系统 UI 字体。
 

@@ -122,10 +122,11 @@ resolved separately:
 - **Fonts:** managed Latin is MonoLisa Nasy; Chinese is 仓耳今楷05 W03/W05,
   obtained byte-for-byte from pinned chinese-fonts-overlay sources. `fonts.nix`
   copies these managed files into user Fonts for CoreText; no manual font-file
-  dependency is added. Existing duplicates, Bookerly and Source Han Serif SC are
-  not deleted. The legacy LXGW/WenKai package and its old generated
-  terminal/IME font files were removed entirely on the owner's request.
-  Audit remaining manual fonts' licenses. TsangerType is personal/non-commercial,
+  dependency is added. All previously manual user fonts (Bookerly, Source Han
+  Serif SC, 今楷01 duplicates) were removed on the owner's request; user Fonts
+  keeps only the managed MonoLisa/今楷 copies. The legacy LXGW/WenKai package
+  and its old generated terminal/IME font files were removed entirely as well.
+  Audit managed fonts' licenses. TsangerType is personal/non-commercial,
   non-redistributable, and MonoLisa also has licensing limits; do not publish
   binaries/caches or infer distribution rights from local installation.
 - **Emacs configuration/state:** `~/.emacs.d` is an independent Git checkout,
@@ -146,6 +147,50 @@ resolved separately:
   require separate migration or provisioning. Do not put secrets in Git or
   the public Nix store. Hammerspoon's accessibility consent must be checked
   in the user's GUI session.
+
+## PIV Key 锁屏登录（OpenSCToken PIN-Never）
+
+通过 OpenSCToken 驱动 + YubiKey PIV 实现免 PIN、一次触摸锁屏解锁。
+
+### 新电脑复现步骤
+
+1. **darwin-rebuild 构建并安装驱动**（自动完成）：
+   - 构建 OpenSCToken（含 PIN-Never 补丁）
+   - 安装到 `/Applications/Utilities/OpenSCTokenApp.app`
+   - 注册到 pluginkit（用户 + `_securityagent`）
+
+2. **手动写入 PIV 密钥**（一次性，需 YubiKey）：
+   ```sh
+   # 确认 9A/9D 为空槽
+   ykman piv keys info 9a && ykman piv keys info 9d
+   ```
+   如果已写入（如迁移场景），跳过此步。否则需生成密钥+证书：
+   - 9A：RSA2048，PIN Never + Touch Always（认证）
+   - 9D：RSA2048，PIN Never + Touch Always（钥匙串解包）
+   - 自签证书，导入 9A/9D
+   - **私钥不可导出，管理密钥状态需确认**
+
+3. **手动配对账户**（一次性，需 sudo + 触摸）：
+   ```sh
+   sc_auth identities   # 获取 9A 公钥哈希
+   sudo sc_auth pair -v -u keke -h <9A_HASH>
+   ```
+   Key 亮灯时触摸。成功输出不应包含 `Failed to store Login keychain unlock key`。
+
+4. **验证**：Ctrl-Cmd-Q 锁屏 → 空 PIN 框按 Enter → Key 亮灯 → 触摸 → 解锁。
+
+### 安全边界
+
+- PIN Never 移除知识因子，安全性依赖物理持有 + Touch Always。
+- 密码回退独立保留，不启用强制智能卡。
+- 不修改 sudo/PAM、FIDO 凭据、PIV PIN、管理密钥。
+- 驱动仅安装 CTK 层，不改登录策略或 authorizationdb。
+
+### 已知限制
+
+- 需要按 Enter 提交（非全自动），但免 PIN、一次触摸。
+- FileVault 预启动不支持 CTK，首次开机仍需密码。
+- ad-hoc 签名已验证可工作；如需持久签名需另行评估。
 
 The four-layer boundaries remain mandatory; shared program definitions belong
 in `System/Common`, not in this private platform layer.
