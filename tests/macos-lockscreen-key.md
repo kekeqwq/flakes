@@ -662,11 +662,47 @@ Current result: no working local no-Enter native unlock entry found in reviewed
 APIs; managed Platform SSO/passkey support is documented but undeployed/untested.
 Missing deployment/UX/recovery evidence must not be reported as a fixed feature.
 
+## 13. Owner priority: reproducible new-Mac deployment, not manual reconfiguration
+
+Owner clarified that infrastructure complexity is acceptable to evaluate; the goal
+is a reproducible setup so a new computer does not need manual configuration from
+scratch. This is not inferred permission to enroll this Mac, create tenants/servers,
+change account policy or waive no-PIN/no-Enter/one-touch and independent recovery.
+Do not repeatedly ask pure-local vs managed scope; instead evaluate against the
+[deployment contract](../macOS/private/lockscreen/REPRODUCIBILITY.md).
+
+New read-only schema review: Apple device-management Release-v27.2 commit
+`9e7fdbe23990b2551c4b29b39bc8b0de956805eb`,
+`mdm/profiles/com.apple.extensiblesso.yaml` confirms declarative Bundle/Team ID,
+OpenID method, web host allowlist and policy fields. OpenID support MUST exist in
+the extension; schema presence does not make any supplier compatible. Registration
+Token and possible authorization headers remain secrets despite being strings.
+Offline OpenID access is DENIED without allowed grace policy; finite grace is not
+independent perpetual password recovery. `AllowWebLoginPasswordSync` defaults
+false; account creation, privilege mapping, and UI across Login/FileVault also need
+explicit control. No profile generated/applied, no fallback policy relaxed.
+
+Supplier proof caution: Microsoft's official macOS Platform SSO deployment guide
+requires Intune/Company Portal. Its “Platform Credential as a passkey” means the
+Mac's SE credential used in the browser, not external YubiKey unlocking the Mac;
+smart-card instructions include PIN. That guide does not establish the needed
+OpenID/no-PIN/no-click UX, so Entra was not selected or deployed merely because it
+advertises passwordless/PSSO.
+
+Public software/policy should be pinned and declarative; private machine-bound
+registration/key/account state needs a narrow idempotent bootstrap, not copying SE
+keys or exposing enrollment tokens in store. If an IdP supports it, register each
+approved Key for that RP once and reuse the account authorization across Macs;
+per-device registration still remains distinct and provider-specific. No claim of
+zero-interaction deployment or successful native unlock. No infrastructure, host,
+VM, account, key, certificate or policy was created by this review.
+
 ## Next gates
 
-- Decide scope before more experiments: pure-local keke account remains blocked;
-  Platform SSO/web-passkey research requires explicit acceptance of evaluating
-  MDM/IdP integration, and enrollment/provisioning needs separate informed consent.
+- Reproducible managed integration is acceptable to EVALUATE. Select a verifiable
+  supplier/IdP combination against the deployment contract before implementing
+  installation/profile/bootstrap modules; no untested enable switch. Actual
+  enrollment/provisioning still needs separate informed consent.
 - Combined non-login fresh FIDO → disposable SE positive and physical no-Key
   rejection passed. Preserve evidence, do not repeat these positives; wrong-Key/
   timeout/unlock-during-wait regressions remain for later authorization review.

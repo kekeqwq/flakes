@@ -285,6 +285,24 @@ for a new IdP domain. Before any deployment obtain scope consent, preserve local
 password/Touch ID recovery and reject unreviewed IdP-only policies/password sync/
 privilege changes. Only docs/SDK were reviewed; details in evidence section12.
 
+## New-Mac reproducibility is a deployment requirement
+
+Owner accepts evaluating infrastructure provided a new Mac does not need the
+configuration manually rebuilt. See [REPRODUCIBILITY.md](REPRODUCIBILITY.md) for the
+public/private boundary, idempotent private bootstrap and actual acceptance gates.
+This is NOT consent to enrollment/provisioning, nor relaxation of Key UX/recovery.
+
+Pinned Apple profile schema confirms these settings can be declared, but OpenID
+still requires a compatible signed extension/IdP and careful recovery policy.
+Offline OpenID access may be denied by default; a grace period is not guaranteed
+independent password recovery. A supplier's “passwordless” or “Mac credential as a
+passkey” claim is not external-Key lock-screen proof. No supplier was selected.
+
+Do not create an untested authentication enable switch or silently deploy a
+profile. Public fixed-version software/policy belongs in configuration; secrets,
+machine-bound SE/registration/account state must remain private and be created or
+reconciled via approved APIs. Reproducibility cannot mean cloning those credentials.
+
 ## Evidence and next gate
 
 - Native module builds, signature verification passes, and Apple PAM handle tests
