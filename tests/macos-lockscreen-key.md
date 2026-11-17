@@ -443,8 +443,32 @@ artifact's `flakes-test-locked-bridge-no-key`:
 - owner returned with terminal output; recovery method unspecified. This does not
   establish both password and Touch ID recovery paths or real unlock parallelism.
 
-Combined positive, wrong-Key/timeout/unlock-during-wait remain pending. No standing
-login authority or new persistent credential was created by this negative test.
+**Owner-operated combined positive PASSED at 17:21:33** using the same artifact's
+`flakes-test-locked-bridge`:
+
+- provider independently observed the locked matching console before its worker
+  started at 17:21:29.336547;
+- independent scoped worker readback (PID 56068) confirmed enumeration success,
+  count1, unsupported built-in UV correctly omitted, no-PIN request, and at
+  17:21:33.322 assertion result0 / verification_attempted1 / verify_result0 /
+  verified1;
+- parent worker exit0 at 17:21:33.346592, fresh FIDO accepted before SE at
+  17:21:33.347274; SE signing/self-verification passed at 17:21:33.367368,
+  raw ECDH/KDF checks passed at 17:21:33.394407;
+- reference released, own-tag lookup -25300; combined pass at 17:21:33.398942;
+  native facade still cancelled -4, no returned signature, 4097.640 ms whole
+  request including human touch wait (not pure crypto latency);
+- runner checked strict event ordering; zero retained instances/advertisement,
+  exact registrations removed and independent PlugInKit readback absent.
+
+These two physical cases establish missing-Key rejection and registered-FIDO →
+disposable-SE admission in the non-login prototype. They do NOT establish native
+locker dispatch, native login signing/keybag unlock or real screen unlock. No
+per-Key identifiers were logged; exact physical-Key attribution beyond carried
+owner context is not independently proved. Wrong-Key/timeout/unlock-during-wait,
+primary Mac and actual native recovery/parallelism remain pending. No standing
+login authority or new persistent credential was created. Do not repeat accepted
+standalone or combined positive hardware tests.
 
 The exposed public-only proxy field is now named `proxy_private_material_created`
 to avoid confusing its lack of private material with the real ephemeral SE test
@@ -458,9 +482,14 @@ Touch ID paths. No standing account unlock authority is granted by this prototyp
 
 ## Next gates
 
-- Combine fresh registered-FIDO verification and SE operations in one NON-LOGIN
-  request; first verify missing authorization never calls SE. Do not repeat the
-  accepted standalone FIDO/SE positive tests. Failure is not software fallback.
+- Combined non-login fresh FIDO → disposable SE positive and physical no-Key
+  rejection passed. Preserve evidence, do not repeat these positives; wrong-Key/
+  timeout/unlock-during-wait regressions remain for later authorization review.
+- Before persistent identity work, request explicit consent for an isolated own-tag
+  SE keychain persistence round trip (write → separate-process reopen → delete),
+  with no certificate/account pairing, private export or software fallback. This
+  would create temporary persistent keychain state and has NOT been authorized or
+  run yet; stable code identity/access and narrow cleanup must be designed first.
 - Investigate a native token bridge with fresh registered-FIDO authorization and
   a separately protected native signing/key-management identity. Existing FIDO
   signatures are not raw X.509/PIV signatures; do not relabel existing credentials

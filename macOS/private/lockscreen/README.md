@@ -191,7 +191,11 @@ No login identity/certificate, persistent key, account pairing or policy write.
 Pure policy truth table, real sandbox preparation and real no-hardware-opt-in
 callback denial passed. The latter (`--dispatch --bridge-denial`) proves no SE
 crypto even when the FIDO library selfcheck succeeds; it does NOT prove physical
-no-Key handling. Positive combined hardware acceptance remains pending.
+no-Key handling. Subsequent owner-operated physical cases passed: no-Key denial
+at 17:17:36 and combined registered-FIDO → SE admission at 17:21:33. The latter
+verified FIDO first, then SE signing/self-verification and ECDH/KDF, and released
+the reference with no own-tag item. Strict event-order checks passed; facade still
+cancelled and exact transient state was removed. Do not repeat this positive.
 
 Its `bin/flakes-test-locked-bridge` requires a visible ordinary-user terminal,
 starts unlocked, streams READY_TO_LOCK, then needs one registered-Key touch ONLY
@@ -234,9 +238,12 @@ ephemeral test keys, not hardware or account credentials.
 Owner's real locked hardware test passed at 15:54:45: verified FIDO assertion,
 worker exit0, no native signature, all transient state cleaned. Do not repeat this
 positive test or label it native screen-unlock acceptance. Primary Mac and physical
-negative cases remain untested. Owner agreed to the isolated SE experiment; creation/release and locked primitives
-passed. Next accept combined fresh FIDO → disposable SE authorization, without
-repeating standalone positives or creating persistent login authority.
+wrong-Key/timeout/unlock-during-wait cases remain untested. Owner agreed to the
+isolated SE experiment; creation/release and locked primitives passed. Combined
+fresh FIDO → disposable SE admission and physical no-Key rejection also passed.
+Next assess safe persistent storage/code access only with new explicit consent;
+no persistent keychain round trip or login identity/account pairing is authorized
+or implemented. Do not repeat accepted positive hardware tests.
 Do not replace required LA/AKS checks or relabel FIDO signatures as raw X.509 signatures.
 Any eventual solution must start hardware authentication only after a confirmed
 secure lock, permit a touch without first pressing Enter, keep password and Key
