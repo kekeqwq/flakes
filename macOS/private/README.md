@@ -99,6 +99,14 @@ sensor availability can cause password fallback; remote/SSH biometric behavior
 is not guaranteed. Administrator authorization for deployment is not itself a
 sudo Touch ID test.
 
+## Planned YubiKey sudo / lock-screen research
+
+The agreed, **not yet implemented**, sudo policy is registered-Key first, otherwise
+native Touch ID, with Esc from Touch ID retaining password fallback. Esc need not
+cancel an active Key wait. The native macOS lock screen is a separate research
+item; do not assume the sudo PAM chain can simply be reused there. Findings,
+Apple references and safety boundaries are in [`SECURITY-KEYS.md`](SECURITY-KEYS.md).
+
 ## Remaining clean-machine reproduction gaps
 
 These were observed on the actual MBA and are **not** supplied completely by
