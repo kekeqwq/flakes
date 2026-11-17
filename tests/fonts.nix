@@ -4,6 +4,7 @@ let
   cjk = pkgs.callPackage ../pkgs/tsanger-jinkai { };
   latin = pkgs.callPackage ../pkgs/monolisa-nasy { };
   rules = (import ../System/Common/desktop/fontconfig-policy.nix { inherit (pkgs) lib; }).rules;
+  moduleConf = (import ../NixOS/desktop/fonts.nix { inherit pkgs; inherit (pkgs) lib; }).fonts.fontconfig.localConf;
   conf = pkgs.writeText "desktop-font-regression.conf" ''
     <?xml version="1.0"?><!DOCTYPE fontconfig SYSTEM "fonts.dtd"><fontconfig>
     <dir>${latin}/share/fonts/truetype</dir>
@@ -20,9 +21,16 @@ pkgs.runCommand "desktop-font-policy-check"
     export FONTCONFIG_FILE=${conf}
     export XDG_CACHE_HOME="$TMPDIR/font-cache"
     export FC_MATCH=${pkgs.fontconfig.bin}/bin/fc-match
+    export MODULE_FC_CONF=${pkgs.writeText "module-fc-local.conf" moduleConf}
     python3 - ${cjk} ${latin} <<'PY'
     import base64, hashlib, os, pathlib, subprocess, sys
+    from xml.dom import minidom
     from fontTools.ttLib import TTFont
+    # The NixOS module writes localConf verbatim: it must be one well-formed
+    # document, or fontconfig silently drops every rule after the first root.
+    doc = minidom.parse(os.environ['MODULE_FC_CONF'])
+    assert doc.documentElement.tagName == 'fontconfig'
+    assert len([n for n in doc.documentElement.childNodes if n.nodeType == n.ELEMENT_NODE]) >= 4
     cjk, latin = map(pathlib.Path, sys.argv[1:])
     expected = {
       'TsangerJinKai05-W03.ttf': 'CB5iJFQ3qVm17zG9iZpdVaFyrrM/ks1cicPY4VWtfIk=',

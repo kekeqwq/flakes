@@ -10,6 +10,11 @@ in
       emoji = [ "Noto Color Emoji" ];
     };
     # Vendor W05 declares regular weight: correct matching, not font bytes.
-    localConf = policy.rules;
+    # The module writes localConf verbatim: wrap fragments in one root element.
+    localConf = ''
+      <fontconfig>
+      ${policy.rules}
+      </fontconfig>
+    '';
   };
 }
