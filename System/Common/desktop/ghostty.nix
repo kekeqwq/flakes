@@ -4,9 +4,13 @@
 }:
 let
   fonts = import ./font-policy.nix;
+  # Ghostty prefers the first family covering a codepoint, so the color emoji
+  # face must precede the symbol fonts. Small platform adaptation is allowed.
+  emoji = if pkgs.stdenv.hostPlatform.isDarwin then "Apple Color Emoji" else "Noto Color Emoji";
   families = cjk: [
     fonts.latin
     cjk
+    emoji
     "DejaVu Sans Mono"
     "Symbols Nerd Font Mono"
     "Noto Sans Symbols 2"

@@ -32,5 +32,17 @@ in
         "sans-serif"
         "serif"
         "monospace"
-      ];
+      ]
+  + ''
+    <!-- Color emoji first: face order would otherwise let symbols fonts win
+         monochrome glyphs for emoji codepoints and keycap components. -->
+    <match target="pattern">
+      <test name="charset" compare="contains"><range><int>0x20e3</int><int>0x20e3</int></range></test>
+      <edit name="family" mode="prepend"><string>Noto Color Emoji</string></edit>
+    </match>
+    <match target="pattern">
+      <test name="charset" compare="contains"><range><int>0x1f000</int><int>0x1faff</int></range></test>
+      <edit name="family" mode="prepend"><string>Noto Color Emoji</string></edit>
+    </match>
+  '';
 }

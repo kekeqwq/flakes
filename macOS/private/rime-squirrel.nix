@@ -42,7 +42,7 @@ let
   squirrelCustom = pkgs.writeText "squirrel.custom.yaml" (
     lib.replaceStrings
       [ "@LATIN_FONT@" "@CJK_FONT@" ]
-      [ fonts.latinRegularPostscript fonts.cjkRegularPostscript ]
+      [ fonts.latinRegularPostscript fonts.cjkBoldPostscript ]
       (builtins.readFile ./rime/squirrel.custom.yaml)
   );
 in

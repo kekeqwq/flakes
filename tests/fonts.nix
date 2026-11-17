@@ -3,12 +3,14 @@ let
   fonts = import ../System/Common/desktop/font-policy.nix;
   cjk = pkgs.callPackage ../pkgs/tsanger-jinkai { };
   latin = pkgs.callPackage ../pkgs/monolisa-nasy { };
+  emoji = pkgs.noto-fonts-color-emoji;
   rules = (import ../System/Common/desktop/fontconfig-policy.nix { inherit (pkgs) lib; }).rules;
   moduleConf = (import ../NixOS/desktop/fonts.nix { inherit pkgs; inherit (pkgs) lib; }).fonts.fontconfig.localConf;
   conf = pkgs.writeText "desktop-font-regression.conf" ''
     <?xml version="1.0"?><!DOCTYPE fontconfig SYSTEM "fonts.dtd"><fontconfig>
     <dir>${latin}/share/fonts/truetype</dir>
     <dir>${cjk}/share/fonts/truetype</dir>
+    <dir>${emoji}/share/fonts</dir>
     ${rules}
     </fontconfig>
   '';
@@ -54,7 +56,10 @@ pkgs.runCommand "desktop-font-policy-check"
         assert str(cjk) in file and ps == '${fonts.cjkRegularPostscript}', (generic, file, ps)
       file, ps = match(generic + ':weight=bold:charset=4e2d')
       assert str(cjk) in file and ps == '${fonts.cjkBoldPostscript}', (file, ps)
-    print('PASS: vendor bytes unchanged; CJK regular/bold + simplified/traditional + Latin matching.')
+    for spec in [':charset=20e3', ':charset=1f600', 'sans:charset=1f004', 'mono:charset=1f21a']:
+      file, ps = match(spec)
+      assert 'NotoColorEmoji' in file, (spec, file, ps)
+    print('PASS: vendor bytes unchanged; CJK regular/bold + simplified/traditional + Latin + color-emoji matching.')
     PY
     touch "$out"
   ''
