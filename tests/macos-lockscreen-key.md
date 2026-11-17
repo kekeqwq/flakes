@@ -125,7 +125,7 @@ this **user-scoped, explicitly requested, non-login** operation. It does not pro
 native lock-screen auto-start, actual YubiKey/HID access, wrong-Key behavior,
 password parallelism, Secure Enclave/keybag integration or real unlock.
 
-## 4. Locked FIDO verification-only probe prepared (hardware test pending)
+## 4. Initial PAM-backed locked FIDO probe (historical; replaced in section 5)
 
 Builder `probeKind = "fido"` retains the same non-login public-only object. It
 copies the EXISTING shared public mapping and native-linked `pam_u2f` into the
@@ -231,6 +231,47 @@ No OS query/authentication in that unit test. Sandbox observations plus no-opt-i
 module/cancellation regression passed; actual revised locked FIDO is still pending.
 The runner now reports an expected unverified/gate-closed result without implying
 that a Python assertion traceback is a Key authentication failure.
+
+## 5. Third owner attempt: PAM initialization blocked; direct libfido2 revision
+
+Owner ran `4zcbryr…-flakes-ctk-fido-probe`. At 15:10:44 the global console gate
+matched UID/name/console/login and a present true lock flag. The hardware worker
+started after that confirmation but exited **8** about 100 ms later. No hardware
+signature was verified; native cancellation returned in 143.770 ms. Cleanup read
+back zero instances/no advertised token/no registrations.
+
+Reproduced entirely WITHOUT locking or touching a Key: extending the sandbox
+selfcheck to `pam_start("other", "keke", …)` yielded **PAM_SYSTEM_ERR (4)** at
+15:18:30, before authentication. A library-loader-only check was insufficient.
+Native PAM logged an error loading `/etc/pam.d/other`; the exact underlying errno
+was not exposed by that log, so do not claim a proved filesystem-denial cause.
+No system PAM/accessibility/sandbox permissions were relaxed to force it through.
+
+The CTK worker now calls the same underlying **libfido2 1.17.0** directly, with:
+
+- strict canonical parsing of the existing `keke` public map, distinct credential
+  IDs, ES256 public keys, and exactly `+presence` options; no new credential;
+- fixed RP `pam://keke-flakes`, fresh 32-byte CSPRNG nonce per request;
+- standard pam_u2f-style **no-touch candidate detection only**, followed by a NEW
+  nonce and UP-required, UV-disabled assertion with NULL PIN;
+- `fido_assert_verify` against the explicitly corresponding whitelisted public
+  key; no vendor/serial-based authorization, no PIN prompt/guess/reset, no make-cred
+  calls; detection alone can never authorize;
+- independent native lock checks before enumeration/request and after verification;
+  existing 20-second own-child watchdog and permanent native-signature refusal.
+
+`bundle-fido.py` replaces the PAM bundler. The worker and its fixed FIDO/CBOR/crypto
+dependency closure are bundle-relative, signed and verified; no PAM service/handle
+or added system-file exception is needed. Existing sudo PAM integration is unchanged.
+
+`tests/macos-fido-verify.c` uses ephemeral software keys ONLY in memory during the
+build (no files/logs/store key material, no HID). It accepts a valid assertion and
+rejects wrong public key, RP, challenge, missing user-presence flag, and malformed
+signature. The lock-state truth table still passes. Actual inherited-sandbox
+selfcheck imported **both existing public credentials**, prepared RP/options/nonces,
+and exited0 without any device enumeration or authentication. Native no-opt-in
+cancellation/cleanup passed at 15:28:53 and 15:33:30. This validates initialization
+and crypto failure cases, **not real locked HID access/touch**.
 
 ## Next gates
 

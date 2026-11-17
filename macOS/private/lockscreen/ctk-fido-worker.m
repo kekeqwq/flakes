@@ -1,29 +1,57 @@
-// Signature verification only. No enrollment, account rights or native signatures.
+// FIDO signature verification only; no PAM service chain, enrollment or native signing.
 #import "ctk-lock-state.h"
 #import <os/log.h>
-#include <security/pam_appl.h>
-#include <dlfcn.h>
+#include <fido.h>
+#include <fido/es256.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 
-static BOOL secretPrompt = NO;
-static int conversation(int n, const struct pam_message **messages,
-                        struct pam_response **response, void *data) {
-    (void)data;
-    if (n <= 0 || n > 16 || !messages || !response) return PAM_CONV_ERR;
-    for (int i = 0; i < n; i++) {
-        if (!messages[i] || (messages[i]->msg_style != PAM_TEXT_INFO && messages[i]->msg_style != PAM_ERROR_MSG)) {
-            secretPrompt = YES;
-            os_log(OS_LOG_DEFAULT, "flakes_fido_secret_prompt_REJECTED");
-            return PAM_CONV_ERR; // Never ask for or provide PIN/password.
-        }
-        if (messages[i]->msg_style == PAM_TEXT_INFO)
-            os_log(OS_LOG_DEFAULT, "flakes_fido_information_touch_may_be_requested");
+static const char *RP = "pam://keke-flakes";
+static NSArray<NSDictionary *> *ReadWhitelist(NSString *path) {
+    NSError *error = nil;
+    NSString *text = [NSString stringWithContentsOfFile:path encoding:NSUTF8StringEncoding error:&error];
+    if (!text || error || text.length > 32768 || ![text hasSuffix:@"\n"]) return nil;
+    NSString *line = [text substringToIndex:text.length - 1];
+    if ([line containsString:@"\n"] || [line containsString:@"\r"]) return nil;
+    NSArray *parts = [line componentsSeparatedByString:@":"];
+    if (parts.count < 2 || parts.count > 17 || ![parts[0] isEqual:@"keke"]) return nil;
+    NSMutableArray *keys = [NSMutableArray array];
+    NSMutableSet *seen = [NSMutableSet set];
+    for (NSUInteger i = 1; i < parts.count; i++) {
+        NSArray *fields = [parts[i] componentsSeparatedByString:@","];
+        if (fields.count != 4 || ![fields[2] isEqual:@"es256"] || ![fields[3] isEqual:@"+presence"]) return nil;
+        NSData *idData = [[NSData alloc] initWithBase64EncodedString:fields[0] options:0];
+        NSData *pubData = [[NSData alloc] initWithBase64EncodedString:fields[1] options:0];
+        if (idData.length == 0 || idData.length > 1024 || pubData.length != 64 || [seen containsObject:idData]) return nil;
+        // Canonical public map only; do not accept decoder-normalized aliases.
+        if (![[idData base64EncodedStringWithOptions:0] isEqual:fields[0]] ||
+            ![[pubData base64EncodedStringWithOptions:0] isEqual:fields[1]]) return nil;
+        es256_pk_t *pk = es256_pk_new();
+        int result = pk ? es256_pk_from_ptr(pk, pubData.bytes, pubData.length) : FIDO_ERR_INTERNAL;
+        es256_pk_free(&pk);
+        if (result != FIDO_OK) return nil;
+        [seen addObject:idData];
+        [keys addObject:@{@"id":idData, @"public":pubData}];
     }
-    *response = calloc((size_t)n, sizeof(**response));
-    return *response ? PAM_SUCCESS : PAM_BUF_ERR;
+    return keys;
 }
+
+static fido_assert_t *PrepareAssertion(NSData *credential, BOOL presence) {
+    unsigned char nonce[32];
+    arc4random_buf(nonce, sizeof(nonce));
+    fido_assert_t *assertion = fido_assert_new();
+    if (!assertion) return NULL;
+    if (fido_assert_set_rp(assertion, RP) != FIDO_OK ||
+        fido_assert_set_clientdata_hash(assertion, nonce, sizeof(nonce)) != FIDO_OK ||
+        fido_assert_allow_cred(assertion, credential.bytes, credential.length) != FIDO_OK ||
+        fido_assert_set_up(assertion, presence ? FIDO_OPT_TRUE : FIDO_OPT_FALSE) != FIDO_OK ||
+        fido_assert_set_uv(assertion, presence ? FIDO_OPT_FALSE : FIDO_OPT_OMIT) != FIDO_OK) {
+        fido_assert_free(&assertion);
+    }
+    return assertion;
+}
+
 int main(int argc, const char *argv[]) {
     @autoreleasepool {
         setbuf(stdout, NULL);
@@ -31,42 +59,73 @@ int main(int argc, const char *argv[]) {
             printf("{\"native_locked_gate\":%s,\"authentication_started\":false}\n", ProbeNativeLocked() ? "true" : "false");
             return 0;
         }
-        BOOL moduleCheck = argc == 3 && strcmp(argv[1], "--module-check") == 0;
-        // The separate loader check never creates a PAM handle or calls auth.
-        if (!moduleCheck && !ProbeNativeLocked()) {
-            printf("{\"gate_closed\":true,\"authentication_started\":false}\n");
-            return 6;
-        }
-        if (argc != 3) return 2;
-        void *pam = dlopen("/usr/lib/libpam.2.dylib", RTLD_NOW | RTLD_LOCAL);
-        if (!pam) return 7;
-        int (*start)(const char *, const char *, const struct pam_conv *, pam_handle_t **) = dlsym(pam, "pam_start");
-        int (*end)(pam_handle_t *, int) = dlsym(pam, "pam_end");
-        if (!start || !end) return 7;
-        void *module = dlopen(moduleCheck ? argv[2] : argv[1], RTLD_NOW | RTLD_LOCAL);
-        if (!module) { printf("{\"module_load_failed\":true}\n"); return 7; }
-        int (*authenticate)(pam_handle_t *, int, int, const char **) = dlsym(module, "pam_sm_authenticate");
-        if (!authenticate) return 7;
-        if (moduleCheck) {
-            printf("{\"module_load_ok\":true,\"authentication_started\":false}\n");
+        BOOL selfcheck = argc == 3 && strcmp(argv[1], "--self-check") == 0;
+        if (!selfcheck && !ProbeNativeLocked()) return 6; // Before any HID operation.
+        if (argc != 3 || (!selfcheck && strcmp(argv[1], "--verify") != 0)) return 2;
+        NSArray *keys = ReadWhitelist([NSString stringWithUTF8String:argv[2]]);
+        if (!keys) { os_log(OS_LOG_DEFAULT, "flakes_fido_whitelist_REJECTED"); return 8; }
+        fido_init(0); // No debug output or callbacks accepting secrets.
+        if (selfcheck) {
+            // Validate key import, fixed RP/options and fresh nonce allocation; no devices enumerated.
+            for (NSDictionary *key in keys) {
+                fido_assert_t *assertion = PrepareAssertion(key[@"id"], YES);
+                if (!assertion) return 8;
+                fido_assert_free(&assertion);
+            }
+            os_log(OS_LOG_DEFAULT, "flakes_fido_selfcheck_PASSED_no_device_access keys=%{public}lu", (unsigned long)keys.count);
             return 0;
         }
-        struct pam_conv conv = { conversation, NULL };
-        pam_handle_t *handle = NULL;
-        if (start("other", "keke", &conv, &handle) != PAM_SUCCESS) return 8;
-        char authfile[2048];
-        if (snprintf(authfile, sizeof(authfile), "authfile=%s", argv[2]) >= (int)sizeof(authfile)) {
-            end(handle, PAM_ABORT); return 8;
-        }
-        const char *options[] = { authfile, "origin=pam://keke-flakes", "appid=pam://keke-flakes",
-            "userpresence=1", "pinverification=0", "userverification=0", "cue" };
-        if (!ProbeNativeLocked()) { end(handle, PAM_ABORT); return 6; }
-        int result = authenticate(handle, 0, 7, options);
-        int ended = end(handle, result);
-        BOOL stillLocked = ProbeNativeLocked();
-        BOOL verified = result == PAM_SUCCESS && ended == PAM_SUCCESS && !secretPrompt && stillLocked;
-        printf("{\"fido_signature_verified\":%s,\"pam_result\":%d,\"pam_end_result\":%d,\"secret_prompt_rejected\":%s,\"still_locked\":%s}\n",
-               verified ? "true" : "false", result, ended, secretPrompt ? "true" : "false", stillLocked ? "true" : "false");
+        if (!ProbeNativeLocked()) return 6;
+        size_t count = 0;
+        fido_dev_info_t *devices = fido_dev_info_new(64);
+        if (!devices) return 8;
+        int enumeration = fido_dev_info_manifest(devices, 64, &count);
+        BOOL verified = NO;
+        os_log(OS_LOG_DEFAULT, "flakes_fido_enumeration_result=%{public}d count=%{public}lu", enumeration, (unsigned long)count);
+        if (enumeration == FIDO_OK) {
+            for (size_t i = 0; i < count && !verified; i++) {
+                if (!ProbeNativeLocked()) break;
+                fido_dev_t *device = fido_dev_new();
+                if (!device) continue;
+                fido_dev_set_timeout(device, 12000);
+                const char *path = fido_dev_info_path(fido_dev_info_ptr(devices, i));
+                int opened = path ? fido_dev_open(device, path) : FIDO_ERR_INTERNAL;
+                if (opened == FIDO_OK) {
+                    for (NSDictionary *key in keys) {
+                        if (!ProbeNativeLocked()) break;
+                        // Same no-touch discovery convention as pam_u2f: CTAP2
+                        // success or CTAP1 UP_REQUIRED locates a candidate only.
+                        fido_assert_t *detect = PrepareAssertion(key[@"id"], NO);
+                        int found = detect ? fido_dev_get_assert(device, detect, NULL) : FIDO_ERR_INTERNAL;
+                        BOOL candidate = (fido_dev_is_fido2(device) && found == FIDO_OK) ||
+                            (!fido_dev_is_fido2(device) && found == FIDO_ERR_USER_PRESENCE_REQUIRED);
+                        fido_assert_free(&detect);
+                        if (!candidate || !ProbeNativeLocked()) continue;
+                        // Detection never authorizes. Fresh nonce and required UP
+                        // for the actual cryptographically verified assertion.
+                        fido_assert_t *assertion = PrepareAssertion(key[@"id"], YES);
+                        es256_pk_t *pk = es256_pk_new();
+                        NSData *pub = key[@"public"];
+                        if (!assertion || !pk || es256_pk_from_ptr(pk, pub.bytes, pub.length) != FIDO_OK) {
+                            fido_assert_free(&assertion); es256_pk_free(&pk); continue;
+                        }
+                        os_log(OS_LOG_DEFAULT, "flakes_fido_registered_credential_request_started_no_pin");
+                        // NULL PIN: no prompt, guess, PIN change or fallback to another factor.
+                        int result = fido_dev_get_assert(device, assertion, NULL);
+                        int signature = result == FIDO_OK && fido_assert_count(assertion) == 1 ?
+                            fido_assert_verify(assertion, 0, COSE_ES256, pk) : FIDO_ERR_INVALID_SIG;
+                        verified = result == FIDO_OK && signature == FIDO_OK && ProbeNativeLocked();
+                        os_log(OS_LOG_DEFAULT, "flakes_fido_assert_result=%{public}d verify_result=%{public}d verified=%{public}d", result, signature, verified);
+                        fido_assert_free(&assertion); es256_pk_free(&pk);
+                        if (verified) break;
+                    }
+                    fido_dev_close(device);
+                } else os_log(OS_LOG_DEFAULT, "flakes_fido_device_open_failed=%{public}d", opened);
+                fido_dev_free(&device);
+            }
+        } else os_log(OS_LOG_DEFAULT, "flakes_fido_enumeration_failed=%{public}d", enumeration);
+        fido_dev_info_free(&devices, 64);
+        printf("{\"fido_signature_verified\":%s,\"native_signature_granted\":false}\n", verified ? "true" : "false");
         return verified ? 0 : 9;
     }
 }

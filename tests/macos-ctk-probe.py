@@ -168,7 +168,7 @@ if args.kind in ("denial", "fido"):
             else:
                 assert events.count("hardware_not_opted_in_no_auth") == 1
                 assert "hardware_worker_started_after_native_lock" not in events
-                assert events.count("sandbox_module_load_PASSED_no_auth") == 1, events
+                assert events.count("sandbox_fido_selfcheck_PASSED_no_auth") == 1, events
         print("PASS: no native signature, terminal cancellation, no retained token; hardware scope checked.")
 if result is not None:
     raise SystemExit(result.returncode)

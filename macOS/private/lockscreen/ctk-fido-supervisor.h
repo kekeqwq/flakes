@@ -13,11 +13,9 @@ static void ProbeFidoVerification(BOOL authenticate) {
     if (authenticate && !ProbeNativeLocked()) { Trace("hardware_gate_CLOSED_no_auth"); return; }
     NSString *root = NSBundle.mainBundle.bundlePath;
     NSString *worker = [root stringByAppendingPathComponent:@"Contents/MacOS/ctk-fido-worker"];
-    NSString *module = [root stringByAppendingPathComponent:@"Contents/Frameworks/pam_u2f.so"];
     NSString *mapping = [root stringByAppendingPathComponent:@"Contents/Resources/public-u2f-keys"];
     char *arguments[] = {(char *)worker.fileSystemRepresentation,
-        authenticate ? (char *)module.fileSystemRepresentation : "--module-check",
-        authenticate ? (char *)mapping.fileSystemRepresentation : (char *)module.fileSystemRepresentation, NULL};
+        authenticate ? "--verify" : "--self-check", (char *)mapping.fileSystemRepresentation, NULL};
     posix_spawn_file_actions_t actions;
     if (posix_spawn_file_actions_init(&actions)) return;
     for (int fd = 0; fd <= 2; fd++) {
@@ -30,7 +28,7 @@ static void ProbeFidoVerification(BOOL authenticate) {
     int spawned = posix_spawn(&child, arguments[0], &actions, NULL, arguments, environment);
     posix_spawn_file_actions_destroy(&actions);
     if (spawned || child <= 1) { Trace("hardware_worker_spawn_FAILED"); return; }
-    Trace(authenticate ? "hardware_worker_started_after_native_lock" : "sandbox_module_check_started_no_auth");
+    Trace(authenticate ? "hardware_worker_started_after_native_lock" : "sandbox_fido_selfcheck_started_no_auth");
     double deadline = NSProcessInfo.processInfo.systemUptime + (authenticate ? 20 : 5);
     BOOL terminating = NO, killed = NO;
     int status = 0;
@@ -63,7 +61,7 @@ static void ProbeFidoVerification(BOOL authenticate) {
     }
     if (!authenticate) {
         Trace(!terminating && WIFEXITED(status) && WEXITSTATUS(status) == 0 ?
-            "sandbox_module_load_PASSED_no_auth" : "sandbox_module_load_FAILED_no_auth");
+            "sandbox_fido_selfcheck_PASSED_no_auth" : "sandbox_fido_selfcheck_FAILED_no_auth");
         return;
     }
     if (!terminating && WIFEXITED(status) && WEXITSTATUS(status) == 0 && ProbeNativeLocked())

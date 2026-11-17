@@ -15,7 +15,6 @@ let
     inherit pkgs;
     lib = pkgs.lib;
   };
-  nativePam = import ../pam-u2f.nix { inherit pkgs; };
   hostID = "com.keke.flakes.ctk-${probeKind}-probe";
   driverID = "${hostID}.driver";
   appName =
@@ -120,11 +119,16 @@ pkgs.runCommand "flakes-ctk-${probeKind}-probe"
       cc -Wall -Wextra -Werror -fobjc-arc -I${./.} ${../../../tests/macos-lock-gate.m} \
         -framework Foundation -framework CoreGraphics -framework IOKit -o lock-gate-test
       ./lock-gate-test
+      ulimit -c 0
+      cc -Wall -Wextra -Werror -I${pkgs.libfido2.dev}/include -I${pkgs.openssl.dev}/include ${../../../tests/macos-fido-verify.c} \
+        -L${pkgs.libfido2}/lib -L${pkgs.openssl.out}/lib -lfido2 -lcrypto -o fido-verify-test
+      ./fido-verify-test
       mkdir -p "$driver/Contents/Resources"
       cp ${shared.mapping} "$driver/Contents/Resources/public-u2f-keys"
-      python3 ${./bundle-pam.py} ${nativePam}/lib/security/pam_u2f.so "$driver/Contents/Frameworks"
-      cc -Wall -Wextra -Werror -fobjc-arc -I${./.} -I${pkgs.pam}/include ${./ctk-fido-worker.m} \
-        -framework Foundation -framework CoreGraphics -framework IOKit -o "$driver/Contents/MacOS/ctk-fido-worker"
+      cc -Wall -Wextra -Werror -fobjc-arc -I${./.} -I${pkgs.libfido2.dev}/include -I${pkgs.openssl.dev}/include ${./ctk-fido-worker.m} \
+        -L${pkgs.libfido2}/lib -lfido2 -framework Foundation -framework CoreGraphics -framework IOKit \
+        -o "$driver/Contents/MacOS/ctk-fido-worker"
+      python3 ${./bundle-fido.py} ${pkgs.libfido2}/lib/libfido2.dylib "$driver/Contents/Frameworks" "$driver/Contents/MacOS/ctk-fido-worker"
       /usr/bin/codesign --force --sign - --timestamp=none --entitlements ${workerEntitlements} "$driver/Contents/MacOS/ctk-fido-worker"
     ''}
     /usr/bin/codesign --force --sign - --timestamp=none --identifier ${driverID} --entitlements ${driverEntitlements} "$driver"

@@ -27,7 +27,7 @@ static void Deny(NSError **error) {
     if (self.hardwareOptIn) ProbeFidoVerification(YES);
     else {
         Trace("hardware_not_opted_in_no_auth");
-        ProbeFidoVerification(NO); // Library-loader selfcheck, never pam_start/auth.
+        ProbeFidoVerification(NO); // Library/whitelist selfcheck, never HID enumeration/auth.
     }
     // Even verified hardware NEVER authorizes this token.
 #endif

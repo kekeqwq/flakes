@@ -121,11 +121,14 @@ See the dated record for the initial retry-loop failure and final regression.
 ## Locked FIDO verification-only probe (owner test pending)
 
 Build with `probeKind = "fido";` and a distinct output link. The bundle contains
-exactly the existing public mapping and fixed native PAM/FIDO libraries; no Key
+exactly the existing public mapping and fixed libfido2/crypto libraries; no Key
 enrollment, PIN/PIV/OTP change, native private key or account pairing. Its public
 proxy remains unsuitable for login and never produces a native signature.
 
-`--dispatch` is a no-hardware negative test plus sandboxed library-loader check.
+`--dispatch` is a no-hardware negative test plus sandboxed whitelist/crypto
+initialization check. It does NOT enumerate devices or call get-assert. The
+previous PAM-backed worker failed pam_start inside the sandbox and was replaced;
+no system PAM service or added system-file permission is used by this worker.
 Only the explicit visible-terminal `--lock-touch` mode marks hardware opt-in and
 waits up to 90 seconds for native lock state. The kernel registry-root global
 console table is mandatory: exactly one active console, matching UID/name,
@@ -172,7 +175,10 @@ or account cleanup. Full design/evidence/limits are in the dated record.
   each cycle verified cleanup. This still is not lock-screen auto-start or Key auth.
 
 Lock gating, an own-child watchdog and a verification-only FIDO worker are now
-prepared; unlocked/no-opt-in checks and actual sandboxed module loading passed.
+prepared; actual sandboxed direct-libfido2 initialization and both public-key
+imports passed. Software assertions test valid signatures plus wrong key/RP/nonce,
+missing presence and malformed-signature rejection; those tests use memory-only
+ephemeral test keys, not hardware or account credentials.
 Next test real locked token-sandbox hardware access with owner touch.
 Only later assess a protected native identity with explicit owner agreement.
 Do not replace required LA/AKS checks or relabel FIDO signatures as raw X.509 signatures.
