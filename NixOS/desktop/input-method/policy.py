@@ -75,6 +75,16 @@ def direct_identity(title):
     return re.fullmatch(r"pi-ime:([1-9][0-9]*):([a-zA-Z0-9-]{1,64})", title or "")
 
 
+def _prefer(matches, pid):
+    """PID is an optimistic preference, never a condition. Container identity
+    plus editing/freshness is authoritative: however Pi was started, a focused
+    editing Pi gets Chinese instead of being forced to ASCII."""
+    for ctx in matches:
+        if ctx.get("pid") == pid:
+            return ctx
+    return matches[0] if matches else None
+
+
 def pi_context(terminal, clients, contexts, now):
     """Resolve the focused pane to a Pi editing context."""
     if not terminal or terminal.get("blocked"):
@@ -82,12 +92,12 @@ def pi_context(terminal, clients, contexts, now):
     identity = direct_identity(terminal.get("title"))
     if identity:
         pid, surface = identity.groups()
-        for ctx in contexts:
-            if (ctx.get("pid") == int(pid) and ctx.get("ghosttySurface") == surface
-                    and not ctx.get("tmuxPane") and ctx.get("editing") is True
-                    and _fresh(ctx, now)):
-                return ctx
-        return None
+        matches = [
+            ctx for ctx in contexts
+            if (ctx.get("ghosttySurface") == surface and not ctx.get("tmuxPane")
+                and ctx.get("editing") is True and _fresh(ctx, now))
+        ]
+        return _prefer(matches, int(pid))
     if terminal.get("title"):
         # Ghostty/tmux path: the terminal window title identifies the client.
         seed = client_for_title(terminal["title"], clients, now)
@@ -113,20 +123,16 @@ def pi_context(terminal, clients, contexts, now):
             if walked is None:
                 return None
             tty, pid, pane, socket = walked
+    matches = []
     for ctx in contexts:
-        if ctx.get("pid") != pid or ctx.get("editing") is not True:
-            continue
-        updated = ctx.get("updated")
-        if not isinstance(updated, (int, float)):
-            continue
-        if not (now - updated < 7 and now >= updated - 1):
+        if ctx.get("editing") is not True or not _fresh(ctx, now):
             continue
         if pane:
             if ctx.get("tmuxPane") == pane and socket_name(ctx.get("socket")) == socket_name(socket):
-                return ctx
+                matches.append(ctx)
         elif not ctx.get("tmuxPane") and str(ctx.get("weztermPane")) == str(terminal.get("pane")):
-            return ctx
-    return None
+            matches.append(ctx)
+    return _prefer(matches, pid)
 
 
 def _int(value):

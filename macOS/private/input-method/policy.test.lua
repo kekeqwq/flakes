@@ -88,4 +88,16 @@ assert(want(P.GHOSTTY, token, {}, {{pid=42, ghosttySurface='surface-b', editing=
 assert(want(P.GHOSTTY, token, {}, {{pid=42, ghosttySurface='surface-a', editing=false, updated=now}}) == P.ABC)
 assert(want(P.GHOSTTY, token, {}, {{pid=42, ghosttySurface='surface-a', editing=true, updated=now-8}}) == P.ABC)
 assert(want(P.GHOSTTY, {title='ghostty-shell:surface-a'}, {}, {tokenPi}) == P.ABC)
+-- Startup/job layout must not matter: PID is preference only. Container
+-- identity + editing + freshness remain required, so fish -c pi job groups
+-- and restarted Pis stay Chinese while other panes/surfaces stay isolated.
+local drifted = {pid=777, editing=true, updated=now, tmuxPane='%3', socket='/tmp/tmux-501/default'}
+assert(want(P.WEZTERM, terminal, {client}, {drifted}) == P.RIME)
+assert(want(P.WEZTERM, terminal, {client}, {{pid=777, editing=true, updated=now-8,
+  tmuxPane='%3', socket='/tmp/tmux-501/default'}}) == P.ABC)
+assert(want(P.WEZTERM, terminal, {}, {{pid=777, editing=true, updated=now, weztermPane='0'}}) == P.RIME)
+local fallback = {pid=43, ghosttySurface='surface-a', editing=true, updated=now}
+assert(want(P.GHOSTTY, token, {}, {fallback}) == P.RIME)
+assert(want(P.GHOSTTY, token, {}, {{pid=43, ghosttySurface='surface-a', editing=true, updated=now-8}}) == P.ABC)
+assert(P.piContext(token, {}, {fallback, tokenPi}, now) == tokenPi, 'exact PID preferred over fallback')
 print('input-method policy: tmux/native/direct Ghostty/context/lease assertions passed')
