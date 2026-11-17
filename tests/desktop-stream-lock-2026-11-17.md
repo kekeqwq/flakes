@@ -1,6 +1,6 @@
 # Deck follow-up — 2026-11-17 (CST)
 
-## Latest correction: Niri warning still unresolved / patch not deployed
+## Latest status: guest patch installed for boot; runtime acceptance pending
 
 Owner subsequently reported the warning again after the requested VM reboot.
 The prior **fixed** status is withdrawn: accepting it without verifying the
@@ -15,10 +15,24 @@ Prepared guest closure
 `/nix/store/rd65s4mpimi90y17b5zkk1xfs6ny6zv0-nixos-system-secret-lab-26.11.20261115.5da7db4`
 built successfully before boot testing. Its kernel, initrd and modules match
 the installed guest; it selects the explicit-environment launcher. It has **not**
-been imported/installed into the guest or activated. Deployment and a subsequent
-real boot remain necessary, with explicit permission for that guest change.
-No Deck activation occurred. Several successful VM boots/unlocks were reported
-by the owner, but those do not establish the Niri patch's runtime acceptance.
+been imported/installed at the time of that correction. Owner then explicitly
+permitted guest deployment and reboot. Through the existing private QGA socket,
+the target identified itself as `secret-lab`, `kvm`, on the expected old system.
+26 missing **public** store paths (9,158,720-byte export) were transferred and
+imported without adding a NIC. The guest persistent profile was set to `rd65s4…`
+and `switch-to-configuration boot` succeeded. Before reboot, the running system
+was verified still `3ip3z7…`, the next-boot profile `rd65s4…`, and the new launcher
+`ml2zs3…-niri-26.04-explicit-session-env` with explicit variable enumeration.
+The old boot generation remains available; no encryption/keyslot changes occurred.
+
+A normal guest reboot was then requested. The initial helper mistakenly waited
+for a success reply to QGA `guest-shutdown` (which intentionally sends none),
+so its client timed out **after** the verified boot installation/request. No
+second reboot was sent. Subsequent agent probe found it unavailable; awaiting
+owner disk-password entry, then actual running-generation and session checks.
+This is successful **build + boot installation**, not yet live warning acceptance.
+No Deck activation occurred. Several earlier successful VM boots/unlocks were
+reported by the owner, but those do not establish the patch's runtime acceptance.
 
 Keep the existing VM, disk, NVRAM, recovery materials and current running state.
 Initially no further boot/unlock tests, deployment, USB hotplug or shutdown was
