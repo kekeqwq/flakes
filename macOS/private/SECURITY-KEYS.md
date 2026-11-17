@@ -4,7 +4,7 @@
 当前已部署并实测的是原生 Touch ID sudo，以及 Esc 后的账户密码回退。
 本轮只读检查系统文件、授权规则和公开文档，没有修改 PAM、authorizationdb 或 Key 内容。
 
-## 已确定的 sudo 方案（待实现）
+## 已确定的 sudo 方案（源码已实现，正式部署待完成）
 
 顺序：`pam_reattach` 适配 → 已登记 Key 的 U2F/FIDO 认证 → 原生 Touch ID → 原生密码。
 
@@ -13,9 +13,12 @@
 - Key 失败/超时继续后续认证，不因错误或缺失 Key 放行。
 - 不做指纹/Key 并行，不做自定义 Esc 取消层；不要求每日 PIN，不修改 Key 的 PIN。
 - 保留两只 Key 的现有公开凭据、`keke` 和 `pam://keke-flakes`，不重新登记。
-  实现时将公开注册表移到 `System/Common/`，两端共享数据，平台 PAM 集成分别归属各自系统层。
+  公开注册表已原样移到 `System/Common/security-keys/`，两端共享数据，平台 PAM 集成分别归属各自系统层。
   macOS 不反向导入 `NixOS/` 模块。每只 Key 仍需在 Mac 上单独实测，不能因 Linux 通过便算 Mac 通过。
 - 此数据可复用于兼容的同 RP PAM 服务，不等于可替代 LUKS 逐卷登记、FileVault 或 PIV 证书。
+
+实施与实测状态见 [`tests/macos-sudo-keys.md`](../../tests/macos-sudo-keys.md)。
+目前第二只 Key 的隔离模块验证已通过，第一只尚未在 Mac 实测；不能把它等同于正式 sudo 验收。
 
 不全量切换 Darwin 来测试；保留已工作的密码回退、root-only 备份及本地恢复入口。
 本机此前的窄范围 PAM 安装需要用户在本地授权完成，不绕过 SIP/System Policy。

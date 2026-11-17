@@ -1,6 +1,7 @@
 # Public FIDO authorization registry
 
-`credentials.json` contains public, non-resident FIDO credential handles and
+[`System/Common/security-keys/credentials.json`](../../../System/Common/security-keys/credentials.json)
+contains the shared public, non-resident FIDO credential handles and
 public keys for `keke`, with the stable relying-party ID `pam://keke-flakes`.
 Publication is intentional and authorized by the owner. It contains no private
 key, PIN, OTP seed, disk key, or LUKS header. Anyone reading it still needs the

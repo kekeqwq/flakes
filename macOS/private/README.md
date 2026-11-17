@@ -101,8 +101,11 @@ sudo Touch ID test.
 
 ## Planned YubiKey sudo / lock-screen research
 
-The agreed, **not yet implemented**, sudo policy is registered-Key first, otherwise
-native Touch ID, with Esc from Touch ID retaining password fallback. Esc need not
+The agreed sudo policy is now **implemented/built, pending live deployment**:
+registered-Key first, otherwise native Touch ID, with Esc from Touch ID retaining
+password fallback. The secondary Key passed an isolated native-module signature
+test; the primary is unavailable, and neither is yet claimed as actual Key sudo
+acceptance. See [`tests/macos-sudo-keys.md`](../../tests/macos-sudo-keys.md). Esc need not
 cancel an active Key wait. The native macOS lock screen is a separate research
 item; do not assume the sudo PAM chain can simply be reused there. Findings,
 Apple references and safety boundaries are in [`SECURITY-KEYS.md`](SECURITY-KEYS.md).

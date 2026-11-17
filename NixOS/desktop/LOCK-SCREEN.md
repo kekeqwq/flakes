@@ -21,7 +21,7 @@ for touch must not delay typing a password. Missing keys retain password unlock;
 a newly inserted enrolled Key is picked up automatically while locked.
 
 Public authorization records live in
-`NixOS/server/security-keys/credentials.json` with a stable relying-party ID;
+`System/Common/security-keys/credentials.json` with a stable relying-party ID;
 new NixOS instances inherit the same sudo policy and desktop instances inherit
 the lock policy without per-host switches. This does not enroll a disk: each
 LUKS2 volume requires its own installation-time hardware enrollment.

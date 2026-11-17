@@ -1,29 +1,10 @@
 { lib, pkgs, ... }:
 let
-  registry = builtins.fromJSON (builtins.readFile ./security-keys/credentials.json);
-  ids = map (key: key.id) registry.keys;
-  credentials = map (key: key.credential) registry.keys;
-  mapping = pkgs.writeText "flakes-public-u2f-keys" (
-    registry.user + ":" + lib.concatStringsSep ":" credentials + "\n"
-  );
+  shared = import ../../System/Common/security-keys { inherit lib pkgs; };
+  inherit (shared) registry mapping;
 in
 {
-  assertions = [
-    {
-      assertion = registry.user == "keke" && registry.origin == "pam://keke-flakes";
-      message = "The public hardware-key registry must use the shared keke relying party.";
-    }
-    {
-      assertion =
-        credentials != [ ]
-        && lib.length (lib.unique ids) == lib.length ids
-        && lib.length (lib.unique credentials) == lib.length credentials
-        && lib.all (
-          credential: builtins.match "[^:,\n]+,[^:,\n]+,es256,\\+presence" credential != null
-        ) credentials;
-      message = "Hardware-key records must be distinct, touch-required, PIN-free ES256 credentials.";
-    }
-  ];
+  assertions = shared.assertions;
   # This file intentionally contains public credentials only. The immutable,
   # root-owned store file prevents an unprivileged process adding a sudo key.
   environment.etc."security/flakes-u2f-keys".source = mapping;

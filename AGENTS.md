@@ -83,7 +83,7 @@
   密码回退，不能把“凭据已生成”描述为 sudo、锁屏或冷启动均已通过。
   不重置 Key、不更改 PIN、不覆盖 OTP/PIV/OpenPGP 等已有凭据。
 - 经用户同意，sudo/锁屏的公开凭据 ID、公钥及固定 relying-party ID 可
-  Git 纳管于 `NixOS/server/security-keys/credentials.json`，供新实例直接
+  Git 纳管于 `System/Common/security-keys/credentials.json`，供新实例直接
   继承；这些不是私钥或磁盘解锁秘密。新增记录先逐只实测，再明确提交，
   不得把任何检测到的 Yubico 设备自动加入授权。撤销须部署到所有实例；
   回滚旧系统 generation 会恢复旧授权，不能声称仅修改当前列表就使旧
