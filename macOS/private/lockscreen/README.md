@@ -1,8 +1,8 @@
 # Native macOS lock-screen investigation
 
 Status (2026-11-17): **temporary PAM observation completed and restored;
-credentialless CTK driver executed and registrations removed; Key screen unlock
-not implemented.** Full evidence: [`tests/macos-lockscreen-key.md`](../../../tests/macos-lockscreen-key.md).
+credentialless CTK driver executed; non-login no-PIN cancellation tests passed;
+registrations removed; Key screen unlock not implemented.** Full evidence: [`tests/macos-lockscreen-key.md`](../../../tests/macos-lockscreen-key.md).
 These experiments are opt-in, not imported by Darwin configuration. No permanent
 PAM/authorization policy change, Key enrollment or account pairing occurred.
 
@@ -93,6 +93,31 @@ on completion. Do not treat build success, registration exit 0 or metadata disco
 as driver execution or lock-screen compatibility; see the dated evidence record.
 Do not force app/driver processes or native authentication services to stop.
 
+## Non-login cancellation probe
+
+The same builder accepts `probeKind = "denial"`. This variant publishes one
+transient proxy for a fixed, public-only curve point, **no certificate/private
+scalar and explicitly no login eligibility**. It exposes only an always-refusing
+signature operation. The custom auth operation is not a PIN/password operation;
+its terminal `NO + CanceledByUser` avoids CTK's retry behavior for AuthenticationFailed.
+No hardware authentication, pairing, Secure Enclave key creation or unlock occurs.
+
+Build the expression above with `probeKind = "denial";` added beside `pkgs`, and
+use `--out-link /tmp/flakes-ctk-denial-probe`. Then, without sudo:
+
+```sh
+python3 tests/macos-ctk-probe.py \
+  /tmp/flakes-ctk-denial-probe/FlakesDenialTokenProbe.app --kind denial --dispatch
+```
+
+The runner temporarily registers only the immutable probe, refuses an existing
+registration, and asserts two rejecting no-UI callbacks/no signature, bounded
+return, zero retained instances and no advertised own token. Its timeout is not
+a passing auth result. After an interrupted run use the same command with
+`--recover-only` instead of `--dispatch`: recovery refuses anything except this
+exact non-login fixture. Never remove unrelated tokens or native driver settings.
+See the dated record for the initial retry-loop failure and final regression.
+
 ## Evidence and next gate
 
 - Native module builds, signature verification passes, and Apple PAM handle tests
@@ -109,9 +134,14 @@ Do not force app/driver processes or native authentication services to stop.
   count returned to zero and explicit registrations were removed. This is not a
   working login driver or a proof of secure-lock/PIN-free behavior.
 
-Next validate CTK operation dispatch and interaction in a non-login, refusing
-prototype, then assess an independently protected native identity. Do not replace
-required LA/AKS checks or relabel FIDO signatures as raw X.509 signatures.
+- Five final-source non-login cycles (10 attempts) reached the custom no-PIN
+  callback, returned cancellation in 3.042–31.082 ms and produced no signatures;
+  each cycle verified cleanup. This still is not lock-screen auto-start or Key auth.
+
+Next prepare compositor-confirmed-lock gating and a bounded verification-only
+FIDO worker, then test actual token-sandbox hardware access with owner touch.
+Only later assess a protected native identity with explicit owner agreement.
+Do not replace required LA/AKS checks or relabel FIDO signatures as raw X.509 signatures.
 Any eventual solution must start hardware authentication only after a confirmed
 secure lock, permit a touch without first pressing Enter, keep password and Key
 authentication independent/parallel, and unlock through the native locker's normal

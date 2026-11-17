@@ -1,8 +1,22 @@
-# Experimental, credentialless metadata probe. Never part of system activation.
-{ pkgs }:
+# Experimental empty/non-login refusal probes. Never part of system activation.
+{
+  pkgs,
+  probeKind ? "empty",
+}:
+assert builtins.elem probeKind [
+  "empty"
+  "denial"
+];
 let
-  hostID = "com.keke.flakes.ctk-empty-probe";
+  denial = probeKind == "denial";
+  hostID = "com.keke.flakes.ctk-${probeKind}-probe";
   driverID = "${hostID}.driver";
+  appName = if denial then "FlakesDenialTokenProbe" else "FlakesEmptyTokenProbe";
+  driverName = if denial then "FlakesDenialTokenDriver" else "FlakesEmptyTokenDriver";
+  hostBin = "ctk-${probeKind}-host";
+  driverBin = "ctk-${probeKind}-driver";
+  hostSource = if denial then ./ctk-denial-host.m else ./ctk-empty-host.m;
+  driverSource = if denial then ./ctk-denial-driver.m else ./ctk-empty-driver.m;
   plist =
     name: attrs:
     pkgs.runCommand name { nativeBuildInputs = [ pkgs.python3 ]; } ''
@@ -22,8 +36,8 @@ let
     common
     // {
       CFBundleIdentifier = hostID;
-      CFBundleExecutable = "ctk-empty-host";
-      CFBundleName = "Flakes Empty Token Probe";
+      CFBundleExecutable = hostBin;
+      CFBundleName = appName;
       CFBundlePackageType = "APPL";
       LSUIElement = true;
     }
@@ -32,14 +46,14 @@ let
     common
     // {
       CFBundleIdentifier = driverID;
-      CFBundleExecutable = "ctk-empty-driver";
-      CFBundleName = "Flakes Empty Token Driver";
+      CFBundleExecutable = driverBin;
+      CFBundleName = driverName;
       CFBundlePackageType = "XPC!";
       NSExtension = {
         NSExtensionPointIdentifier = "com.apple.ctk-tokens";
         NSExtensionAttributes = {
           "com.apple.ctk.class-id" = driverID;
-          "com.apple.ctk.driver-class" = "FlakesEmptyTokenDriver";
+          "com.apple.ctk.driver-class" = driverName;
           "com.apple.ctk.token-type" = "persistent";
         };
       };
@@ -50,16 +64,18 @@ let
     "com.apple.security.smartcard" = true;
   };
 in
-pkgs.runCommand "flakes-ctk-empty-probe" { nativeBuildInputs = [ pkgs.stdenv.cc ]; } ''
-  app="$out/FlakesEmptyTokenProbe.app"
-  driver="$app/Contents/PlugIns/FlakesEmptyTokenDriver.appex"
+pkgs.runCommand "flakes-ctk-${probeKind}-probe" { nativeBuildInputs = [ pkgs.stdenv.cc ]; } ''
+  app="$out/${appName}.app"
+  driver="$app/Contents/PlugIns/${driverName}.appex"
   mkdir -p "$app/Contents/MacOS" "$driver/Contents/MacOS"
   cp ${hostInfo} "$app/Contents/Info.plist"
   cp ${driverInfo} "$driver/Contents/Info.plist"
-  cc -Wall -Wextra -Werror -fobjc-arc ${./ctk-empty-host.m} \
-    -framework Foundation -framework CryptoTokenKit -o "$app/Contents/MacOS/ctk-empty-host"
-  cc -Wall -Wextra -Werror -fobjc-arc ${./ctk-empty-driver.m} \
-    -framework Foundation -framework CryptoTokenKit -o "$driver/Contents/MacOS/ctk-empty-driver"
+  cc -Wall -Wextra -Werror -fobjc-arc -I${./.} ${hostSource} \
+    -framework Foundation -framework CryptoTokenKit -framework Security -framework LocalAuthentication \
+    -o "$app/Contents/MacOS/${hostBin}"
+  cc -Wall -Wextra -Werror -fobjc-arc -I${./.} ${driverSource} \
+    -framework Foundation -framework CryptoTokenKit -framework Security \
+    -o "$driver/Contents/MacOS/${driverBin}"
   /usr/bin/codesign --force --sign - --timestamp=none --identifier ${driverID} --entitlements ${entitlements} "$driver"
   /usr/bin/codesign --force --sign - --timestamp=none --identifier ${hostID} --entitlements ${entitlements} "$app"
   /usr/bin/codesign --verify --strict --deep "$app"

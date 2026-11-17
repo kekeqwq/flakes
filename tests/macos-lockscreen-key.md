@@ -71,10 +71,66 @@ This does NOT prove availability from the secure lock screen, `_securityagent`,
 pre-login/FileVault, actual HID access, PIN-free interaction, account pairing,
 keybag operations, or fail-closed authentication.
 
+## 3. Non-login operation dispatch and terminal cancellation
+
+Implemented `ctk-denial-{common.h,host.m,driver.m}` and generalized the same
+standalone bundle builder with `probeKind = "denial"`. Runner:
+`tests/macos-ctk-probe.py` (ordinary user only, signed immutable Nix bundle,
+no existing active probe registration). No certificates or private scalars.
+
+A public P-256 point is derived deterministically from a hashed x-coordinate;
+no signing keypair is generated. SHA1 identifies the public key per CTK metadata,
+not an authentication/hash-security scheme. The transient proxy explicitly has
+`suitableForLogin = NO`, no decrypt/key exchange, one fixed object ID/constraint,
+and no associated certificate. The backend never returns a signature or
+successful authentication. Host lookups are restricted to the fresh unique token
+ID and public-key identifier, with returned token ID verified before use.
+
+Two actual integration faults were found before the successful regression:
+
+- Provider-side `applicationTag` did not preserve the host-supplied value. Initial
+  strict fixture validation rejected it and lookup returned -26276. Scope now uses
+  the unique token ID/public-key hash; backend keeps its no-login, object-ID,
+  public-point and operation-constraint validation. No real authorization guard
+  or native required PAM step was removed.
+- Returning `TKErrorCodeAuthenticationFailed` from a custom no-password operation
+  caused rapid framework retries (20,496 finish callbacks in the sampled window).
+  The own probe host timed out at 25 seconds. This was **not a pass**; its `@finally`
+  did not run after timeout termination and one non-login proxy configuration
+  remained. Exact-fixture recovery verified class/prefix, point, object and
+  no-login flags and removed it; readback count returned to zero. No locker,
+  authorizationhost or ctkd was killed/restarted.
+
+Fixed this probe's terminal failure as `NO + TKErrorCodeCanceledByUser`, rather
+than an invitation to retry. Runner now recovers only its known non-login fixture
+on a child timeout, treats timeout as failure, excludes preceding-run log rows,
+and checks actual callback counts as well as signature results.
+
+**Final-source regression: 5 cycles, 2 attempts on the same LAContext each cycle**
+(13:33:31–13:33:45, +0800). Each cycle created a fresh transient non-login instance:
+
+- Own key lookup succeeded. The real framework invoked `begin_auth` and the custom
+  `finishWithError:` without a PIN/password/biometric operation or UI permission
+  (`LAContext.interactionNotAllowed = YES`).
+- All **10** attempts produced **no signature**, returned terminal error -4, and
+  completed in **3.042–31.082 ms**. Two matching begin/finish-cancel events per
+  cycle were asserted; a preceding 10-attempt version also terminated correctly.
+- No credentials were cached as successful: second attempts also reached the
+  rejecting callback. Instances read back as 0, own token was no longer advertised,
+  and exact PlugInKit/LaunchServices registrations were removed every cycle.
+- The original empty-driver variant was rebuilt/retested successfully afterward.
+
+This proves a no-PIN custom CTK callback plus bounded terminal cancellation in
+this **user-scoped, explicitly requested, non-login** operation. It does not prove
+native lock-screen auto-start, actual YubiKey/HID access, wrong-Key behavior,
+password parallelism, Secure Enclave/keybag integration or real unlock.
+
 ## Next gates
 
-- Verify real CTK operation dispatch and no-PIN interaction with a non-login,
-  always-refusing test object before making any identity login-eligible.
+- Verify registered FIDO hardware access from the token sandbox while native
+  compositor-confirmed secure lock is active. This must remain verification-only:
+  no native signature/login authority, no PIV changes or new hardware enrollment.
+  Prepare lock-state gating and a bounded own worker before owner touch testing.
 - Investigate a native token bridge with fresh registered-FIDO authorization and
   a separately protected native signing/key-management identity. Existing FIDO
   signatures are not raw X.509/PIV signatures; do not relabel existing credentials
