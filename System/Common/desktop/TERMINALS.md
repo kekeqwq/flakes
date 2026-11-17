@@ -14,15 +14,25 @@ this split option does not promise identical glass rendering on window blur.
 Shared content padding is 12 horizontally and 10 vertically (Ghostty points),
 including space around the tmux status bar.
 
-Chinese fallback uses **WenKai Mono Medium**, while MonoLisa's Latin weight stays
-unchanged. `pkgs/wenkai-mono-terminal/` exposes the original Medium font as the
-regular slot of a distinct `Keke CJK Terminal Medium` family: only naming/style-selection
-metadata changes, not outlines, hinting, character coverage or advance widths.
-Copyright/license records are preserved. This avoids applying Ghostty's global
-`font-style`/macOS `font-thicken` to Latin too. The original WenKai family remains
-as an additional fallback. Linux installs the shared font package; macOS also
-copies the identical Nix-built file into the user's Fonts directory for narrow
-Home Manager updates (ATS can ignore nix-store symlinks there). Emacs and Rime keep their separate font selections.
+Chinese fallback is **仓耳今楷05 (TsangerJinKai05)**, while Latin remains
+**MonoLisa Nasy**. Shared names are in `font-policy.nix`; regular uses the vendor
+W03 face and bold W05. `pkgs/tsanger-jinkai/` selects those two hash-pinned assets
+from chinese-fonts-overlay, preserving font bytes/names/outlines. The vendor files
+both declare regular weight, so Linux corrects matching in Fontconfig scan rules,
+and Ghostty explicitly selects each face without global Latin thickening.
+
+Linux aliases cover sans/sans-serif/serif/monospace, with strong family bindings;
+macOS copies managed MonoLisa/JinKai files through `macOS/private/fonts.nix`
+because ATS can ignore store symlinks. Shared GUI Emacs applies the same font
+policy; Squirrel uses actual PostScript names plus Apple Color Emoji. JinKai's
+W03/W05 have no 🀄/🈚 cmap entries, so no IME font patch is needed.
+
+The original `lxgw-wenkai` package is temporarily still INSTALLED at the owner's
+request, but is no longer selected or configured as a fallback. Its old renamed
+terminal/IME build helpers and configuration are removed; existing user font
+files are not deleted. Final legacy font-body cleanup requires a later request.
+TsangerType's personal/non-commercial and non-redistribution terms apply: no font
+binaries added to Git or public caches. macOS system UI fonts are not replaced.
 
 ## Integration
 
@@ -136,8 +146,9 @@ It uses empty HOME/agent directories, `--offline`, no extensions/tools, no
 prompts or saved sessions, and never changes the user's terminal/OS appearance.
 Manual Ghostty/tmux rapid switching and background-tab acceptance remain separate.
 
-`nix build .#checks.aarch64-darwin.wenkai-mono-terminal --no-link` verifies the
-entire original Medium outline/hinting table, metrics, coverage and license
-metadata, and compares two independently prepared files for byte reproducibility.
+`nix build .#checks.aarch64-darwin.desktop-fonts --no-link` checks vendor-byte
+hashes, simplified/traditional sample coverage, regular/bold CJK and unchanged
+Latin matching for all generic families, explicitly WITH the retained legacy
+fonts present. The Linux counterpart is `checks.x86_64-linux.desktop-fonts`.
 Ghostty's `+show-face --string='A中文，。'` checks actual Latin/CJK family selection;
 it does not replace visual acceptance of font weight on the display.

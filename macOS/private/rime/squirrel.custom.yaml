@@ -32,11 +32,11 @@ patch:
     line_spacing: 10 # 行间距(适用于竖排)
     border_height: 1 # 窗口上下高度
     border_width: 1 # 窗口左右宽度
-    # 输入法专用文楷已去掉 🀄🈚️ 等符号区字形，才能回退到彩色 Apple Color Emoji。
-    # 完整霞鹜文楷仍给 Emacs 用；不要把 AppleColorEmoji 放第一位，否则 UUID 会被撑开。
-    font_face: "LXGWWenKaiIME-Medium, AppleColorEmoji"
-    label_font_face: "LXGWWenKaiIME-Medium"
-    comment_font_face: "LXGWWenKaiIME-Medium, AppleColorEmoji"
+    # MonoLisa handles Latin; JinKai05 handles Chinese and has no 🀄/🈚 glyphs.
+    # Fonts are substituted from the shared policy; keep color emoji last.
+    font_face: "@LATIN_FONT@, @CJK_FONT@, AppleColorEmoji"
+    label_font_face: "@LATIN_FONT@, @CJK_FONT@"
+    comment_font_face: "@LATIN_FONT@, @CJK_FONT@, AppleColorEmoji"
     font_point: 16 # 候选字大小
     label_font_point: 13 # 候选编号大小
 

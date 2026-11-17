@@ -13,7 +13,7 @@ in
     gtk = {
       enable = true;
       # Generic families deliberately resolve through the system Fontconfig
-      # policy (MonoLisa/WenKai), not a GTK/CSS hardcoded UI font.
+      # policy (MonoLisa/JinKai05), not a GTK/CSS hardcoded UI font.
       font = {
         name = "sans-serif";
         size = 11;

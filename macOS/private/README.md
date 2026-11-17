@@ -119,19 +119,23 @@ These were observed on the actual MBA and are **not** supplied completely by
 this flake. Do not claim a perfect fresh-machine reproduction until they are
 resolved separately:
 
-- **Manual fonts:** `~/Library/Fonts` contains MonoLisa Nasy, Bookerly, Source
-  Han Serif SC and 仓耳今楷 files. `LXGWWenKaiIME-Medium.ttf` and
-  `KekeCJKTerminal-Regular.ttf` are intentional Nix-generated copies, not missing
-  sources. The latter contains unchanged WenKai Mono Medium outlines for
-  Ghostty's CJK fallback; ATS requires a real file rather than a store symlink.
-  Audit the other fonts'
-  licenses; use pinned public sources for open fonts and an explicit private
-  provisioning mechanism for proprietary ones. Do not publish the binaries.
+- **Fonts:** managed Latin is MonoLisa Nasy; Chinese is 仓耳今楷05 W03/W05,
+  obtained byte-for-byte from pinned chinese-fonts-overlay sources. `fonts.nix`
+  copies these managed files into user Fonts for CoreText; no manual font-file
+  dependency is added. Existing duplicates, Bookerly, Source Han Serif SC and old
+  generated terminal/IME files are NOT deleted. The raw LXGW package temporarily
+  remains installed but no managed app chooses it. Its old derivation/selection
+  helpers are removed; final body cleanup is deferred to the owner.
+  Audit remaining manual fonts' licenses. TsangerType is personal/non-commercial,
+  non-redistributable, and MonoLisa also has licensing limits; do not publish
+  binaries/caches or infer distribution rights from local installation.
 - **Emacs configuration/state:** `~/.emacs.d` is an independent Git checkout,
-  not deployed by this flake, and `init.org` had an uncommitted edit during
-  testing. The migration did not modify it. Nix supplies the Emacs executable
-  and native module, but not that checkout or its Elpaca state. Do not overwrite
-  it or publish its contents as part of a deployment test.
+  not deployed in full by this flake. Nix supplies the Emacs executable
+  and native module, but not that checkout or its Elpaca state. Shared desktop
+  default.el now declares Latin/JinKai selection without copying the private init;
+  this font migration also updates only that checkout's explicit font references.
+  Do not overwrite unrelated configuration/state or publish the checkout as part
+  of a deployment test.
 - **Terminal migration:** Ghostty replaces WezTerm and its plugin. Its macOS
   cask and native glass integration are declared in the private layer; shared
   settings and remaining GUI acceptance tests are in `System/Common/desktop/TERMINALS.md`.

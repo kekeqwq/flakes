@@ -1,6 +1,10 @@
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable-small";
+    chinese-fonts-overlay = {
+      url = "github:brsvh/chinese-fonts-overlay/a14d554299d1c8a5f4329a215d4d6217d99bf307";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     # Keep the app's tested Swift/SDK toolchain pinned independently.
     kikieye.url = "github:kekeqwq/kikieye";
     kikinavmap.url = "github:kekeqwq/KikiNavMap";
@@ -82,6 +86,7 @@
         inputs.kikieye.overlays.default
         inputs.kikinavmap.overlays.default
         inputs.spotx-nix.overlays.default
+        inputs.chinese-fonts-overlay.overlays.default
       ];
 
       nixosModules = {
@@ -118,7 +123,13 @@
         system:
         {
           treefmt = treefmtFor.${system}.config.build.check self;
-          wenkai-mono-terminal = pkgsFor.${system}.callPackage ./pkgs/wenkai-mono-terminal { };
+          desktop-fonts = import ./tests/fonts.nix {
+            pkgs =
+              if system == "aarch64-darwin" then
+                self.darwinConfigurations.mba.pkgs
+              else
+                self.nixosConfigurations.deck.pkgs;
+          };
           pi-native-theme = import ./System/Common/pi-native-theme.nix {
             pkgs = pkgsFor.${system};
             raw = inputs.pi.packages.${system}.coding-agent;

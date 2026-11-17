@@ -2,6 +2,16 @@
   pkgs,
   ...
 }:
+let
+  fonts = import ./font-policy.nix;
+  families = cjk: [
+    fonts.latin
+    cjk
+    "DejaVu Sans Mono"
+    "Symbols Nerd Font Mono"
+    "Noto Sans Symbols 2"
+  ];
+in
 {
   myuser.hm.programs.fish.interactiveShellInit = ''
     if set -q GHOSTTY_SURFACE_ID; and not set -q TMUX
@@ -19,16 +29,11 @@
     package = if pkgs.stdenv.hostPlatform.isDarwin then null else pkgs.ghostty;
 
     settings = {
-      # Keep MonoLisa's weight; CJK uses the original WenKai Medium outlines
-      # exposed in a dedicated regular-slot family (not global font-thicken).
-      font-family = [
-        "MonoLisa Nasy"
-        "Keke CJK Terminal Medium"
-        "LXGW WenKai Mono"
-        "DejaVu Sans Mono"
-        "Symbols Nerd Font Mono"
-        "Noto Sans Symbols 2"
-      ];
+      # Latin remains MonoLisa. Select the vendor's actual CJK faces explicitly;
+      # both files report regular weight, so do not thicken Latin or modify fonts.
+      font-family = families fonts.cjkRegular;
+      font-family-bold = families fonts.cjkBold;
+      font-family-bold-italic = families fonts.cjkBold;
       font-size = if pkgs.stdenv.hostPlatform.isDarwin then 16 else 12;
       background-opacity = 0.95;
       unfocused-split-opacity = 1;

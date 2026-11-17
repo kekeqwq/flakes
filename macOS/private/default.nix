@@ -3,6 +3,7 @@ _: {
     ../../System/Common
     ./system.nix
     ./security.nix
+    ./fonts.nix
     ./ghostty.nix
     ./input-method.nix
     ./emacs-rime.nix

@@ -141,16 +141,20 @@ assert lib.all (font: builtins.elem (toString font) (map toString c.fonts.packag
 assert !(builtins.elem (toString disabled.pkgs.lxgw-wenkai) (map toString off.fonts.packages));
 assert lib.any (font: (font.pname or "") == "monolisa-nasy") c.fonts.packages;
 assert !lib.any (font: (font.pname or "") == "monolisa-nasy") off.fonts.packages;
+assert lib.any (font: (font.pname or "") == "tsanger-jinkai-05") c.fonts.packages;
+assert !lib.any (font: (font.pname or "") == "tsanger-jinkai-05") off.fonts.packages;
 assert
   c.fonts.fontconfig.defaultFonts.sansSerif == [
     "MonoLisa Nasy"
-    "LXGW WenKai"
+    "TsangerJinKai05"
   ];
 assert
   c.fonts.fontconfig.defaultFonts.monospace == [
     "MonoLisa Nasy"
-    "LXGW WenKai Mono"
+    "TsangerJinKai05"
   ];
+assert builtins.elem "仓耳今楷05 W03" c.home-manager.users.keke.programs.ghostty.settings.font-family;
+assert lib.hasInfix "仓耳今楷05 W03" c.home-manager.users.keke.programs.emacs.extraConfig;
 assert !(c.systemd.services ? openlist) && !(off.systemd.services ? openlist);
 assert deck.config.systemd.services.openlist.enable;
 assert deck.config.systemd.services.openlist.serviceConfig.WorkingDirectory == "/home/keke";

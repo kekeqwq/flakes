@@ -38,40 +38,24 @@ let
         chmod u+w "$out/lua"
         cp ${./rime/pi_chinese_lock.lua} "$out/lua/pi_chinese_lock.lua"
       '';
-  squirrelCustom = ./rime/squirrel.custom.yaml;
-  # WenKai contains monochrome 🀄/🈚️ glyphs. Strip those cmap entries so
-  # Squirrel can fall back to Apple Color Emoji without putting emoji first
-  # (which stretches Latin metrics).
-  lxgwWenkaiIme = pkgs.stdenvNoCC.mkDerivation {
-    pname = "lxgw-wenkai-ime";
-    version = pkgs.lxgw-wenkai.version;
-    src = pkgs.lxgw-wenkai;
-    nativeBuildInputs = [ (pkgs.python3.withPackages (ps: [ ps.fonttools ])) ];
-    dontUnpack = true;
-    buildPhase = ''
-      python3 ${./rime/strip-wenkai-emoji.py} \
-        $src/share/fonts/truetype/LXGWWenKai-Medium.ttf \
-        LXGWWenKaiIME-Medium.ttf
-    '';
-    installPhase = ''
-      mkdir -p $out/share/fonts/truetype
-      cp LXGWWenKaiIME-Medium.ttf $out/share/fonts/truetype/
-    '';
-  };
+  fonts = import ../../System/Common/desktop/font-policy.nix;
+  squirrelCustom = pkgs.writeText "squirrel.custom.yaml" (
+    lib.replaceStrings
+      [ "@LATIN_FONT@" "@CJK_FONT@" ]
+      [ fonts.latinRegularPostscript fonts.cjkRegularPostscript ]
+      (builtins.readFile ./rime/squirrel.custom.yaml)
+  );
 in
 {
   config = lib.mkIf pkgs.stdenv.hostPlatform.isDarwin {
-    fonts.packages = [ lxgwWenkaiIme ];
     myuser.hm.home.activation.syncRimeIce =
       inputs.home-manager.lib.hm.dag.entryAfter [ "linkGeneration" ]
         ''
           set -euo pipefail
           src=${rimeIceData}
           dest="$HOME/Library/Rime"
-          mkdir -p "$dest" "$HOME/Library/Fonts"
-          # Copy the IME font; ATS often ignores nix-store symlinks in Fonts.
-          cp -f ${lxgwWenkaiIme}/share/fonts/truetype/LXGWWenKaiIME-Medium.ttf \
-            "$HOME/Library/Fonts/LXGWWenKaiIME-Medium.ttf"
+          mkdir -p "$dest"
+          # Native font files are installed centrally by macOS/private/fonts.nix.
           # Schema and dictionaries follow nixpkgs. User-trained data stays local:
           # *.userdb, user.yaml, installation.yaml, build/, and sync/.
           find -L "$src" -type f -print0 | while IFS= read -r -d "" f; do

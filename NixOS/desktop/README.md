@@ -51,10 +51,14 @@ can be reproduced on a fresh host. The following still need separate work:
 - Shared fonts are declared in `System/Common/desktop/fonts.nix`. MonoLisa Nasy
   normal/italic are user-supplied files under `pkgs/monolisa-nasy/`; confirm
   redistribution rights before publishing these proprietary files or caches.
-  Linux defaults are MonoLisa for Latin and LXGW WenKai for simplified/traditional
-  Chinese (WenKai Mono for monospace). Old PingFang/Hiragino aliases were removed;
-  no Japanese font policy is requested. Other manually installed fonts such as
-  Source Han Serif SC and 仓耳今楷 may still be used by out-of-scope user programs.
+  Linux defaults are MonoLisa for Latin and 仓耳今楷05 (TsangerJinKai05) for
+  simplified/traditional Chinese, including monospace fallback. The latter is
+  hash-pinned through chinese-fonts-overlay; unmodified W03/W05 vendor assets are
+  personal/non-commercial and must not be redistributed via public caches.
+  LXGW's raw package remains installed only pending the owner's cleanup request;
+  old terminal/IME helper definitions and fallback selections are removed.
+  No Japanese font policy is requested. Other manually installed fonts such as
+  Source Han Serif SC can still exist for out-of-scope user programs.
 - Ghostty replaces WezTerm and its bar plugin. Shared fonts, Fish and themes
   are declared in Common; native macOS glass stays private. See
   `System/Common/desktop/TERMINALS.md` for remaining interactive acceptance tests.

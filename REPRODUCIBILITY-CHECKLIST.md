@@ -27,7 +27,7 @@
 ## 1. 用户最终决策
 
 - [x] 分区表、磁盘初始化由每实例安装时手动准备；不复刻另一台机器的分区，不引入自动格式化流程。
-- [x] 默认西文 MonoLisa，简繁中文 LXGW；日文无需求。MonoLisa 正/斜体由用户明确要求复制入仓库。
+- [x] 默认西文 MonoLisa，简繁中文仓耳今楷05；日文无需求。LXGW 暂留原始字体安装但不选用。MonoLisa 正/斜体由用户明确要求复制入仓库。
 - [x] Pi 只复现插件与运行依赖，不复现模型/provider/failover/账户/会话。
 - [x] Emacs 用户配置由用户独立管理；本仓库只负责声明的程序/原生模块，不审计独立 dotfiles/Elpaca 工作流。
 - [x] IINA、Anki、GoldenDict、Surge、Tinycast、Moonlight 本地设置/数据不要求复现。
@@ -47,11 +47,12 @@
 
 - [x] 删除旧 `NixOS/desktop/fontconfig.xml` 的苹方/冬青别名与本地字体依赖。
 - [x] `pkgs/monolisa-nasy/` 包含 Normal/Italic；复制文件与本机原件 SHA-256 一致。
-- [x] `System/Common/desktop/fonts.nix` 两平台安装 MonoLisa、LXGW、DejaVu、Nerd symbols、Noto Sans Symbols 2。
-- [x] Linux sans/serif 为 MonoLisa → LXGW WenKai，monospace 为 MonoLisa → LXGW WenKai Mono；emoji 由 Linux Noto Color Emoji 提供。
-- [x] 上轮 Deck 隔离 Fontconfig（不含旧用户字体目录）字符匹配验证通过：西文、简中、繁中、等宽中文全部来自受管字体。
+- [x] `System/Common/desktop/fonts.nix` 两平台安装 MonoLisa、仓耳今楷05、DejaVu、Nerd symbols、Noto Sans Symbols 2；LXGW 原包按用户要求暂留。
+- [x] Linux sans/sans-serif/serif/monospace 为 MonoLisa → TsangerJinKai05；强别名与 W05 scan 字重规则不修改字体文件；emoji 由 Linux Noto Color Emoji 提供。
+- [x] 新隔离 Fontconfig 回归（含保留的旧字体）验证西文、简繁中文与 CJK 正常/粗体选择；vendor 字体 SHA-256 与源码保持一致。
+- [ ] 本次更新后的 Deck / macOS 运行态字体选择需独立验收，不能继承旧字体回归的结论。
 - [x] 旧 Deck 字体文件未删；其 MonoLisa 正/斜体与受管包逐字节相同。旧副本优先匹配不等于新机器缺文件。
-- 例外：MonoLisa 为专有字体，纳管不授予公开分发权；发布仓库/二进制缓存前需确认授权。
+- 例外：MonoLisa 为专有字体，纳管不授予公开分发权；仓耳今楷固定字体源也限制个人/非商业使用与再分发，不纳管二进制、不发公共缓存。
 - macOS 无同等 Fontconfig 的全系统 UI 字体开关；安装字体并让受管应用显式选择，不替换系统 UI 字体。
 
 ### F-02 WezTerm/bar

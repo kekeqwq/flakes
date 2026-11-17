@@ -22,6 +22,7 @@
         ./fonts.nix
         ./apps.nix
         ./emacs.nix
+        ./emacs-fonts.nix
         ./emacs-rime.nix
         ./ghostty.nix
         ./snipaste.nix
