@@ -24,7 +24,7 @@ in
     lib.concatMapStringsSep "\n"
       (generic: ''
         <alias binding="strong"><family>${generic}</family><prefer>
-          <family>${fonts.latin}</family><family>${fonts.cjk}</family>
+          <family>${fonts.latin}</family><family>${fonts.cjk}</family><family>Noto Color Emoji</family>
         </prefer></alias>
       '')
       [
@@ -34,15 +34,24 @@ in
         "monospace"
       ]
   + ''
-    <!-- Color emoji first: face order would otherwise let symbols fonts win
-         monochrome glyphs for emoji codepoints and keycap components. -->
+    <!-- Color emoji: append to the prefer chain so any glyph fallback keeps
+         the color face ahead of monochrome symbol fonts. The contains test has
+         subset semantics, so family-less queries need single-codepoint rules. -->
     <match target="pattern">
-      <test name="charset" compare="contains"><range><int>0x20e3</int><int>0x20e3</int></range></test>
-      <edit name="family" mode="prepend"><string>Noto Color Emoji</string></edit>
+      <test name="charset" compare="contains"><charset><int>0x20e3</int></charset></test>
+      <edit name="family" mode="prepend" binding="strong"><string>Noto Color Emoji</string></edit>
     </match>
     <match target="pattern">
-      <test name="charset" compare="contains"><range><int>0x1f000</int><int>0x1faff</int></range></test>
-      <edit name="family" mode="prepend"><string>Noto Color Emoji</string></edit>
+      <test name="charset" compare="contains"><charset><int>0xfe0f</int></charset></test>
+      <edit name="family" mode="prepend" binding="strong"><string>Noto Color Emoji</string></edit>
+    </match>
+    <match target="pattern">
+      <test name="charset" compare="contains"><charset><int>0x1f004</int></charset></test>
+      <edit name="family" mode="prepend" binding="strong"><string>Noto Color Emoji</string></edit>
+    </match>
+    <match target="pattern">
+      <test name="charset" compare="contains"><charset><int>0x1f21a</int></charset></test>
+      <edit name="family" mode="prepend" binding="strong"><string>Noto Color Emoji</string></edit>
     </match>
   '';
 }

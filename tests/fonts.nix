@@ -11,6 +11,9 @@ let
     <dir>${latin}/share/fonts/truetype</dir>
     <dir>${cjk}/share/fonts/truetype</dir>
     <dir>${emoji}/share/fonts</dir>
+    <!-- Competitors: without them a broken emoji rule still passes. -->
+    <dir>${pkgs.dejavu_fonts}/share/fonts/truetype</dir>
+    <dir>${pkgs.freefont_ttf}/share/fonts/truetype</dir>
     ${rules}
     </fontconfig>
   '';
@@ -56,7 +59,7 @@ pkgs.runCommand "desktop-font-policy-check"
         assert str(cjk) in file and ps == '${fonts.cjkRegularPostscript}', (generic, file, ps)
       file, ps = match(generic + ':weight=bold:charset=4e2d')
       assert str(cjk) in file and ps == '${fonts.cjkBoldPostscript}', (file, ps)
-    for spec in [':charset=20e3', ':charset=1f600', 'sans:charset=1f004', 'mono:charset=1f21a']:
+    for spec in [':charset=20e3', ':charset=1f004', 'sans:charset=20e3', 'sans:charset=1f600', 'mono:charset=1f21a']:
       file, ps = match(spec)
       assert 'NotoColorEmoji' in file, (spec, file, ps)
     print('PASS: vendor bytes unchanged; CJK regular/bold + simplified/traditional + Latin + color-emoji matching.')
