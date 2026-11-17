@@ -158,6 +158,27 @@ returns native cancellation, preserving the non-login test's lack of authority.
 A terminal timeout/interrupt invokes only exact-fixture recovery, not broad token
 or account cleanup. Full design/evidence/limits are in the dated record.
 
+## Temporary Secure Enclave probe (owner approved)
+
+`probeKind = "se"` is a separate, non-login experiment. It never accesses USB/FIDO,
+creates no certificate/account binding, and never exports private key material.
+It requests one nonpersistent P-256 Secure Enclave key per test instance, with
+AfterFirstUnlockThisDeviceOnly/privateKeyUsage only for this disposable key.
+Software fallback is prohibited. Tagged keychain lookups verify no stored item;
+completion/failure or a 120-second expiry releases the opaque reference.
+
+The unlocked creation/release smoke test passed in the actual sandbox. Copied
+IsPermanent=true is a generic Apple token-key attribute, NOT accepted as evidence
+of a stored item; see the dated record/source reference and independent tag checks.
+No signature/key exchange has yet been accepted while locked.
+
+The SE output offers `bin/flakes-test-locked-se`: run without sudo while unlocked,
+wait for **READY_TO_LOCK**, then manually Ctrl-Cmd-Q. **Do NOT touch the YubiKey**;
+this phase tests SE-only signing/self-verification and ECDH/KDF. It will NOT unlock;
+recover using original native Touch ID/password and wait for cleanup/results.
+Private keys, derived secrets and signatures stay out of logs/store/files. A
+failure is not permission to weaken account policy or substitute software keys.
+
 ## Evidence and next gate
 
 - Native module builds, signature verification passes, and Apple PAM handle tests
@@ -186,8 +207,9 @@ ephemeral test keys, not hardware or account credentials.
 Owner's real locked hardware test passed at 15:54:45: verified FIDO assertion,
 worker exit0, no native signature, all transient state cleaned. Do not repeat this
 positive test or label it native screen-unlock acceptance. Primary Mac and physical
-negative cases remain untested. Next assess a protected native test identity only
-with explicit owner agreement.
+negative cases remain untested. Owner agreed to the isolated SE primitive experiment; creation/release passed.
+Next verify its locked operations before considering any persistent native identity
+or account pairing, which still requires a separate design/consent gate.
 Do not replace required LA/AKS checks or relabel FIDO signatures as raw X.509 signatures.
 Any eventual solution must start hardware authentication only after a confirmed
 secure lock, permit a touch without first pressing Enter, keep password and Key

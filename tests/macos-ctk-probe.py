@@ -17,12 +17,16 @@ import threading
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("bundle", type=Path)
-parser.add_argument("--kind", choices=("empty", "denial", "fido"), required=True)
+parser.add_argument("--kind", choices=("empty", "denial", "fido", "se"), required=True)
 mode = parser.add_mutually_exclusive_group()
 mode.add_argument("--dispatch", action="store_true")
 mode.add_argument("--recover-only", action="store_true")
 mode.add_argument("--lock-touch", action="store_true")
+mode.add_argument("--lock-se", action="store_true")
 args = parser.parse_args()
+locked_test = args.lock_touch or args.lock_se
+if args.lock_se and (args.kind != "se" or not sys.stdin.isatty()):
+    parser.error("Locked SE test requires the se variant and a visible local terminal.")
 if args.recover_only and args.kind == "empty":
     parser.error("Recovery is restricted to the non-login fixture.")
 if args.lock_touch and (args.kind != "fido" or not sys.stdin.isatty()):
@@ -34,7 +38,7 @@ assert str(app).startswith("/nix/store/")
 info = plistlib.loads((app / "Contents/Info.plist").read_bytes())
 identifier = f"com.keke.flakes.ctk-{args.kind}-probe"
 assert info["CFBundleIdentifier"] == identifier
-name = {"empty": "FlakesEmptyTokenDriver", "denial": "FlakesDenialTokenDriver", "fido": "FlakesFidoTokenDriver"}[args.kind]
+name = {"empty": "FlakesEmptyTokenDriver", "denial": "FlakesDenialTokenDriver", "fido": "FlakesFidoTokenDriver", "se": "FlakesSETokenDriver"}[args.kind]
 extension = app / f"Contents/PlugIns/{name}.appex"
 extinfo = plistlib.loads((extension / "Contents/Info.plist").read_bytes())
 assert extinfo["CFBundleIdentifier"] == identifier + ".driver"
@@ -112,21 +116,22 @@ try:
             break
     else:
         raise RuntimeError("Host configuration not available: " + discovery.stdout)
-    if args.dispatch or args.recover_only or args.lock_touch:
+    if args.dispatch or args.recover_only or locked_test:
         option = "--cleanup-own-fixture" if args.recover_only else (
-            "--dispatch-locked-fido" if args.lock_touch else (
-                "--empty-instance" if args.kind == "empty" else "--dispatch-denial"))
-        if args.lock_touch:
+            "--dispatch-locked-se" if args.lock_se else (
+                "--dispatch-locked-fido" if args.lock_touch else (
+                    "--empty-instance" if args.kind == "empty" else "--dispatch-denial")))
+        if locked_test:
             print("Preparing reference: keep the screen UNLOCKED until the host prints READY_TO_LOCK. No PIN/password goes into this terminal.", flush=True)
         try:
-            result = run_live(host + [option], timeout=135) if args.lock_touch else run(host + [option])
+            result = run_live(host + [option], timeout=135) if locked_test else run(host + [option])
         except (subprocess.TimeoutExpired, KeyboardInterrupt) as error:
-            if args.kind in ("denial", "fido"):
+            if args.kind in ("denial", "fido", "se"):
                 recovery = run(host + ["--cleanup-own-fixture"])
                 print("Own non-login fixture recovery after timeout:", recovery.stdout.strip())
                 assert recovery.returncode == 0, "Recovery needs review; do not touch other token classes."
             raise RuntimeError("Own probe timed out/interrupted; this is NOT a passing rejection test.") from error
-        if not args.lock_touch:
+        if not locked_test:
             print(result.stdout, end="")
         if result.stderr:
             print(result.stderr[:2000])
@@ -139,7 +144,7 @@ finally:
     assert removed.returncode == 0 and unlisted.returncode == 0
     assert not matches(), "Probe registration cleanup needs review."
     print("Probe registration removed; no other drivers/settings changed.")
-if args.kind in ("denial", "fido"):
+if args.kind in ("denial", "fido", "se"):
     logs = run(["/usr/bin/log", "show", "--start", started, "--style", "json",
                 "--predicate", f'subsystem == "com.keke.flakes.ctk-{args.kind}"'])
     events = []
@@ -149,12 +154,12 @@ if args.kind in ("denial", "fido"):
             continue
         events.append(row.get("eventMessage"))
         print(row.get("timestamp"), row.get("eventMessage"))
-    if (args.dispatch or args.lock_touch) and result is not None and result.returncode == 0:
+    if (args.dispatch or locked_test) and result is not None and result.returncode == 0:
         records = [json.loads(line) for line in result.stdout.splitlines() if line.startswith("{")]
         attempts = [r for r in records if "attempt" in r]
         count = 2 if args.kind == "denial" else 1
         assert len(attempts) == count
-        limit = 25000 if args.lock_touch else 2000
+        limit = 25000 if locked_test else 2000
         assert all(not r["signature_produced"] and r["error_code"] == -4 and r["elapsed_ms"] < limit for r in attempts)
         assert any(r.get("own_token_advertised_after_cleanup") is False for r in records)
         assert events.count("begin_auth_no_password_operation") == count, events
@@ -169,6 +174,13 @@ if args.kind in ("denial", "fido"):
                 assert events.count("hardware_not_opted_in_no_auth") == 1
                 assert "hardware_worker_started_after_native_lock" not in events
                 assert events.count("sandbox_fido_selfcheck_PASSED_no_auth") == 1, events
-        print("PASS: no native signature, terminal cancellation, no retained token; hardware scope checked.")
+        if args.kind == "se":
+            required = "se_locked_primitives_PASSED_native_output_STILL_DENIED" if args.lock_se else "se_creation_selfcheck_PASSED_no_operations"
+            assert events.count(required) == 1, events
+            assert events.count("se_ephemeral_enclave_key_created_no_private_export") == 1, events
+            assert events.count("se_own_tag_keychain_lookup_status_-25300") == 1, events
+            assert events.count("se_test_key_reference_released") == 1, events
+            assert events.count("se_released_own_tag_lookup_status_-25300") == 1, events
+        print("PASS: no native signature, terminal cancellation, no retained token; requested scope checked.")
 if result is not None:
     raise SystemExit(result.returncode)

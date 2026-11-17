@@ -2,7 +2,9 @@
 #import <os/log.h>
 
 static void Trace(const char *event) {
-#ifdef FLAKES_FIDO_PROBE
+#ifdef FLAKES_SE_PROBE
+    os_log_t log = os_log_create("com.keke.flakes.ctk-se", "callback");
+#elif defined(FLAKES_FIDO_PROBE)
     os_log_t log = os_log_create("com.keke.flakes.ctk-fido", "callback");
 #else
     os_log_t log = os_log_create("com.keke.flakes.ctk-denial", "callback");
@@ -11,6 +13,8 @@ static void Trace(const char *event) {
 }
 #ifdef FLAKES_FIDO_PROBE
 #import "ctk-fido-supervisor.h"
+#elif defined(FLAKES_SE_PROBE)
+#import "ctk-se-primitive.h"
 #endif
 static void Deny(NSError **error) {
     if (error) *error = [NSError errorWithDomain:TKErrorDomain
@@ -19,6 +23,8 @@ static void Deny(NSError **error) {
 @interface FlakesDenyOperation : TKTokenAuthOperation
 #ifdef FLAKES_FIDO_PROBE
 @property BOOL hardwareOptIn;
+#elif defined(FLAKES_SE_PROBE)
+@property BOOL seLockedOptIn;
 #endif
 @end
 @implementation FlakesDenyOperation
@@ -30,6 +36,15 @@ static void Deny(NSError **error) {
         ProbeFidoVerification(NO); // Library/whitelist selfcheck, never HID enumeration/auth.
     }
     // Even verified hardware NEVER authorizes this token.
+#endif
+#ifdef FLAKES_SE_PROBE
+    if (self.seLockedOptIn) {
+        BOOL result = [ProbeSEKey runLockedTest];
+        Trace(result ? "se_locked_primitives_PASSED_native_output_STILL_DENIED" : "se_locked_primitives_FAILED");
+    } else {
+        Trace(ProbeSEKey.ready ? "se_creation_selfcheck_PASSED_no_operations" : "se_creation_selfcheck_FAILED");
+    }
+    [ProbeSEKey invalidate];
 #endif
     Trace("finish_without_pin_CANCELLED");
     // AuthenticationFailed means retry to CTK. This no-UI negative probe must
@@ -73,6 +88,8 @@ static void Deny(NSError **error) {
     FlakesDenyOperation *auth = [[FlakesDenyOperation alloc] init];
 #ifdef FLAKES_FIDO_PROBE
     auth.hardwareOptIn = [self.token.configuration.configurationData isEqual:ProbeHardwareOptInData()];
+#elif defined(FLAKES_SE_PROBE)
+    auth.seLockedOptIn = [self.token.configuration.configurationData isEqual:ProbeSEOptInData()];
 #endif
     return auth; // Not a PIN/password operation.
 }
@@ -100,7 +117,7 @@ static void Deny(NSError **error) {
     if (self) {
         self.delegate = self;
         Trace("driver_initialized");
-#ifdef FLAKES_FIDO_PROBE
+#if defined(FLAKES_FIDO_PROBE) || defined(FLAKES_SE_PROBE)
         Trace(ProbeLockDiagnostic().UTF8String);
         Trace(ProbeGlobalLockDiagnostic().UTF8String);
 #endif
@@ -129,6 +146,14 @@ static void Deny(NSError **error) {
         Trace("factory_metadata_validation_denied");
         Deny(error); return nil;
     }
+#ifdef FLAKES_SE_PROBE
+    if (![ProbeSEInstance isEqual:configuration.instanceID]) {
+        [ProbeSEKey invalidate];
+        ProbeSEInstance = configuration.instanceID;
+        ProbeSEKey = [[FlakesSEPrimitive alloc] init];
+    }
+    if (!ProbeSEKey.ready) { Trace("se_key_preparation_FAILED"); Deny(error); return nil; }
+#endif
     Trace("nonlogin_token_created");
     return [[FlakesDenyToken alloc] initWithTokenDriver:driver instanceID:configuration.instanceID];
 }

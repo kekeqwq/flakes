@@ -330,12 +330,55 @@ Key/no-Key/unlock-during-wait regressions, or password-vs-Key parallel acceptanc
 The owner recovered through the existing native UI; no per-method recovery timing
 was measured. No account was paired or real native signing key generated.
 
+## 8. Owner-approved ephemeral Secure Enclave primitive probe
+
+Owner explicitly agreed to a temporary, non-login SE test key (no private export,
+account pairing, PIV/PIN change or software fallback). Added `probeKind = "se"`
+with separate app/driver IDs; it has NO FIDO/USB access and never asks for a Key
+touch. Existing non-login proxy still returns native cancellation, not signatures.
+
+`ctk-se-primitive.h` requests P-256, `kSecAttrTokenIDSecureEnclave`,
+`kSecAttrIsPermanent=NO`, privateKeyUsage and AfterFirstUnlockThisDeviceOnly.
+That accessibility applies ONLY to this new disposable test key, not existing
+keys/accounts. An interaction-not-allowed LAContext prevents a surprise prompt.
+Creation is permitted only with an independently observed matching unlocked
+console. A unique test-only random application tag scopes persistence queries and
+unexpected-item cleanup; no broad key enumeration/deletion.
+
+The first metadata guard rejected reported IsPermanent=true and released the
+reference without signing. Public Apple source explains why this is not a
+persistence indicator: [SecCTKKeyCopyAttributeDictionary](https://github.com/apple-oss-distributions/Security/blob/db15acbe6a7f257a859ad9a3bb86097bfe0679d9/OSX/sec/Security/SecCTKKey.m#L511-L587)
+marks ALL token keys permanent in copied attributes. This source is a reference,
+not claimed identical to installed proprietary binaries. The guard now requires
+real SE token identity, non-extractable status, explicit nonpersistent creation
+and actual no-keychain-item result for the unique tag, rather than that generic
+copied flag. Any unexpected own-tag item is deleted and the experiment rejected.
+
+**Actual sandbox creation/release smoke test passed at 16:26:22**:
+
+- enclave=1, token ID present, extractable=0; no private representation API called;
+- unique-tag DP-keychain lookup -25300 before use and after reference release;
+- no signature/key exchange requested in this smoke mode;
+- one ephemeral key per fresh test instance, reused across provider factory calls;
+- native request cancelled, own virtual instance/token/registrations removed.
+
+The helper holds only an opaque native key reference and no exportable private
+blob. It releases on completion/failure and has a 120-second expiry if the client
+never reaches the callback. No private key/certificate/signature/shared secret is
+written to Git/store/argv/logs. Public fixed peer point only—no peer private key.
+
+Next owner mode prepares the reference while unlocked, waits for READY_TO_LOCK,
+and after independently confirmed lock tests: ECDSA signing + own-public-key
+verification, wrong-message rejection, raw ECDH determinism and X9.63/SHA256 KDF
+output length. Secrets/signatures remain local memory and aren't returned to the
+native token caller; the request still cancels. Actual locked primitives are
+**pending owner operation**, and there is still no login-eligible identity/keybag
+integration or account pairing. No YubiKey touch is needed for this SE-only phase.
+
 ## Next gates
 
-- Explain and obtain owner agreement before creating any native test key. Proposed
-  next isolation gate: nonpersistent, non-login Secure Enclave key, with no account
-  pairing or certificate, to verify signing/key-exchange availability across lock.
-  Do not silently substitute an exportable software key if Secure Enclave fails.
+- Owner-operated locked Secure Enclave primitive test; do not repeat the accepted
+  FIDO positive test. Failure must remain a reported failure, not software fallback.
 - Investigate a native token bridge with fresh registered-FIDO authorization and
   a separately protected native signing/key-management identity. Existing FIDO
   signatures are not raw X.509/PIV signatures; do not relabel existing credentials

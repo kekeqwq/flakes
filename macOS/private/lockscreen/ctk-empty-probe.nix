@@ -7,8 +7,10 @@ assert builtins.elem probeKind [
   "empty"
   "denial"
   "fido"
+  "se"
 ];
 let
+  se = probeKind == "se";
   fido = probeKind == "fido";
   denial = probeKind != "empty";
   shared = import ../../../System/Common/security-keys {
@@ -18,14 +20,18 @@ let
   hostID = "com.keke.flakes.ctk-${probeKind}-probe";
   driverID = "${hostID}.driver";
   appName =
-    if fido then
+    if se then
+      "FlakesSETokenProbe"
+    else if fido then
       "FlakesFidoTokenProbe"
     else if denial then
       "FlakesDenialTokenProbe"
     else
       "FlakesEmptyTokenProbe";
   driverName =
-    if fido then
+    if se then
+      "FlakesSETokenDriver"
+    else if fido then
       "FlakesFidoTokenDriver"
     else if denial then
       "FlakesDenialTokenDriver"
@@ -92,7 +98,8 @@ let
     "com.apple.security.app-sandbox" = true;
     "com.apple.security.inherit" = true;
   };
-  flags = pkgs.lib.optionalString fido "-DFLAKES_FIDO_PROBE";
+  flags =
+    pkgs.lib.optionalString fido "-DFLAKES_FIDO_PROBE" + pkgs.lib.optionalString se "-DFLAKES_SE_PROBE";
 in
 assert !fido || pkgs.lib.all (a: a.assertion) shared.assertions;
 pkgs.runCommand "flakes-ctk-${probeKind}-probe"
@@ -113,7 +120,7 @@ pkgs.runCommand "flakes-ctk-${probeKind}-probe"
       -framework Foundation -framework CryptoTokenKit -framework Security -framework LocalAuthentication -framework CoreGraphics -framework IOKit \
       -o "$app/Contents/MacOS/${hostBin}"
     cc -Wall -Wextra -Werror -fobjc-arc ${flags} -I${./.} ${driverSource} \
-      -framework Foundation -framework CryptoTokenKit -framework Security -framework CoreGraphics -framework IOKit \
+      -framework Foundation -framework CryptoTokenKit -framework Security -framework LocalAuthentication -framework CoreGraphics -framework IOKit \
       -o "$driver/Contents/MacOS/${driverBin}"
     ${pkgs.lib.optionalString fido ''
       cc -Wall -Wextra -Werror -fobjc-arc -I${./.} ${../../../tests/macos-lock-gate.m} \
@@ -134,12 +141,14 @@ pkgs.runCommand "flakes-ctk-${probeKind}-probe"
     /usr/bin/codesign --force --sign - --timestamp=none --identifier ${driverID} --entitlements ${driverEntitlements} "$driver"
     /usr/bin/codesign --force --sign - --timestamp=none --identifier ${hostID} --entitlements ${entitlements} "$app"
     /usr/bin/codesign --verify --strict --deep "$app"
-    ${pkgs.lib.optionalString fido ''
+    ${pkgs.lib.optionalString (fido || se) ''
       mkdir -p "$out/bin"
       printf '%s\n' '#!${pkgs.runtimeShell}' 'set -euo pipefail' \
         'if [ "$#" -ne 0 ]; then echo "Use a local terminal, no arguments, no sudo." >&2; exit 2; fi' \
-        "exec ${pkgs.python3}/bin/python3 ${../../../tests/macos-ctk-probe.py} \"$app\" --kind fido --lock-touch" \
-        > "$out/bin/flakes-test-locked-key"
-      chmod 755 "$out/bin/flakes-test-locked-key"
+        "exec ${pkgs.python3}/bin/python3 ${../../../tests/macos-ctk-probe.py} \"$app\" --kind ${probeKind} --${
+          if se then "lock-se" else "lock-touch"
+        }" \
+        > "$out/bin/flakes-test-locked-${if se then "se" else "key"}"
+      chmod 755 "$out/bin/flakes-test-locked-${if se then "se" else "key"}"
     ''}
   ''

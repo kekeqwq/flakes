@@ -2,14 +2,14 @@
 #import <LocalAuthentication/LocalAuthentication.h>
 #include <stdio.h>
 #include <string.h>
-#ifdef FLAKES_FIDO_PROBE
+#if defined(FLAKES_FIDO_PROBE) || defined(FLAKES_SE_PROBE)
 #import "ctk-lock-state.h"
 #endif
 
 int main(int argc, const char *argv[]) {
     @autoreleasepool {
         setbuf(stdout, NULL);
-#ifdef FLAKES_FIDO_PROBE
+#if defined(FLAKES_FIDO_PROBE) || defined(FLAKES_SE_PROBE)
         if (argc == 2 && strcmp(argv[1], "--gate-check") == 0) {
             puts(ProbeLockDiagnostic().UTF8String);
             puts(ProbeGlobalLockDiagnostic().UTF8String);
@@ -44,6 +44,13 @@ int main(int argc, const char *argv[]) {
             puts("Preparing non-login reference while unlocked. Do NOT lock until READY_TO_LOCK.");
             dispatch = YES;
         }
+#elif defined(FLAKES_SE_PROBE)
+        BOOL seOptIn = argc == 2 && strcmp(argv[1], "--dispatch-locked-se") == 0;
+        if (seOptIn) {
+            if (ProbeNativeLocked()) { puts("Start unlocked for temporary enclave-key creation."); return 12; }
+            puts("Preparing non-login Secure Enclave test; do NOT lock until READY_TO_LOCK. No YubiKey touch needed.");
+            dispatch = YES;
+        }
 #endif
         if (!dispatch) return 0;
         NSString *instance = [@"nonlogin-denial-" stringByAppendingString:NSUUID.UUID.UUIDString];
@@ -59,6 +66,8 @@ int main(int argc, const char *argv[]) {
             TKTokenConfiguration *configuration = [driver addTokenConfigurationForTokenInstanceID:instance];
 #ifdef FLAKES_FIDO_PROBE
             if (hardwareOptIn) configuration.configurationData = ProbeHardwareOptInData();
+#elif defined(FLAKES_SE_PROBE)
+            if (seOptIn) configuration.configurationData = ProbeSEOptInData();
 #endif
             configuration.keychainItems = @[item]; // No certificate or real key material.
             NSDate *deadline = [NSDate dateWithTimeIntervalSinceNow:8.0];
@@ -101,6 +110,16 @@ int main(int argc, const char *argv[]) {
                             if (!ProbeNativeLocked()) outcome = 12;
                         }
                         const int attempts = 1; // One physical touch request, never a second cached attempt.
+#elif defined(FLAKES_SE_PROBE)
+                        if (seOptIn) {
+                            puts("READY_TO_LOCK: Ctrl-Cmd-Q within 90s. NO YubiKey touch. Testing enclave primitives only; recover with native Touch ID/password.");
+                            double deadline = NSProcessInfo.processInfo.systemUptime + 90;
+                            while (!ProbeNativeLocked() && NSProcessInfo.processInfo.systemUptime < deadline)
+                                [NSThread sleepForTimeInterval:0.1];
+                            printf("{\"native_lock_confirmed_before_request\":%s}\n", ProbeNativeLocked() ? "true" : "false");
+                            if (!ProbeNativeLocked()) outcome = 12;
+                        }
+                        const int attempts = 1;
 #else
                         const int attempts = 2;
 #endif

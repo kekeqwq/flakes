@@ -4,7 +4,13 @@
 #include <string.h>
 #include <stdlib.h>
 
-#ifdef FLAKES_FIDO_PROBE
+#ifdef FLAKES_SE_PROBE
+static NSString *const ProbeDriverID = @"com.keke.flakes.ctk-se-probe.driver";
+#define FlakesDenialTokenDriver FlakesSETokenDriver
+static NSData *ProbeSEOptInData(void) {
+    return [@"locked-se-primitive-opt-in-v1" dataUsingEncoding:NSUTF8StringEncoding];
+}
+#elif defined(FLAKES_FIDO_PROBE)
 static NSString *const ProbeDriverID = @"com.keke.flakes.ctk-fido-probe.driver";
 #define FlakesDenialTokenDriver FlakesFidoTokenDriver
 static NSData *ProbeHardwareOptInData(void) {
