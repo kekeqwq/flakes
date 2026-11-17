@@ -262,6 +262,29 @@ repeat crypto positives or trade away the no-PIN/no-Enter/one-touch requirement.
 Current native unlocking remains original Touch ID/password; custom Key unlocking
 is NOT deployed. Temporary SE storage recovery metadata/root remain retained.
 
+## Public API audit and managed passkey candidate
+
+Read-only current rules confirm native UI ownership and a separate
+`system.login.screensaver.unlock` → `CryptoTokenKit:login` mechanism (explicitly
+“Do not modify”). That name is not a callable “FIDO succeeded, clear screen” switch.
+Native context/pairing/login-blob and keybag requirements still apply; no right was
+requested/evaluated, no native credential/context was fabricated, no policy changed.
+LAContext policy success and AuthorizationRef rights are not screen-unlock proof.
+
+[Apple Platform SSO documentation](https://support.apple.com/guide/deployment/platform-sso-for-macos-dep7bbb05313/web)
+(published 2026-11-03) DOES support macOS27 web-based/passkey authentication at
+Lock Screen/login window. This is a supported system integration candidate, not a
+plain-local helper API. It requires device management, compatible SSO extension
+and IdP. A supplier-signed extension might avoid own developer signing, but no
+provider/version, external YubiKey no-PIN/no-click/one-touch UX or recovery behavior
+is accepted. Passkeys here do not unlock FileVault preboot.
+
+No MDM enrollment, IdP/server/cloud account, new RP registration or extension was
+installed. Existing pam:// public credentials cannot simply serve browser WebAuthn
+for a new IdP domain. Before any deployment obtain scope consent, preserve local
+password/Touch ID recovery and reject unreviewed IdP-only policies/password sync/
+privilege changes. Only docs/SDK were reviewed; details in evidence section12.
+
 ## Evidence and next gate
 
 - Native module builds, signature verification passes, and Apple PAM handle tests

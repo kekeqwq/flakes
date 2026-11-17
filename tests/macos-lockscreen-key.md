@@ -593,8 +593,80 @@ PIN Never, a simulated Enter, or an arbitrary successful SecKey call as a solved
 native unlock. Current scope pauses provisioning and preserves password/Touch ID;
 read-only research must first find evidence of a legitimate native initiation path.
 
+## 12. Read-only native initiation/API audit; scoped Platform SSO candidate
+
+Owner requested continuing. No authentication evaluation, credential request,
+lock cycle, input injection, profile/account change or key provisioning occurred.
+Only public headers, pinned authd source, native binary strings and read-only
+`security authorizationdb read` were inspected.
+
+Observed current policy (NOT modified):
+
+- `system.login.screensaver`: class rule, `use-login-window-ui`;
+- `use-login-window-ui`: user authentication, session-owner, shared=false;
+- `system.login.screensaver.unlock`: evaluate-mechanisms, `CryptoTokenKit:login`,
+  comment “Do not modify. Performs unlock operations for screensaver.”
+
+The last name is NOT evidence of a safe arbitrary-client unlock switch. Native
+CryptoTokenKit mechanism binary strings mention username/PIN/token ID/serialized
+token data, paired-user public-key hash and construction of a login blob in the
+Authorization context. Strings are static clues, not accepted runtime behavior or
+permission to fabricate trusted token data. No invocation of that right occurred.
+Pinned authd `engine.m` marks system.login.* with required keybag-unlock hint;
+SkipInternalAuth branches skip internal checkpw rather than creating an arbitrary
+credential and are NOT proof that external FIDO can replace native LA/AKS checks.
+
+Public SDK audit:
+
+- Authorization API grants rights to an AuthorizationRef; its success alone does
+  not establish clearing the current loginwindow/WindowServer lock. No rights
+  were requested/extended/evaluated, even without UI.
+- `LAContext.evaluatePolicy` evaluates a policy for its context; documented
+  successful implications are policy-specific. Public credential setters are
+  application password / smart-card PIN, not a generic external-FIDO proof setter.
+  No canEvaluate/evaluatePolicy/setCredential calls were made.
+- TKToken APIs service requested crypto/auth callbacks, not an unsolicited screen
+  unlock notification. The working probes used their OWN caller, not loginwindow.
+- `ASAuthorizationProviderExtensionLoginManager` cannot be normally init/new'ed;
+  it is passed during registered Platform SSO callbacks. Its reauthentication
+  request is for extension SSO tokens, not documented arbitrary lock clearing.
+  No registration/configuration/key-rotation/reset methods were invoked.
+
+A genuine supported integration candidate exists, but is a different scope:
+[Apple Platform SSO for Mac](https://support.apple.com/guide/deployment/platform-sso-for-macos-dep7bbb05313/web),
+page published 2026-11-03, explicitly documents macOS27 web-based authentication
+and passkeys at the Lock Screen/login window. Requirements include device
+management supporting Extensible SSO, a compatible app/extension, and an IdP.
+SDK27 also contains OpenID authentication/federation additions. Thus do NOT claim
+“macOS categorically cannot use passkeys to unlock.” This is not evidence that our
+plain-local CTK prototype can auto-start or that external YubiKey UP-only (no PIN,
+no click, one touch) works in that managed web flow.
+
+Scope/correctness gates before any such deployment:
+
+- Owner must choose whether MDM/IdP integration is acceptable; no permission to
+  enroll/manage the Mac or create cloud/server accounts is inferred from research.
+- A compatible supplier-signed extension MAY avoid needing the owner's developer
+  team, but available provider/version/license and exact key UX must be verified;
+  no paid account/subscription or deployment is recommended on speculation.
+- Browser WebAuthn needs the IdP's valid RP domain, not the existing `pam://keke-flakes`
+  credential. Do not migrate/change that whitelist or silently enroll new hardware
+  credentials. No existing PIN changes, resident-key/UV requirement assumptions.
+- Password/Touch ID recovery must remain independently usable. Online-required
+  authentication, grace-period expiration, password sync and privilege mapping can
+  change that and must be reviewed. Do not enforce an IdP-only login policy.
+- Apple explicitly excludes passkeys for FileVault preboot in this web flow; this
+  candidate is NOT a FileVault/LUKS solution or permission to change disk settings.
+
+Current result: no working local no-Enter native unlock entry found in reviewed
+APIs; managed Platform SSO/passkey support is documented but undeployed/untested.
+Missing deployment/UX/recovery evidence must not be reported as a fixed feature.
+
 ## Next gates
 
+- Decide scope before more experiments: pure-local keke account remains blocked;
+  Platform SSO/web-passkey research requires explicit acceptance of evaluating
+  MDM/IdP integration, and enrollment/provisioning needs separate informed consent.
 - Combined non-login fresh FIDO → disposable SE positive and physical no-Key
   rejection passed. Preserve evidence, do not repeat these positives; wrong-Key/
   timeout/unlock-during-wait regressions remain for later authorization review.
