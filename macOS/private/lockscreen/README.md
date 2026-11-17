@@ -197,7 +197,10 @@ Its `bin/flakes-test-locked-bridge` requires a visible ordinary-user terminal,
 starts unlocked, streams READY_TO_LOCK, then needs one registered-Key touch ONLY
 when flashing after lock. Recover with native Touch ID/password; it will NOT
 unlock. `bin/flakes-test-locked-bridge-no-key` requires unplugged Keys and changes
-only result expectations, not authentication logic; no-Key acceptance pending.
+only result expectations, not authentication logic. Owner-operated no-Key denial
+passed at 17:17:36: independent worker log confirmed enumeration success/count0;
+worker exit9, SE_NOT_CALLED, no signing/ECDH, reference/fixture cleaned. This is
+not wrong-Key/timeout/unlock-during-wait or real screen-unlock acceptance.
 
 Persistent native identity/certificate creation and account pairing remain a
 separate consent gate, with signed-code/key access, per-session/lock-transition

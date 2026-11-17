@@ -425,8 +425,26 @@ performs one touch request before SE; native output remains denied. Optional
 `--expect-no-key` changes ONLY runner expectations, never driver/verifier behavior;
 its wrapper requires physically unplugged Keys, a started locked worker with exit9
 (no gate-closed/unlock/timeout substitute), and no SE calls. It does not infer USB
-absence from an error; inspect the scoped worker enumeration evidence as needed. Actual
-combined positive, no-Key/wrong-Key/timeout/unlock-during-wait remain pending.
+absence from an error; inspect the scoped worker enumeration evidence as needed.
+
+**Owner-operated physical no-Key denial PASSED at 17:17:36** with the prepared
+artifact's `flakes-test-locked-bridge-no-key`:
+
+- host confirmed native lock; provider global observation at 17:17:35.977346
+  independently showed lock=1, correct active console/user;
+- worker started at 17:17:35.977845; independent scoped readback for worker PID
+  53450 at 17:17:36.084: `flakes_fido_enumeration_result=0 count=0` (successful
+  enumeration, zero devices—not inferred from a generic failure);
+- worker exit9 at 17:17:36.147993, no verification; 17:17:36.157265
+  `bridge_rejected_SE_NOT_CALLED`, no SE signing/ECDH events;
+- reference released, own-tag query -25300, native cancellation -4 in 204.751 ms
+  whole request; zero instances/advertisement and exact registrations removed;
+  independent PlugInKit readback also absent;
+- owner returned with terminal output; recovery method unspecified. This does not
+  establish both password and Touch ID recovery paths or real unlock parallelism.
+
+Combined positive, wrong-Key/timeout/unlock-during-wait remain pending. No standing
+login authority or new persistent credential was created by this negative test.
 
 The exposed public-only proxy field is now named `proxy_private_material_created`
 to avoid confusing its lack of private material with the real ephemeral SE test
