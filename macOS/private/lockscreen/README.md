@@ -1,9 +1,10 @@
 # Native macOS lock-screen investigation
 
-Status (2026-11-17): **diagnostic built; not installed; Key screen unlock not implemented.**
-This is explicitly opt-in, not imported by the Darwin configuration. No real PAM
-files, authorization rights, Key credentials, or lock-screen settings were changed
-while preparing/building it.
+Status (2026-11-17): **temporary PAM observation completed and restored;
+credentialless CTK driver executed and registrations removed; Key screen unlock
+not implemented.** Full evidence: [`tests/macos-lockscreen-key.md`](../../../tests/macos-lockscreen-key.md).
+These experiments are opt-in, not imported by Darwin configuration. No permanent
+PAM/authorization policy change, Key enrollment or account pairing occurred.
 
 ## Why not just copy sudo_local?
 
@@ -44,7 +45,8 @@ logging. This is not a replacement locker or a simulated unlock UI.
 Any PAM edit still carries loader/authentication availability risk. **Before
 installation the owner must confirm a known working local account password and
 agree to this brief observation**, save work, and use a visible local terminal.
-Do not send a password to chat/tools. No installation has been performed yet.
+Do not send a password to chat/tools. The first owner-approved observation has
+completed and restored; any repeat needs a deliberate local invocation.
 
 Build from the repository (build only, no activation):
 
@@ -73,6 +75,24 @@ run can be restored using the same immutable command with
 `--restore /var/root/flakes-lockscreen-observer/run.XXXXXX`. Unknown concurrent
 changes require review, not forced overwrite. Never kill loginwindow to recover.
 
+## Credentialless CTK probe
+
+`ctk-empty-probe.nix` builds a containing app and sandboxed persistent-token
+extension using only public CTK interfaces. Default host execution reads only its
+own driver configuration. The explicit `--empty-instance` mode briefly adds one
+fresh, zero-item configuration and removes it in `@finally`; it aborts if any
+configuration already exists. The driver factory always refuses to create a token.
+It has no login identity, certificate, private key, signing implementation or HID
+access. No physical card driver is disabled or intercepted.
+
+Build by replacing `observe-session.nix` in the expression above with
+`ctk-empty-probe.nix` and using a separate output link. Temporary runtime tests must
+register the containing app in user LaunchServices before PlugInKit discovery,
+allow discovery delay, and remove only the exact probe extension/app registrations
+on completion. Do not treat build success, registration exit 0 or metadata discovery
+as driver execution or lock-screen compatibility; see the dated evidence record.
+Do not force app/driver processes or native authentication services to stop.
+
 ## Evidence and next gate
 
 - Native module builds, signature verification passes, and Apple PAM handle tests
@@ -80,12 +100,18 @@ changes require review, not forced overwrite. Never kill loginwindow to recover.
 - Synthetic normal completion, partial installation, TERM and concurrent-edit
   scenarios pass using redirected private fixture paths and mocked privilege
   commands. They do not modify real PAM or establish lock-screen compatibility.
-- Actual entry timing and native loader acceptance remain untested. No log records
-  alone do not prove PAM is unused; loader rejection/another service could explain
-  absence. Build-time `service=other` records are not lock-screen evidence.
+- Actual owner observation loaded the module in root `authorizationhost` under
+  `screensaver_new_la` / `screensaver_new`, about 20 seconds after each lock and
+  after native auth requests. No automatic lock-establishment entry was observed.
+  All observer lines and expiry state were subsequently confirmed absent.
+- The empty CTK probe executed custom driver code via native `ctkd` in the current
+  user context. It has no credentials and cannot authenticate. Empty configuration
+  count returned to zero and explicit registrations were removed. This is not a
+  working login driver or a proof of secure-lock/PIN-free behavior.
 
-Determine whether any applicable entry runs before user interaction, or only
-AFTER native fingerprint/password approval. Only then select an integration path.
+Next validate CTK operation dispatch and interaction in a non-login, refusing
+prototype, then assess an independently protected native identity. Do not replace
+required LA/AKS checks or relabel FIDO signatures as raw X.509 signatures.
 Any eventual solution must start hardware authentication only after a confirmed
 secure lock, permit a touch without first pressing Enter, keep password and Key
 authentication independent/parallel, and unlock through the native locker's normal
