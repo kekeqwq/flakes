@@ -210,6 +210,39 @@ Persistent native identity/certificate creation and account pairing remain a
 separate consent gate, with signed-code/key access, per-session/lock-transition
 binding, native keybag policy and recovery/revocation still unresolved.
 
+## Storage-only SE experiment: current ad-hoc path blocked
+
+Owner explicitly consented to write → separate-process reopen → delete for one
+new SE test key, without private export, software fallback, certificates or account
+pairing. Separate standalone `se-store-probe.nix` is NOT part of activation. It
+uses base sandbox/smartcard entitlements, no USB/CTK registration and no signing.
+`tests/macos-se-store.py` reserves a random UID-scoped tag, writes private recovery
+metadata before creation, and restricts cleanup to that tag. Native create/read
+requires matching unlocked console; interaction is prohibited. Public point only
+is encoded for fingerprint comparison; creator exits before reader can run.
+
+Actual result: creation **-34018 / errSecMissingEntitlement** under ad-hoc signature,
+TeamIdentifier unset; no cross-process read. Delete also -34018; queries twice
+reported -25300 in the visible own-tag namespace, not a deletion success/global
+absence proof. Runner failed and retained `deleted_verified=false`. No software
+fallback, fabricated access group, profile/trust/SIP change or certificate/pairing.
+
+Private state:
+`~/Library/Application Support/flakes/se-store-probe/run.7B030A22-00C2-4376-8C29-8FE6DE6628A7/`.
+Its `package` GC root keeps the exact app for narrow review. State has only public
+tag/fingerprint/status metadata, mode0600 in mode0700 directory, never key blobs.
+Do not remove recovery state/root or repeat creation before resolving legitimate
+signing/access. `--recover DIR` is scoped to same executable/hash/owner/tag, but
+cannot bypass the missing entitlement and is NOT claimed to have succeeded.
+
+Apple's pinned reference source describes implicit `com.apple.token` as read-only,
+with writable access dependent on validated entitlements. This is consistent with
+observations, not proof of installed implementation details. No valid local code-
+signing identity was found; that is not evidence owner lacks a developer account.
+A paid account alone is not an established solution: native locker/keybag behavior
+still needs separate acceptance. Details/source references in the chronological
+record; do not call this storage test successful.
+
 ## Evidence and next gate
 
 - Native module builds, signature verification passes, and Apple PAM handle tests
@@ -241,9 +274,10 @@ positive test or label it native screen-unlock acceptance. Primary Mac and physi
 wrong-Key/timeout/unlock-during-wait cases remain untested. Owner agreed to the
 isolated SE experiment; creation/release and locked primitives passed. Combined
 fresh FIDO → disposable SE admission and physical no-Key rejection also passed.
-Next assess safe persistent storage/code access only with new explicit consent;
-no persistent keychain round trip or login identity/account pairing is authorized
-or implemented. Do not repeat accepted positive hardware tests.
+Owner subsequently authorized storage-only testing; the attempt is blocked by
+-34018 (see above). No working persistent bridge or login identity/account pairing
+is implemented or authorized. Next resolve legitimate signing/access, not more
+positive hardware tests or weakened policy. Do not repeat accepted positive hardware tests.
 Do not replace required LA/AKS checks or relabel FIDO signatures as raw X.509 signatures.
 Any eventual solution must start hardware authentication only after a confirmed
 secure lock, permit a touch without first pressing Enter, keep password and Key

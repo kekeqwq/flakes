@@ -74,6 +74,15 @@ static inline BOOL ProbeNativeLocked(void) {
     ProbeLockObservation global = ProbeObserveGlobalLock(&active, &owned);
     return ProbeLockDecision(ProbeObserveLock(), global, active, owned);
 }
+// Creation/storage experiments only; NEVER an authentication authorization.
+static inline BOOL ProbeConsoleUnlocked(void) {
+    NSUInteger active, owned;
+    ProbeLockObservation g = ProbeObserveGlobalLock(&active, &owned), l = ProbeObserveLock();
+    if (!g.ordinaryUser || !g.sessionPresent || active != 1 || owned != 1 ||
+        !g.console || !g.loggedIn || !g.uidMatches || !g.nameMatches || g.locked) return NO;
+    return l.ordinaryUser && (!l.sessionPresent ||
+        (l.console && l.loggedIn && l.uidMatches && l.nameMatches && !l.locked));
+}
 static inline NSString *ProbeLockDiagnostic(void) {
     ProbeLockObservation v = ProbeObserveLock();
     return [NSString stringWithFormat:@"gate_observation ordinary=%d session=%d lock_field=%d locked=%d console=%d login=%d uid_match=%d name_match=%d",

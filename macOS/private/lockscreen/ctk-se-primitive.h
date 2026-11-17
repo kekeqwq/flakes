@@ -5,14 +5,6 @@
 #import <dispatch/dispatch.h>
 #include <stdio.h>
 
-static inline BOOL ProbeConsoleUnlocked(void) {
-    NSUInteger active, owned;
-    ProbeLockObservation g = ProbeObserveGlobalLock(&active, &owned), l = ProbeObserveLock();
-    if (!g.ordinaryUser || !g.sessionPresent || active != 1 || owned != 1 ||
-        !g.console || !g.loggedIn || !g.uidMatches || !g.nameMatches || g.locked) return NO;
-    return l.ordinaryUser && (!l.sessionPresent ||
-        (l.console && l.loggedIn && l.uidMatches && l.nameMatches && !l.locked));
-}
 static void SEError(const char *stage, CFErrorRef error) {
     char event[120];
     snprintf(event, sizeof(event), "%s_error_%ld", stage, error ? (long)CFErrorGetCode(error) : 0L);
