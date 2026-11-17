@@ -1,12 +1,24 @@
 # Deck follow-up — 2026-11-17 (CST)
 
-## Latest owner acceptance / observation pause
+## Latest correction: Niri warning still unresolved / patch not deployed
 
-Owner reports the Niri warning is fixed in actual testing and explicitly accepts
-Niri as **fixed**. Several VM boots/unlocks were reported successful. This is
-owner-observed runtime acceptance, distinct from the agent's earlier launcher
-check. The exact guest generation at acceptance was not independently recorded;
-do not claim the agent deployed the prepared closure or activated Deck.
+Owner subsequently reported the warning again after the requested VM reboot.
+The prior **fixed** status is withdrawn: accepting it without verifying the
+booted generation was premature. QGA read-only inspection now confirms both
+`/run/current-system` and the persistent system profile still reference
+`3ip3z7ls0w7a8lzs2b37x0x5b0gjpwin`, and the actual launcher resolves to upstream
+`d2r1zcvri3fiz8wfzmj1mbylv3rnvbnl-niri-26.04/bin/niri-session` with bare
+`systemctl --user import-environment` at line 36. Thus the VM rebooted the old,
+unpatched system; this is not evidence of failure of the patched launcher.
+
+Prepared guest closure
+`/nix/store/rd65s4mpimi90y17b5zkk1xfs6ny6zv0-nixos-system-secret-lab-26.11.20261115.5da7db4`
+built successfully before boot testing. Its kernel, initrd and modules match
+the installed guest; it selects the explicit-environment launcher. It has **not**
+been imported/installed into the guest or activated. Deployment and a subsequent
+real boot remain necessary, with explicit permission for that guest change.
+No Deck activation occurred. Several successful VM boots/unlocks were reported
+by the owner, but those do not establish the Niri patch's runtime acceptance.
 
 Keep the existing VM, disk, NVRAM, recovery materials and current running state.
 Initially no further boot/unlock tests, deployment, USB hotplug or shutdown was
