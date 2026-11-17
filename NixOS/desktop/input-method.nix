@@ -110,16 +110,10 @@ in
     };
     # The wrapper's data dir is not always searched before Qt falls back to
     # its own palette, so link the theme into the user data dir explicitly.
-    # Rebuild the theme with a bold CJK face: W03 strokes are too thin for
-    # small candidate text on dark backgrounds. Assets stay upstream bytes.
-    xdg.dataFile."fcitx5/themes/catppuccin-mocha-mauve".source = pkgs.runCommand "fcitx5-catppuccin-jinkai" { } ''
-      mkdir -p $out
-      for asset in arrow.png highlight.svg panel.svg radio.png; do
-        ln -s ${pkgs.catppuccin-fcitx5}/share/fcitx5/themes/catppuccin-mocha-mauve/$asset $out/
-      done
-      sed -e 's/^Font=Sans 13$/Font=Sans Bold 13/' -e 's/^Font=Sans 10$/Font=Sans Bold 10/' \
-        ${pkgs.catppuccin-fcitx5}/share/fcitx5/themes/catppuccin-mocha-mauve/theme.conf > $out/theme.conf
-    '';
+    # Inherit Fontconfig's language/emoji policy through the stock theme; do
+    # not override per-app fonts here.
+    xdg.dataFile."fcitx5/themes/catppuccin-mocha-mauve".source =
+      "${pkgs.catppuccin-fcitx5}/share/fcitx5/themes/catppuccin-mocha-mauve";
     xdg.dataFile."fcitx5/rime/default.custom.yaml" = {
       force = true;
       text = ''

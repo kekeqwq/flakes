@@ -39,6 +39,13 @@ in
       font-family-bold = families fonts.cjkBold;
       font-family-bold-italic = families fonts.cjkBold;
       font-size = if pkgs.stdenv.hostPlatform.isDarwin then 16 else 12;
+      # Text-default emoji and keycap components would otherwise lose to
+      # monochrome symbol faces; force them to the color emoji face.
+      font-codepoint-map = [
+        "U+20E3=${emoji}"
+        "U+FE0F=${emoji}"
+        "U+1F000-U+1FAFF=${emoji}"
+      ];
       background-opacity = 0.95;
       unfocused-split-opacity = 1;
       # Give both the tmux bar and terminal content room inside rounded edges.
