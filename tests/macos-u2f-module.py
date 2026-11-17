@@ -2,8 +2,10 @@
 """Opt-in native Apple-PAM handle test, NOT a sudo/privilege acceptance test.
 
 Calls only pam-u2f against the public mapping. Supplies no password/PIN, creates
-no credentials, changes no PAM file and runs no privileged command. A separate
-bounded child owns the token connection; prompts for secrets are rejected.
+no credentials and changes no PAM file. Default mode is unprivileged; explicit
+--root-probe requires pre-existing sudo authorization and does NOT test privilege
+granting by the Key. A bounded child owns the token connection; secret prompts
+are rejected.
 """
 import argparse
 import ctypes as C
@@ -22,8 +24,17 @@ p.add_argument('--label', required=True, choices=['no-key', 'primary', 'secondar
 p.add_argument('--report', required=True)
 p.add_argument('--timeout', type=int, default=65)
 p.add_argument('--child', action='store_true', help=argparse.SUPPRESS)
+p.add_argument('--root-probe', action='store_true', help='Diagnostic only: requires existing sudo authorization')
 a = p.parse_args()
-assert sys.platform == 'darwin' and os.geteuid() != 0
+assert sys.platform == 'darwin'
+if a.root_probe:
+    assert os.geteuid() == 0 and os.environ.get('SUDO_USER') == 'keke'
+    report = Path(a.report)
+    assert report.parent == Path('/var/root/flakes-sudo-key-probes')
+    assert report.parent.stat().st_uid == 0 and report.parent.stat().st_mode & 0o077 == 0
+    assert not report.is_symlink()
+else:
+    assert os.geteuid() != 0
 assert 10 <= a.timeout <= 120
 os.umask(0o077)
 module = Path(a.module).resolve()
@@ -43,7 +54,8 @@ if not a.child:
                     'authenticated': False}
     except subprocess.TimeoutExpired:
         data = {'test_error': 'timeout', 'authenticated': False}
-    data.update(label=a.label, password_or_pin_provided=False, privileged_command_run=False,
+    data.update(label=a.label, password_or_pin_provided=False,
+                privileged_command_run=a.root_probe, existing_authorization_required=a.root_probe,
                 elapsed_seconds=round(time.monotonic()-start, 3))
     data['passed'] = (not data.get('test_error')
         and not data.get('secret_prompt_rejected', False)
@@ -87,7 +99,7 @@ pam.pam_start.argtypes = [C.c_char_p, C.c_char_p, C.POINTER(Conversation), C.POI
 pam.pam_start.restype = C.c_int
 pam.pam_end.argtypes = [C.c_void_p, C.c_int]
 pam.pam_end.restype = C.c_int
-user = pwd.getpwuid(os.geteuid()).pw_name
+user = 'keke' if a.root_probe else pwd.getpwuid(os.geteuid()).pw_name
 # pam_start only creates a handle; do not call the 'other' service's auth stack.
 r = pam.pam_start(b'other', user.encode(), C.byref(conv), C.byref(handle))
 assert r == 0, r

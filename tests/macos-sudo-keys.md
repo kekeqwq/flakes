@@ -1,6 +1,6 @@
 # macOS Key-first sudo rollout
 
-## Current stage: built / isolated module verified; live sudo deployment pending
+## Current stage: local-terminal secondary-Key sudo passed; fallback acceptance pending
 
 - Shared registry moved byte-for-byte to `System/Common/security-keys/credentials.json`.
   No credentials added, regenerated or reenrolled. RP/AppID remains `pam://keke-flakes`.
@@ -19,7 +19,7 @@
 - Owner carries only the secondary Key. Read-only ykman identification matched
   serial **15490313**. Raw signature test: PAM result 0, pam_end 0, touch only,
   no PIN/password prompt or input, 4.663 s including owner response.
-  No privileged command ran; this is not yet a successful sudo test.
+  No privileged command ran; this is not a successful sudo test.
 - Primary **20452713** is not physically available on this Mac; Mac acceptance
   remains pending. Do not substitute a second test of the secondary for it.
 - Full Darwin system and `checks.aarch64-darwin.sudo-touchid` built successfully.
@@ -42,15 +42,62 @@ Keep an authenticated administrator terminal available through acceptance.
 The installed fingerprint/password policy authorizes this first installation;
 the new Key cannot authorize sudo until its module has actually been deployed.
 
-## Remaining acceptance
+## Actual deployment and failed acceptance
 
-1. Read back installed owner/mode/hash and unchanged macOS password stack.
-2. Secondary-only actual fresh sudo: touch Key, no fingerprint/PIN/password,
-   only privileged command `true`; ignore sudo cache.
-3. No Key: native Touch ID authenticates a fresh sudo.
-4. No Key: Esc from native fingerprint dialog reaches password; owner privately
+Owner locally installed the exact policy. Backup:
+`/var/root/flakes-pam-backups/20261117-100452-8654-sudo-keys`.
+Readback verified root:wheel 0644, expected bytes and SHA256
+`d876b71ec9aad1b898308443bce7c865b16fc3683b96fa0c80250570b3829973`;
+Apple's original sudo password route remains unchanged.
+
+The first fresh sudo-true PTY returned 0 after 31.95 seconds with no password,
+but owner explicitly confirmed using **fingerprint**, not the Key. Therefore it
+is not Key acceptance. A subsequent Key-only attempt did not complete; owner
+reported fingerprint-only behavior. That test's marked sudo-true process was
+cancelled, not any unrelated sudo/shell or locker. The PTY fixture's timeout
+cleanup was corrected to bound TERM handling before killing its own child.
+
+Unified logs show AMFI signature assessments for the module/libfido2, including
+ad-hoc/CMS warnings and AppleSystemPolicy **allowed** entries. These mixed records
+are not sufficient to conclude signature rejection is the root cause.
+`tests/macos-u2f-root-probe.nix` prepares a read-only module probe under existing
+administrator authorization to compare native PAM handles in root vs user
+processes, without changing the production stack. Its result is not a Key-granted
+privilege test. No cause for the proxy-PTY difference had been established at that point.
+
+### Owner local-terminal confirmation
+
+Owner executed the immutable root probe through `/usr/bin/sudo` in their local
+terminal. **Before** `Root module probe starting`, sudo printed `Please touch
+the FIDO authenticator.` Owner explicitly confirmed there was no fingerprint
+popup and touching the lit Key allowed the command to proceed. This establishes
+actual local-terminal **secondary-Key sudo success**, not merely the child probe.
+The command did not explicitly use `-k`; the pre-command PAM cue and owner-confirmed
+physical authentication show sudo did request authentication, rather than silently
+using cached approval. Do not describe it as the cache-ignored PTY fixture.
+
+The subsequent root-process module probe also passed: PAM 0 / pam_end 0,
+no password/PIN, 14.402 seconds including human response. Thus root privilege
+itself does not prevent Key access. The proxy-PTY observations remain recorded,
+but the earlier blanket statement that sudo only supports fingerprint is withdrawn.
+Do not claim all terminal/SSH/background contexts are verified or assign an
+unproven cause to the PTY difference. No further production PAM change was made.
+
+## Owner decision: stop additional tests; observe during everyday use
+
+Actual installed mapping was read back and matched both original credential
+records exactly, with root ownership, no group/world writes and fixed RP/AppID.
+No enrollment or credential replacement occurred. Owner requested both be
+configured and further checks deferred to real use; do not prompt for more tests.
+
+Installed hash/owner/mode and unchanged password stack are verified. Secondary
+Key's local sudo is verified by the owner. Remaining:
+
+1. No Key: native Touch ID authenticates a fresh local sudo.
+2. No Key: Esc from native fingerprint dialog reaches password; owner privately
    tests correct password in a local terminal. Never relay the password to tools.
-5. Primary-only actual sudo when available; errors/timeouts must not grant access.
+3. Primary-only actual sudo when available; errors/timeouts must not grant access.
+4. Re-measure other terminal/proxy/SSH contexts only if requested.
 
 The native macOS lock screen and PIV/OTP/OpenPGP state are not modified. LUKS
 registration is independent. Do not claim the rollout complete before the live

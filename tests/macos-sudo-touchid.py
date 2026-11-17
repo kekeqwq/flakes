@@ -53,7 +53,20 @@ finally:
             os.kill(pid, signal.SIGTERM)
         except ProcessLookupError:
             pass
-        _, status = os.waitpid(pid, 0)
+        # Native biometric waits may ignore TERM until the UI completes.
+        # Only stop our isolated sudo-true child, never another auth process.
+        for _ in range(20):
+            done, rc = os.waitpid(pid, os.WNOHANG)
+            if done:
+                status = rc
+                break
+            time.sleep(.1)
+        if status is None:
+            try:
+                os.kill(pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+            _, status = os.waitpid(pid, 0)
     os.close(fd)
 result = {
     "passed": os.waitstatus_to_exitcode(status) == 0 and not fallback and not timed_out,

@@ -47,10 +47,10 @@ that still executes the env-clearing shebang. Explicitly invoking Bash is
 essential. Only use `sudo darwin-rebuild switch --flake .#mba` when activation
 is intended; it can reload applications and run Homebrew cleanup.
 
-## sudo: Touch ID or account password
+## Original sudo Touch ID deployment (reference)
 
-`security.nix` enables nix-darwin's `sudo_local.touchIdAuth` and `reattach`.
-The generated local stack contains an **optional** `pam_reattach` adapter followed
+The original Touch-ID-only rollout enabled `sudo_local.touchIdAuth` and `reattach`.
+That local stack contained an **optional** `pam_reattach` adapter followed
 by **sufficient** `pam_tid.so`. It does not replace the macOS-owned sudo stack:
 its existing required `pam_opendirectory.so` password route remains available.
 The adapter covers GUI bootstrap-session differences in tmux/screen. No fingerprint
@@ -99,16 +99,19 @@ sensor availability can cause password fallback; remote/SSH biometric behavior
 is not guaranteed. Administrator authorization for deployment is not itself a
 sudo Touch ID test.
 
-## Planned YubiKey sudo / lock-screen research
+## Key-first sudo / separate lock-screen research
 
-The agreed sudo policy is now **implemented/built, pending live deployment**:
-registered-Key first, otherwise native Touch ID, with Esc from Touch ID retaining
-password fallback. The secondary Key passed an isolated native-module signature
-test; the primary is unavailable, and neither is yet claimed as actual Key sudo
-acceptance. See [`tests/macos-sudo-keys.md`](../../tests/macos-sudo-keys.md). Esc need not
-cancel an active Key wait. The native macOS lock screen is a separate research
-item; do not assume the sudo PAM chain can simply be reused there. Findings,
-Apple references and safety boundaries are in [`SECURITY-KEYS.md`](SECURITY-KEYS.md).
+The agreed sudo policy is **narrowly deployed**: registered-Key first, otherwise
+native Touch ID, with Esc from Touch ID retaining password fallback. Both
+existing credentials are in the actual immutable mapping. Owner confirmed the
+secondary Key authenticated real sudo in a local terminal with touch only, no
+fingerprint/PIN/password. Primary Mac acceptance and new-stack no-Key fallback
+checks are deferred to everyday use at the owner's request. Earlier proxy-PTY
+results do not establish a general lack of Key support or verify every context.
+See [`tests/macos-sudo-keys.md`](../../tests/macos-sudo-keys.md).
+
+Esc need not cancel an active Key wait. Native macOS lock screen integration
+remains a separate unimplemented research item; see [`SECURITY-KEYS.md`](SECURITY-KEYS.md).
 
 ## Remaining clean-machine reproduction gaps
 
