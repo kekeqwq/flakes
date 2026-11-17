@@ -299,12 +299,43 @@ capability selection and whether crypto verification ran are logged as booleans;
 no device paths/credential IDs/secret values. Actual corrected touch remains
 pending; no successful Key verification/unlock is claimed.
 
+## 7. Locked hardware verification accepted — 15:54:42–15:54:45
+
+Owner ran `xvsly2…-flakes-ctk-fido-probe` and reported **the Key flashed immediately**.
+Carried Key is secondary per prior physical context; primary Mac testing remains
+pending. This test deliberately logs no per-Key handle/public-key/device serial.
+
+- Host acquired its own non-login reference while unlocked, then owner locked.
+- Provider independently observed the unique matching global console with
+  lock-field present/true. Worker started at **15:54:42.166237**.
+- Worker metadata: one device, built-in UV unsupported, UV option omitted.
+- At **15:54:45.873**, worker logged `assert_result=0`,
+  `verification_attempted=1`, `verify_result=0`, `verified=1`.
+- Worker exit0 at **15:54:45.921133**, parent independently confirmed still locked
+  and logged `hardware_signature_VERIFIED_native_signature_STILL_DENIED`.
+- Native operation still cancelled with -4 and no native signature, exactly as
+  designed. Total operation **3822.703 ms**, including human touch wait; not a
+  separately measured cryptographic/LED latency.
+- Zero retained instances, own token no longer advertised, exact registrations
+  removed. Independent post-test PlugInKit readback confirms absent registrations.
+
+**Accepted scope:** real registered-FIDO UP-required signature verification from
+an inherited CTK sandbox after confirmed native lock, without supplying PIN or
+password to the verifier. No new FIDO credential/PIV/PIN change occurred. No need
+to repeat this positive hardware experiment.
+
+**NOT accepted yet:** actual native screen unlock, native login/keybag identity,
+locker-initiated automatic dispatch, primary Key on Mac, physical unauthorized
+Key/no-Key/unlock-during-wait regressions, or password-vs-Key parallel acceptance.
+The owner recovered through the existing native UI; no per-method recovery timing
+was measured. No account was paired or real native signing key generated.
+
 ## Next gates
 
-- Owner-operated locked hardware verification with the carried secondary Key;
-  touch only when it flashes, then normal native fingerprint/password unlock.
-  This is deliberately NOT a Key screen-unlock test. Do not claim its outcome
-  until actual worker/parent evidence is returned.
+- Explain and obtain owner agreement before creating any native test key. Proposed
+  next isolation gate: nonpersistent, non-login Secure Enclave key, with no account
+  pairing or certificate, to verify signing/key-exchange availability across lock.
+  Do not silently substitute an exportable software key if Secure Enclave fails.
 - Investigate a native token bridge with fresh registered-FIDO authorization and
   a separately protected native signing/key-management identity. Existing FIDO
   signatures are not raw X.509/PIV signatures; do not relabel existing credentials

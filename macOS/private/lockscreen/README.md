@@ -2,7 +2,8 @@
 
 Status (2026-11-17): **temporary PAM observation completed and restored;
 credentialless CTK driver executed; non-login no-PIN cancellation tests passed;
-registrations removed; Key screen unlock not implemented.** Full evidence: [`tests/macos-lockscreen-key.md`](../../../tests/macos-lockscreen-key.md).
+registered-FIDO touch verification while locked passed; registrations removed;
+Key screen unlock not implemented.** Full evidence: [`tests/macos-lockscreen-key.md`](../../../tests/macos-lockscreen-key.md).
 These experiments are opt-in, not imported by Darwin configuration. No permanent
 PAM/authorization policy change, Key enrollment or account pairing occurred.
 
@@ -118,7 +119,7 @@ a passing auth result. After an interrupted run use the same command with
 exact non-login fixture. Never remove unrelated tokens or native driver settings.
 See the dated record for the initial retry-loop failure and final regression.
 
-## Locked FIDO verification-only probe (owner test pending)
+## Locked FIDO verification-only probe (positive hardware test passed)
 
 Build with `probeKind = "fido";` and a distinct output link. The bundle contains
 exactly the existing public mapping and fixed libfido2/crypto libraries; no Key
@@ -182,8 +183,11 @@ prepared; actual sandboxed direct-libfido2 initialization and both public-key
 imports passed. Software assertions test valid signatures plus wrong key/RP/nonce,
 missing presence and malformed-signature rejection; those tests use memory-only
 ephemeral test keys, not hardware or account credentials.
-Next test real locked token-sandbox hardware access with owner touch.
-Only later assess a protected native identity with explicit owner agreement.
+Owner's real locked hardware test passed at 15:54:45: verified FIDO assertion,
+worker exit0, no native signature, all transient state cleaned. Do not repeat this
+positive test or label it native screen-unlock acceptance. Primary Mac and physical
+negative cases remain untested. Next assess a protected native test identity only
+with explicit owner agreement.
 Do not replace required LA/AKS checks or relabel FIDO signatures as raw X.509 signatures.
 Any eventual solution must start hardware authentication only after a confirmed
 secure lock, permit a touch without first pressing Enter, keep password and Key
