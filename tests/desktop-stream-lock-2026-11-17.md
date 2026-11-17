@@ -9,9 +9,14 @@ check. The exact guest generation at acceptance was not independently recorded;
 do not claim the agent deployed the prepared closure or activated Deck.
 
 Keep the existing VM, disk, NVRAM, recovery materials and current running state.
-No further boot/unlock tests, deployment, USB hotplug or shutdown is requested.
-The previously selected primary Key was identity-matched before passthrough;
-it remains assigned to the VM unless the owner subsequently changes that state.
+Initially no further boot/unlock tests, deployment, USB hotplug or shutdown was
+requested. Owner subsequently explicitly requested returning the Key and rebooting
+the VM. The previously selected primary Key was removed with QMP `device_del`;
+QMP verified no Key attached, and host read-only enumeration matched the original
+Key. A normal guest reboot was requested via QGA `guest-shutdown` mode `reboot`,
+not a hardware reset. QEMU remained running and the guest agent became unavailable;
+completion of boot/disk-password fallback is not independently verified yet.
+The Key is now host-owned; no reattachment, reenrollment or host reboot occurred.
 
 Sunshine remains **unresolved**. Owner suspects a relationship with the VM and
 will observe first. This is a hypothesis, not established causation; multiple
