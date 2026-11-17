@@ -27,12 +27,11 @@ because ATS can ignore store symlinks. Shared GUI Emacs applies the same font
 policy; Squirrel uses actual PostScript names plus Apple Color Emoji. JinKai's
 W03/W05 have no 🀄/🈚 cmap entries, so no IME font patch is needed.
 
-The original `lxgw-wenkai` package is temporarily still INSTALLED at the owner's
-request, but is no longer selected or configured as a fallback. Its old renamed
-terminal/IME build helpers and configuration are removed; existing user font
-files are not deleted. Final legacy font-body cleanup requires a later request.
-TsangerType's personal/non-commercial and non-redistribution terms apply: no font
-binaries added to Git or public caches. macOS system UI fonts are not replaced.
+The legacy LXGW/WenKai package, its terminal/IME derivation helpers and all
+selectors were removed on the owner's request. Existing system and user font
+bodies were cleaned on macOS and Deck; tsanger's personal/non-commercial and
+non-redistribution terms apply to the pinned 今楷 assets (never commit binaries
+or publish caches). macOS system UI fonts are not replaced.
 
 ## Integration
 

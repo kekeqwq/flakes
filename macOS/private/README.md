@@ -122,10 +122,9 @@ resolved separately:
 - **Fonts:** managed Latin is MonoLisa Nasy; Chinese is 仓耳今楷05 W03/W05,
   obtained byte-for-byte from pinned chinese-fonts-overlay sources. `fonts.nix`
   copies these managed files into user Fonts for CoreText; no manual font-file
-  dependency is added. Existing duplicates, Bookerly, Source Han Serif SC and old
-  generated terminal/IME files are NOT deleted. The raw LXGW package temporarily
-  remains installed but no managed app chooses it. Its old derivation/selection
-  helpers are removed; final body cleanup is deferred to the owner.
+  dependency is added. Existing duplicates, Bookerly and Source Han Serif SC are
+  not deleted. The legacy LXGW/WenKai package and its old generated
+  terminal/IME font files were removed entirely on the owner's request.
   Audit remaining manual fonts' licenses. TsangerType is personal/non-commercial,
   non-redistributable, and MonoLisa also has licensing limits; do not publish
   binaries/caches or infer distribution rights from local installation.

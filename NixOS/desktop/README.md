@@ -55,8 +55,8 @@ can be reproduced on a fresh host. The following still need separate work:
   simplified/traditional Chinese, including monospace fallback. The latter is
   hash-pinned through chinese-fonts-overlay; unmodified W03/W05 vendor assets are
   personal/non-commercial and must not be redistributed via public caches.
-  LXGW's raw package remains installed only pending the owner's cleanup request;
-  old terminal/IME helper definitions and fallback selections are removed.
+  The legacy LXGW/WenKai package, user font files and helper definitions were
+  removed entirely on the owner's request.
   No Japanese font policy is requested. Other manually installed fonts such as
   Source Han Serif SC can still exist for out-of-scope user programs.
 - Ghostty replaces WezTerm and its bar plugin. Shared fonts, Fish and themes

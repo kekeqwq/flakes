@@ -6,9 +6,6 @@
     (callPackage ../../../pkgs/monolisa-nasy { })
     dejavu_fonts
     (callPackage ../../../pkgs/tsanger-jinkai { })
-    # Deliberate temporary retention: installed assets only, no font selection.
-    # Remove only after the owner requests the final legacy-font cleanup.
-    lxgw-wenkai
     nerd-fonts.symbols-only
     (noto-fonts.override { variants = [ "Noto Sans Symbols 2" ]; })
   ];

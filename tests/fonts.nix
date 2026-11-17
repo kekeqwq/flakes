@@ -9,8 +9,6 @@ let
     <?xml version="1.0"?><!DOCTYPE fontconfig SYSTEM "fonts.dtd"><fontconfig>
     <dir>${latin}/share/fonts/truetype</dir>
     <dir>${cjk}/share/fonts/truetype</dir>
-    <!-- Retained legacy bodies must not win configured CJK matching. -->
-    <dir>${pkgs.lxgw-wenkai}/share/fonts/truetype</dir>
     ${rules}
     </fontconfig>
   '';
@@ -56,7 +54,7 @@ pkgs.runCommand "desktop-font-policy-check"
         assert str(cjk) in file and ps == '${fonts.cjkRegularPostscript}', (generic, file, ps)
       file, ps = match(generic + ':weight=bold:charset=4e2d')
       assert str(cjk) in file and ps == '${fonts.cjkBoldPostscript}', (file, ps)
-    print('PASS: vendor bytes unchanged; CJK regular/bold + simplified/traditional + Latin matching, with legacy fonts retained.')
+    print('PASS: vendor bytes unchanged; CJK regular/bold + simplified/traditional + Latin matching.')
     PY
     touch "$out"
   ''
