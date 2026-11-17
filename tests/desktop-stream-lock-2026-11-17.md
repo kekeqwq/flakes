@@ -1,6 +1,30 @@
 # Deck follow-up — 2026-11-17 (CST)
 
-## Latest status: guest patch installed for boot; runtime acceptance pending
+## Final status: owner accepts Niri and Sunshine as fixed
+
+After the authorized guest update/reboot, owner reports no further warning and
+stable Niri/Sunshine, and explicitly accepts both as fixed for this regression.
+The agent's final read-only QGA check independently confirms:
+
+- Running system **and** persistent profile are the prepared `rd65s4…` closure.
+- Actual launcher is `ml2zs3…-niri-26.04-explicit-session-env`, with explicit
+  variable enumeration. Both greetd session commands select this launcher.
+- Guest greetd and Niri user service are active (Niri PID 1278).
+- Readable boot journal filtered to `_COMM=systemctl` has zero matching bare
+  import-environment warnings. This complements, not replaces, owner visual acceptance.
+
+Sunshine is **owner-accepted stable/fixed in the observed regression**, not a
+proven root-cause source fix: no Sunshine patch or restart was performed in this
+round. A VM relationship remains unproven; do not claim that updating the guest
+launcher repaired host Sunshine internals or guarantees long-term stability.
+No timed full idle/lock/reconnect matrix was run in this round.
+
+Preserve the existing VM and current runtime state; Key is host-owned. No more
+restarts, deployments or tests without a new request. Owner requests handoff to
+the main window for review/merge; this branch does not merge itself or modify
+main-worktree font/terminal/fontconfig changes.
+
+## Earlier deployment timeline (superseded status retained for accuracy)
 
 Owner subsequently reported the warning again after the requested VM reboot.
 The prior **fixed** status is withdrawn: accepting it without verifying the
@@ -44,8 +68,8 @@ not a hardware reset. QEMU remained running and the guest agent became unavailab
 completion of boot/disk-password fallback is not independently verified yet.
 The Key is now host-owned; no reattachment, reenrollment or host reboot occurred.
 
-Sunshine remains **unresolved**. Owner suspects a relationship with the VM and
-will observe first. This is a hypothesis, not established causation; multiple
+At that earlier pause, Sunshine remained **unresolved**. Owner suspected a
+relationship with the VM and chose to observe first. This is a hypothesis, not established causation; multiple
 successful VM unlocks do not prove stream lock/resume/input stability. Pause
 active diagnosis and do not restart Sunshine or alter host displays/session.
 
