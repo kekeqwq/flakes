@@ -13,6 +13,8 @@
   # other portable terminal tools come from System/Common above.
   myuser.users = {
     isNormalUser = true;
+    # Start the per-user Emacs service at boot, even before a GUI login.
+    linger = true;
     extraGroups = [ "wheel" ];
   };
   myuser.hm.home.stateVersion = lib.mkDefault "24.11";

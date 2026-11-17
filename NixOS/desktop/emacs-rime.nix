@@ -9,6 +9,8 @@ let
           application.only = [
             "emacs"
             "Emacs"
+            "emacsd"
+            "Emacsd"
             "org.gnu.Emacs"
           ];
           remap.LEFTSHIFT = {

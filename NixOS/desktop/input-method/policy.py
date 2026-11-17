@@ -2,7 +2,7 @@
 
 import re
 
-EMACS = {"emacs", "org.gnu.emacs"}
+EMACS = {"emacs", "emacsd", "org.gnu.emacs"}
 WEZTERM = {"org.wezfurlong.wezterm", "wezterm"}
 GHOSTTY = {"com.mitchellh.ghostty", "ghostty"}
 RIME = "rime"

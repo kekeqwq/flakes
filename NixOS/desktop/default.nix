@@ -45,6 +45,7 @@
         ./input-method.nix
         ./mimeapps.nix
         ./emacs-rime.nix
+        ./emacs-client.nix
         ./wayland.nix
         ./lock-screen.nix
         ./snipaste.nix

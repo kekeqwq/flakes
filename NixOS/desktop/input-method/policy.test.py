@@ -15,6 +15,7 @@ def want(app, term=terminal, clients=(), contexts=(pi,), prefix=False):
 
 assert want("org.gnu.Emacs") == "ascii"
 assert want("emacs") == "ascii"
+assert want("Emacsd") == "ascii"
 assert want("org.wezfurlong.wezterm") == "rime"
 assert want("org.wezfurlong.wezterm", term={**terminal, "blocked": True}) == "ascii"
 assert want("org.wezfurlong.wezterm", term={**terminal, "pane": 1}) == "ascii"

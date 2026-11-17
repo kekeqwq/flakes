@@ -85,11 +85,26 @@ assert c.services.udisks2.enable && c.services.fwupd.enable;
 assert !off.programs.niri.enable && !off.services.greetd.enable && !off.services.sunshine.enable;
 assert off.myuser.name == "keke";
 assert off.home-manager.users.keke.programs.fish.enable;
+assert lib.hasInfix "--tty --alternate-editor=false $argv"
+  off.home-manager.users.keke.programs.fish.functions.e.body;
 assert off.home-manager.users.keke.programs.git.enable;
 assert off.home-manager.users.keke.programs.tmux.enable;
 assert off.home-manager.users.keke.programs.yazi.enable;
 assert off.home-manager.users.keke.programs.pi.coding-agent.enable;
 assert off.home-manager.users.keke.programs.emacs.enable;
+assert c.home-manager.users.keke.services.emacs.enable;
+assert off.home-manager.users.keke.services.emacs.enable;
+assert c.users.users.keke.linger && off.users.users.keke.linger;
+assert c.home-manager.users.keke.services.emacs.startWithUserSession == true;
+assert off.home-manager.users.keke.services.emacs.startWithUserSession == true;
+assert c.home-manager.users.keke.services.emacs.client.enable;
+assert !off.home-manager.users.keke.services.emacs.client.enable;
+assert c.home-manager.users.keke.systemd.user.services.emacs.Service.Type == "notify";
+assert lib.hasInfix "--fg-daemon"
+  (lib.concatStringsSep " " (lib.toList c.home-manager.users.keke.systemd.user.services.emacs.Service.ExecStart));
+assert lib.hasInfix "emacsclient --create-frame --no-wait --alternate-editor=false"
+  c.home-manager.users.keke.xdg.desktopEntries.emacs.exec;
+assert !(off.home-manager.users.keke.xdg.desktopEntries ? emacs);
 assert
   toString off.home-manager.users.keke.programs.emacs.package
   == toString disabled.pkgs.emacs-head-nox;

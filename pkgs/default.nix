@@ -1,4 +1,5 @@
 self: super: {
+  eca = super.callPackage ./eca { };
   xrock = super.callPackage ./xrock { };
   keke-waybar-panel = super.callPackage ./keke-waybar-panel { };
   swaylock-security-key = super.callPackage ./swaylock-security-key { };

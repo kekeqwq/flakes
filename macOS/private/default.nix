@@ -7,6 +7,7 @@ _: {
     ./ghostty.nix
     ./input-method.nix
     ./emacs-rime.nix
+    ./emacs-client.nix
     ./rime-squirrel.nix
     ./shell.nix
     ./yazi.nix

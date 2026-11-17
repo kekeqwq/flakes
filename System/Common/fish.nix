@@ -34,6 +34,14 @@
     programs.fish = {
       enable = true;
 
+      functions.e = {
+        description = "Connect to the managed Emacs server in this terminal";
+        wraps = "emacsclient";
+        body = ''
+          command ${config.home-manager.users.${config.myuser.name}.programs.emacs.finalPackage}/bin/emacsclient --tty --alternate-editor=false $argv
+        '';
+      };
+
       interactiveShellInit = ''
         set fish_greeting # Disable greeting
         set -g fish_cursor_default block
