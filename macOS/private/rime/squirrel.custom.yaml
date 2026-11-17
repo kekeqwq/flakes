@@ -35,7 +35,7 @@ patch:
     # MonoLisa handles Latin; JinKai05 handles Chinese and has no 🀄/🈚 glyphs.
     # Fonts are substituted from the shared policy; keep color emoji last.
     font_face: "@LATIN_FONT@, @CJK_FONT@, AppleColorEmoji"
-    label_font_face: "@LATIN_FONT@, @CJK_FONT@"
+    label_font_face: "@LATIN_FONT@, @CJK_FONT@, AppleColorEmoji"
     comment_font_face: "@LATIN_FONT@, @CJK_FONT@, AppleColorEmoji"
     font_point: 16 # 候选字大小
     label_font_point: 13 # 候选编号大小
