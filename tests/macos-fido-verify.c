@@ -46,6 +46,9 @@ int main(void) {
     assert(es256_pk_from_EVP_PKEY(wrong, other) == FIDO_OK);
     install(a, key, nonce, 1);
     assert(fido_assert_verify(a, 0, COSE_ES256, pk) == FIDO_OK);
+    // UV omission for a device without built-in UV must retain the UP check.
+    assert(fido_assert_set_uv(a, FIDO_OPT_OMIT) == FIDO_OK);
+    assert(fido_assert_verify(a, 0, COSE_ES256, pk) == FIDO_OK);
     assert(fido_assert_verify(a, 0, COSE_ES256, wrong) != FIDO_OK);
     assert(fido_assert_set_rp(a, "pam://wrong-rp") == FIDO_OK);
     assert(fido_assert_verify(a, 0, COSE_ES256, pk) != FIDO_OK);
@@ -54,6 +57,8 @@ int main(void) {
     assert(fido_assert_set_clientdata_hash(a, changed, sizeof(changed)) == FIDO_OK);
     assert(fido_assert_verify(a, 0, COSE_ES256, pk) != FIDO_OK);
     install(a, key, nonce, 0); // Valid signature without presence must fail.
+    assert(fido_assert_verify(a, 0, COSE_ES256, pk) != FIDO_OK);
+    assert(fido_assert_set_uv(a, FIDO_OPT_OMIT) == FIDO_OK);
     assert(fido_assert_verify(a, 0, COSE_ES256, pk) != FIDO_OK);
     install(a, key, nonce, 1);
     const unsigned char invalid[] = {0x30, 0x00};

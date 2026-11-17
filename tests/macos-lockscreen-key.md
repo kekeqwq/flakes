@@ -273,6 +273,32 @@ and exited0 without any device enumeration or authentication. Native no-opt-in
 cancellation/cleanup passed at 15:28:53 and 15:33:30. This validates initialization
 and crypto failure cases, **not real locked HID access/touch**.
 
+## 6. Fourth owner attempt: HID works; unsupported UV option
+
+Owner ran `zz9bdh…-flakes-ctk-fido-probe`. At 15:42:24 native lock matched all
+global conditions and the worker started. Worker logs show **enumeration 0,
+count1**, a candidate credential found, and the actual request returned **43
+(FIDO_ERR_UNSUPPORTED_OPTION)**. Signature verification was NOT invoked; the
+previous `verify_result=-6` was a placeholder, not a bad signature result. Native
+signature remained absent, worker exit9, callback cancelled in 304.494 ms; all own
+objects/registrations were removed.
+
+Read-only `fido2-token -I` metadata (no assertion/touch/PIN/credential enumeration)
+confirmed the attached FIDO device does not expose the built-in `uv` option.
+Comparing pam_u2f's `match_device_opts` identified omitted device-capability
+adaptation: it changes explicit UV=false to OMIT when UV is unsupported. libfido2
+1.17.0's public `fido_dev_supports_uv` checks both UV_SET/UV_UNSET capability bits,
+matching that distinction.
+
+The worker now selects OMIT for devices without built-in UV, and FALSE for
+UV-capable devices. It still passes NULL PIN and ALWAYS requires UP on the final
+assertion. No always-UV/PIN policy is changed or bypassed; a device requiring PIN
+can still refuse. Software assertions verify that both UV forms accept a valid
+UP assertion and STILL reject a validly signed assertion missing UP. Device
+capability selection and whether crypto verification ran are logged as booleans;
+no device paths/credential IDs/secret values. Actual corrected touch remains
+pending; no successful Key verification/unlock is claimed.
+
 ## Next gates
 
 - Owner-operated locked hardware verification with the carried secondary Key;

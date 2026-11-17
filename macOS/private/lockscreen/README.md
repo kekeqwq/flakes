@@ -129,6 +129,9 @@ proxy remains unsuitable for login and never produces a native signature.
 initialization check. It does NOT enumerate devices or call get-assert. The
 previous PAM-backed worker failed pam_start inside the sandbox and was replaced;
 no system PAM service or added system-file permission is used by this worker.
+Final assertions always require UP. UV is omitted when the device lacks built-in
+UV support (otherwise explicitly false); PIN is always NULL. This mirrors the
+capability adaptation in pam_u2f, not permission to skip touch.
 Only the explicit visible-terminal `--lock-touch` mode marks hardware opt-in and
 waits up to 90 seconds for native lock state. The kernel registry-root global
 console table is mandatory: exactly one active console, matching UID/name,

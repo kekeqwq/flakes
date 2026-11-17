@@ -37,7 +37,7 @@ static NSArray<NSDictionary *> *ReadWhitelist(NSString *path) {
     return keys;
 }
 
-static fido_assert_t *PrepareAssertion(NSData *credential, BOOL presence) {
+static fido_assert_t *PrepareAssertion(NSData *credential, BOOL presence, BOOL supportsUV) {
     unsigned char nonce[32];
     arc4random_buf(nonce, sizeof(nonce));
     fido_assert_t *assertion = fido_assert_new();
@@ -46,7 +46,7 @@ static fido_assert_t *PrepareAssertion(NSData *credential, BOOL presence) {
         fido_assert_set_clientdata_hash(assertion, nonce, sizeof(nonce)) != FIDO_OK ||
         fido_assert_allow_cred(assertion, credential.bytes, credential.length) != FIDO_OK ||
         fido_assert_set_up(assertion, presence ? FIDO_OPT_TRUE : FIDO_OPT_FALSE) != FIDO_OK ||
-        fido_assert_set_uv(assertion, presence ? FIDO_OPT_FALSE : FIDO_OPT_OMIT) != FIDO_OK) {
+        fido_assert_set_uv(assertion, presence && supportsUV ? FIDO_OPT_FALSE : FIDO_OPT_OMIT) != FIDO_OK) {
         fido_assert_free(&assertion);
     }
     return assertion;
@@ -68,9 +68,11 @@ int main(int argc, const char *argv[]) {
         if (selfcheck) {
             // Validate key import, fixed RP/options and fresh nonce allocation; no devices enumerated.
             for (NSDictionary *key in keys) {
-                fido_assert_t *assertion = PrepareAssertion(key[@"id"], YES);
-                if (!assertion) return 8;
-                fido_assert_free(&assertion);
+                for (int uv = 0; uv <= 1; uv++) {
+                    fido_assert_t *assertion = PrepareAssertion(key[@"id"], YES, uv);
+                    if (!assertion) return 8;
+                    fido_assert_free(&assertion);
+                }
             }
             os_log(OS_LOG_DEFAULT, "flakes_fido_selfcheck_PASSED_no_device_access keys=%{public}lu", (unsigned long)keys.count);
             return 0;
@@ -91,11 +93,13 @@ int main(int argc, const char *argv[]) {
                 const char *path = fido_dev_info_path(fido_dev_info_ptr(devices, i));
                 int opened = path ? fido_dev_open(device, path) : FIDO_ERR_INTERNAL;
                 if (opened == FIDO_OK) {
+                    BOOL supportsUV = fido_dev_supports_uv(device);
+                    os_log(OS_LOG_DEFAULT, "flakes_fido_builtin_uv_supported=%{public}d actual_uv_option_omitted=%{public}d", supportsUV, !supportsUV);
                     for (NSDictionary *key in keys) {
                         if (!ProbeNativeLocked()) break;
                         // Same no-touch discovery convention as pam_u2f: CTAP2
                         // success or CTAP1 UP_REQUIRED locates a candidate only.
-                        fido_assert_t *detect = PrepareAssertion(key[@"id"], NO);
+                        fido_assert_t *detect = PrepareAssertion(key[@"id"], NO, supportsUV);
                         int found = detect ? fido_dev_get_assert(device, detect, NULL) : FIDO_ERR_INTERNAL;
                         BOOL candidate = (fido_dev_is_fido2(device) && found == FIDO_OK) ||
                             (!fido_dev_is_fido2(device) && found == FIDO_ERR_USER_PRESENCE_REQUIRED);
@@ -103,7 +107,7 @@ int main(int argc, const char *argv[]) {
                         if (!candidate || !ProbeNativeLocked()) continue;
                         // Detection never authorizes. Fresh nonce and required UP
                         // for the actual cryptographically verified assertion.
-                        fido_assert_t *assertion = PrepareAssertion(key[@"id"], YES);
+                        fido_assert_t *assertion = PrepareAssertion(key[@"id"], YES, supportsUV);
                         es256_pk_t *pk = es256_pk_new();
                         NSData *pub = key[@"public"];
                         if (!assertion || !pk || es256_pk_from_ptr(pk, pub.bytes, pub.length) != FIDO_OK) {
@@ -112,10 +116,10 @@ int main(int argc, const char *argv[]) {
                         os_log(OS_LOG_DEFAULT, "flakes_fido_registered_credential_request_started_no_pin");
                         // NULL PIN: no prompt, guess, PIN change or fallback to another factor.
                         int result = fido_dev_get_assert(device, assertion, NULL);
-                        int signature = result == FIDO_OK && fido_assert_count(assertion) == 1 ?
-                            fido_assert_verify(assertion, 0, COSE_ES256, pk) : FIDO_ERR_INVALID_SIG;
-                        verified = result == FIDO_OK && signature == FIDO_OK && ProbeNativeLocked();
-                        os_log(OS_LOG_DEFAULT, "flakes_fido_assert_result=%{public}d verify_result=%{public}d verified=%{public}d", result, signature, verified);
+                        BOOL attempted = result == FIDO_OK && fido_assert_count(assertion) == 1;
+                        int signature = attempted ? fido_assert_verify(assertion, 0, COSE_ES256, pk) : FIDO_ERR_INVALID_SIG;
+                        verified = attempted && signature == FIDO_OK && ProbeNativeLocked();
+                        os_log(OS_LOG_DEFAULT, "flakes_fido_assert_result=%{public}d verification_attempted=%{public}d verify_result=%{public}d verified=%{public}d", result, attempted, signature, verified);
                         fido_assert_free(&assertion); es256_pk_free(&pk);
                         if (verified) break;
                     }
