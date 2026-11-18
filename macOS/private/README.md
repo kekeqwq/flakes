@@ -150,14 +150,15 @@ resolved separately:
 
 ## PIV Key 锁屏登录（OpenSCToken PIN-Never）
 
-通过 OpenSCToken 驱动 + YubiKey PIV 实现免 PIN、一次触摸锁屏解锁。
+实验性 OpenSCToken + YubiKey PIV 路径。已验证驱动运行时可以解锁，但扩展被系统回收后，智能卡实例恢复仍不可靠。日常请保留并优先使用可用的 Mac 密码解锁路径。
 
 ### 新电脑复现步骤
 
 1. **darwin-rebuild 构建并安装驱动**（自动完成）：
    - 构建 OpenSCToken（含 PIN-Never 补丁）
    - 安装到 `/Applications/Utilities/OpenSCTokenApp.app`
-   - 注册到 pluginkit（用户 + `_securityagent`）
+   - 在当前登录用户的会话注册，并核对 PlugInKit 返回的扩展路径；不以 `_securityagent` 身份向该用户的 PlugInKit 服务发请求。
+   - 严格签名校验和注册成功不等同于锁屏已识别智能卡，仍需单独验收。
 
 2. **手动写入 PIV 密钥**（一次性，需 YubiKey）：
    ```sh
@@ -188,9 +189,11 @@ resolved separately:
 
 ### 已知限制
 
-- 需要按 Enter 提交（非全自动），但免 PIN、一次触摸。
+- 需要按 Enter 提交（非全自动），不满足只触摸的目标。
 - FileVault 预启动不支持 CTK，首次开机仍需密码。
-- ad-hoc 签名已验证可工作；如需持久签名需另行评估。
+- 2026-11-18 12:17，已有智能卡实例时解锁成功。12:18:57，PlugInKit 请求移除扩展实例；同一秒扩展注册记录的 UUID 更换，且 LaunchServices 正在更新多个应用扩展。尚不能归因到某条命令。12:19，CTK 启动了新驱动进程，但报告无法创建 token 实例，与 12:14 的 `missing tokenID` 不同。
+- 安装器在已安装的同源 App 通过签名校验且注册路径匹配时不重新注册。12:24:50 激活新版安装器后，原有注册 UUID 和时间均未变，系统仍列出同一 token。这验证了常规 rebuild 不会刷新此注册记录，但不等于系统或其他程序重新注册后的实例恢复已修复。12:52:01 经智能卡认证解锁成功，注册 UUID 未变；这次未覆盖扩展被移除后的恢复。
+- 上游实现的是 `TKSmartCardTokenDriverDelegate` 的 `createTokenForSmartCard:AID:error:`。Apple SDK 明确要求 SmartCard 驱动不要实现通用的 `tokenForConfiguration:error:`；不能用补一个通用回调来冒充已修复。需要验证系统回收扩展后，在卡仍插着的情况下重新枚举并成功认证；不能用重新插卡后的成功代替。
 
 The four-layer boundaries remain mandatory; shared program definitions belong
 in `System/Common`, not in this private platform layer.
