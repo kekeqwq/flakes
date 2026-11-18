@@ -42,6 +42,10 @@ assert c.networking.hostName == "desktop-module-check";
 assert c.programs.niri.enable && c.services.greetd.enable && !c.services.greetd.restart;
 assert c.boot.plymouth.enable && !off.boot.plymouth.enable;
 assert c.boot.plymouth.theme == "keke";
+assert builtins.elem "keke-wallpaper.cpio" c.system.boot.extraInitrd.paths;
+assert !(builtins.elem "keke-wallpaper.cpio" off.system.boot.extraInitrd.paths);
+assert !(c.home-manager.users.keke.systemd.user.services ? wallpaper-polkit-agent);
+assert !(off.home-manager.users.keke.systemd.user.services ? wallpaper-polkit-agent);
 assert c.my.desktop.controlCenter.extraActions == [ ];
 assert !(off.home-manager.users.keke.xdg.configFile ? "keke-waybar-panel/actions.json");
 assert map (a: a.id) deck.config.my.desktop.controlCenter.extraActions == [ "steam" ];
@@ -100,8 +104,11 @@ assert off.home-manager.users.keke.services.emacs.startWithUserSession == true;
 assert c.home-manager.users.keke.services.emacs.client.enable;
 assert !off.home-manager.users.keke.services.emacs.client.enable;
 assert c.home-manager.users.keke.systemd.user.services.emacs.Service.Type == "notify";
-assert lib.hasInfix "--fg-daemon"
-  (lib.concatStringsSep " " (lib.toList c.home-manager.users.keke.systemd.user.services.emacs.Service.ExecStart));
+assert lib.hasInfix "--fg-daemon" (
+  lib.concatStringsSep " " (
+    lib.toList c.home-manager.users.keke.systemd.user.services.emacs.Service.ExecStart
+  )
+);
 assert lib.hasInfix "emacsclient --create-frame --no-wait --alternate-editor=false"
   c.home-manager.users.keke.xdg.desktopEntries.emacs.exec;
 assert !(off.home-manager.users.keke.xdg.desktopEntries ? emacs);

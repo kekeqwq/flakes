@@ -6,6 +6,7 @@
 }:
 let
   cfg = config.my.desktop.controlCenter;
+  wallpaper = import ./wallpaper-runtime.nix { inherit config pkgs lib; };
   actionType = lib.types.submodule {
     options = {
       id = lib.mkOption { type = lib.types.strMatching "[a-z][a-z0-9-]*"; };
@@ -27,6 +28,16 @@ let
       label = "Lock screen";
       icon = "󰌾";
       argv = [ "screen-lock" ];
+      confirm = false;
+    }
+    {
+      id = "wallpaper-random";
+      label = "Random Switch";
+      icon = "󰋩";
+      argv = [
+        "${wallpaper.random}/bin/wallpaper-random"
+        "--panel"
+      ];
       confirm = false;
     }
     {

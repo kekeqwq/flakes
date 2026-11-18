@@ -41,6 +41,7 @@
       lib = nixpkgs.lib;
       systems = [
         "x86_64-linux"
+        "aarch64-linux"
         "aarch64-darwin"
       ];
       forAllSystems = lib.genAttrs systems;
@@ -125,10 +126,12 @@
           treefmt = treefmtFor.${system}.config.build.check self;
           desktop-fonts = import ./tests/fonts.nix {
             pkgs =
-              if system == "aarch64-darwin" then
-                self.darwinConfigurations.mba.pkgs
-              else
-                self.nixosConfigurations.deck.pkgs;
+              {
+                aarch64-darwin = self.darwinConfigurations.mba.pkgs;
+                aarch64-linux = self.nixosConfigurations.lab.pkgs;
+                x86_64-linux = self.nixosConfigurations.deck.pkgs;
+              }
+              .${system};
           };
           pi-native-theme = import ./System/Common/pi-native-theme.nix {
             pkgs = pkgsFor.${system};
@@ -144,6 +147,29 @@
             themes = self.checks.${system}.pi-catppuccin;
           };
           tmux-foreground = import ./tests/tmux-foreground.nix { pkgs = pkgsFor.${system}; };
+          wallpaper-selection =
+            let
+              pkgs = pkgsFor.${system};
+              pack = import ./NixOS/desktop/wallpaper-initrd.nix { inherit pkgs; };
+              default = import ./NixOS/desktop/wallpaper.nix;
+            in
+            pkgs.runCommand "wallpaper-selection-check"
+              {
+                nativeBuildInputs = [
+                  (pkgs.python3.withPackages (ps: [ ps.pillow ]))
+                  pkgs.cpio
+                ];
+              }
+              ''
+                python3 -I ${./tests/wallpaper.py} ${./NixOS/desktop/wallpaper-select.py}
+                ${lib.getExe pack} ${default} "$PWD/wallpaper.cpio"
+                if ${lib.getExe pack} "$PWD/missing.png" "$PWD/wallpaper.cpio"; then exit 1; fi
+                mkdir extracted
+                (cd extracted; cpio --quiet -id --no-preserve-owner < ../wallpaper.cpio)
+                cmp ${default} extracted/var/lib/keke-plymouth/wallpaper.png
+                test "$(find extracted -type f | wc -l)" -eq 1
+                touch "$out"
+              '';
           qbittorrent-policy =
             pkgsFor.${system}.runCommand "qbittorrent-policy-check"
               { nativeBuildInputs = [ pkgsFor.${system}.python3 ]; }
@@ -160,6 +186,14 @@
           sudo-touchid = import ./tests/macos-sudo-auth.nix {
             pkgs = pkgsFor.${system};
             darwin = self.darwinConfigurations.mba;
+          };
+        }
+        // lib.optionalAttrs (system == "aarch64-linux") {
+          package-boundaries = import ./tests/aarch64-linux.nix {
+            inherit inputs;
+            baseModule = self.nixosModules.default;
+            desktop = self.nixosConfigurations.lab;
+            pkgs = pkgsFor.${system};
           };
         }
         // lib.optionalAttrs (system == "x86_64-linux") {

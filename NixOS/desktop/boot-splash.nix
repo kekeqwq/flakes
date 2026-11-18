@@ -4,6 +4,12 @@
   pkgs,
   ...
 }:
+let
+  user = config.myuser.name;
+  wallpaper = import ./wallpaper-runtime.nix { inherit config pkgs lib; };
+  asUser = "${pkgs.util-linux}/bin/runuser -u ${lib.escapeShellArg user} --";
+
+in
 {
   # Linux desktop policy only. No dataset names, passwords or machine-specific
   # DRM drivers live here. Native ZFS and LUKS both use Plymouth's ask agent.
@@ -11,8 +17,27 @@
     enable = true;
     theme = "keke";
     themePackages = [
-      (pkgs.callPackage ../../pkgs/keke-plymouth { wallpaper = import ./wallpaper.nix; })
+      (pkgs.callPackage ../../pkgs/keke-plymouth { wallpaper = wallpaper.default; })
     ];
+  };
+  environment.systemPackages = [ wallpaper.random ];
+  system.boot.extraInitrd.paths = lib.optional config.boot.loader.systemd-boot.enable wallpaper.archiveName;
+  boot.loader.systemd-boot.extraInstallCommands = wallpaper.seedBoot;
+  system.activationScripts.randomWallpaper = {
+    deps = [ "users" ];
+    text = ''
+      if [ "''${NIXOS_ACTION:-}" = switch ]; then
+        if ${lib.getExe wallpaper.rotate}; then
+          uid=$(${pkgs.coreutils}/bin/id -u ${lib.escapeShellArg user})
+          if [ -S "/run/user/$uid/bus" ]; then
+            ${asUser} ${pkgs.coreutils}/bin/env XDG_RUNTIME_DIR="/run/user/$uid" \
+              DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$uid/bus" ${wallpaper.refresh} || true
+          fi
+        else
+          echo 'Wallpaper selection failed; leaving the current image in place.' >&2
+        fi
+      fi
+    '';
   };
   boot.consoleLogLevel = 0;
   boot.kernelParams = [

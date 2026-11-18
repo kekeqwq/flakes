@@ -471,9 +471,37 @@ class Control(Gtk.Box):
         cancel.connect("clicked", lambda *_: self.stack.set_visible_child_name("menu"))
         confirmation.pack_start(cancel, False, False, 0)
         self.stack.add_named(confirmation, "confirm")
+        self.auth = None
+        self.auth_state = None
+        authentication = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        self.auth_label = Gtk.Label(xalign=0, wrap=True)
+        authentication.pack_start(self.auth_label, False, False, 0)
+        self.password_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        self.password_row.set_no_show_all(True)
+        self.password = Gtk.Entry()
+        self.password.set_visibility(False)
+        self.password.set_input_purpose(Gtk.InputPurpose.PASSWORD)
+        self.password.set_property("im-module", "gtk-im-context-simple")
+        self.password.set_max_length(256)
+        self.password.set_placeholder_text("Password")
+        self.password.connect("activate", self.send_password)
+        self.password_row.pack_start(self.password, True, True, 0)
+        submit = Gtk.Button(label="Authorize")
+        submit.connect("clicked", self.send_password)
+        self.password_row.pack_start(submit, False, False, 0)
+        self.password.show()
+        submit.show()
+        authentication.pack_start(self.password_row, False, False, 0)
+        self.cancel_auth = Gtk.Button(label="Cancel")
+        self.cancel_auth.connect("clicked", self.dismiss_auth)
+        authentication.pack_start(self.cancel_auth, False, False, 0)
+        self.stack.add_named(authentication, "auth")
         self.stack.set_visible_child_name("menu")
 
     def select(self, action):
+        if action["id"] == "wallpaper-random" and action["argv"][-1] == "--panel":
+            self.begin_auth(action["argv"])
+            return
         if not action["confirm"]:
             self.execute(action)
             return
@@ -481,6 +509,67 @@ class Control(Gtk.Box):
         self.question.set_text(f"{action['label']}?\nThis will end the current session. Save your work first.")
         self.confirm.set_label(action["label"])
         self.stack.set_visible_child_name("confirm")
+
+    def auth_view(self, state):
+        if self.auth_state == state:
+            return
+        self.auth_state = state
+        self.password.set_text("")
+        self.password_row.set_visible(state == "password")
+        self.cancel_auth.set_label("Back" if state == "failed" else "Cancel")
+        self.cancel_auth.set_sensitive(state != "working")
+        self.auth_label.set_text({
+            "checking": "Waiting for sudo…",
+            "touch": "Touch your security key.",
+            "password": "Enter your sudo password.",
+            "working": "Changing wallpaper…",
+            "failed": "Authorization or wallpaper change failed.",
+        }[state])
+        if state == "password":
+            self.password.grab_focus()
+
+    def begin_auth(self, argv):
+        from sudo_prompt import SudoPrompt
+        self.stack.set_visible_child_name("auth")
+        self.auth_view("checking")
+        try:
+            self.auth = SudoPrompt(argv)
+        except OSError:
+            self.auth_view("failed")
+            return
+        GLib.timeout_add(50, self.poll_auth)
+
+    def poll_auth(self):
+        if self.auth is None:
+            return False
+        state = self.auth.poll()
+        if state in ("done", "failed"):
+            self.auth = None
+            if state == "done":
+                self.close_panel()
+            else:
+                self.auth_view("failed")
+            return False
+        self.auth_view(state)
+        return True
+
+    def send_password(self, *_):
+        if self.auth and self.password.get_text():
+            value = self.password.get_text()
+            self.password.set_text("")
+            if self.auth.password(value):
+                self.auth_view("checking")
+
+    def stop_auth(self):
+        self.password.set_text("")
+        if self.auth is not None:
+            self.auth.cancel()
+            self.auth = None
+
+    def dismiss_auth(self, *_):
+        self.stop_auth()
+        self.auth_state = None
+        self.stack.set_visible_child_name("menu")
 
     def execute(self, action):
         from actions import execute_action
@@ -526,6 +615,8 @@ class PanelGroup:
 
     def close(self):
         for panel in self.panels:
+            if isinstance(panel.page, Control):
+                panel.page.stop_auth()
             panel.hide()
         if Gtk.main_level():
             Gtk.main_quit()

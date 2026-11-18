@@ -19,14 +19,24 @@
       mpv
       scrcpy
     ]
-    # SpotX has no aarch64-linux build. macOS and x86_64 Linux still get it.
-    ++ lib.optionals (stdenv.hostPlatform.isDarwin || stdenv.hostPlatform.isx86_64) [
-      (spotify-spotx.override {
-        # SpotX applies its free-tier patches by default. --premium skips them.
-        spotxArgs = [ "--hide" ] ++ lib.optionals stdenv.hostPlatform.isDarwin [
-          # Prevent Spotify's macOS updater from replacing the Nix-built app.
-          "--blockupdates"
+    # Match SpotX-Nix's supported platforms exactly. In particular, ARM Linux
+    # must not evaluate the Spotify package or pull it into the system closure.
+    ++
+      lib.optionals
+        (builtins.elem stdenv.hostPlatform.system [
+          "aarch64-darwin"
+          "x86_64-linux"
+        ])
+        [
+          (spotify-spotx.override {
+            # SpotX applies its free-tier patches by default. --premium skips them.
+            spotxArgs = [
+              "--hide"
+            ]
+            ++ lib.optionals stdenv.hostPlatform.isDarwin [
+              # Prevent Spotify's macOS updater from replacing the Nix-built app.
+              "--blockupdates"
+            ];
+          })
         ];
-      })
-    ];
 }

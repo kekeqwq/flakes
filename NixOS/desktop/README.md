@@ -43,6 +43,36 @@ login overrides, and `system.stateVersion`. Optional display profiles go in
 user's password/SSH credentials separately; do not commit secrets. No VM or
 `mynewvpc` host has been created yet.
 
+## Random wallpaper
+
+On `nixos-rebuild switch`, the Linux desktop scans the current user's
+`~/Downloads/Wallpapers` and replaces `/var/lib/keke-plymouth/wallpaper.png`.
+The control center's **Random Switch** runs the same helper after sudo
+approval inside the dropdown. It displays the existing PAM security-key cue
+or a masked password prompt only when sudo asks for one. If no usable file exists, the helper copies the repository default.
+Niri refreshes its wallpaper service, and the next lock and Plymouth shutdown
+read the same file. An already displayed lock is never restarted.
+
+With systemd-boot, the helper also replaces `keke-wallpaper.cpio` on the boot
+partition. The extra initrd contains only the current PNG and its parent
+directories, so early Plymouth uses the image before the real root is available.
+The boot install hook seeds the archive with the default when it does not yet
+exist. On other boot loaders, early Plymouth still uses its bundled default.
+The selected image is visible before disk unlock. User images never enter Git
+or the Nix store, and no history of selected images is kept.
+
+## Linux ARM64 package policy
+
+The shared desktop also evaluates on `aarch64-linux`. Keep SpotX, Discord,
+Snipaste, VIA and Steam out of its closure rather than allowing unsupported
+packages globally. ECA uses the pinned official ARM64 Linux archive; its
+interpreter and zlib dependency are resolved through Nix.
+
+On an ARM64 Linux builder, run `nix build .#checks.aarch64-linux.package-boundaries --no-link`.
+It evaluates the full desktop and a separate headless fixture, checks the
+architecture exclusions, and runs `eca --version`. It does not activate a host
+or replace hardware and desktop-session acceptance.
+
 ## Reproducibility audit (not yet complete)
 
 A successful Nix build does **not** yet mean the whole current home directory

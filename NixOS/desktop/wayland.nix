@@ -5,7 +5,11 @@
   ...
 }:
 let
-  wallpaper = import ./wallpaper.nix;
+  wallpaper = import ./wallpaper-runtime.nix { inherit config pkgs lib; };
+  displayWallpaper = pkgs.writeShellScript "display-wallpaper" ''
+    ${wallpaper.resolve}
+    exec ${pkgs.swaybg}/bin/swaybg -i "$image" -m fill
+  '';
   trayIcons = "${
     config.home-manager.users.${config.myuser.name}.gtk.iconTheme.package
   }/share/icons/Papirus-Dark/22x22/panel";
@@ -107,12 +111,12 @@ in
   };
   myuser.hm.systemd.user.services.wallpaper = {
     Unit = {
-      Description = "Catppuccin Mocha wallpaper";
+      Description = "Current desktop wallpaper";
       PartOf = [ "graphical-session.target" ];
       After = [ "graphical-session.target" ];
     };
     Service = {
-      ExecStart = "${pkgs.swaybg}/bin/swaybg -i ${wallpaper} -m fill";
+      ExecStart = displayWallpaper;
       Restart = "on-failure";
     };
     Install.WantedBy = [ "graphical-session.target" ];

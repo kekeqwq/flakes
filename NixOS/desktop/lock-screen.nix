@@ -5,7 +5,7 @@
   ...
 }:
 let
-  wallpaper = import ./wallpaper.nix;
+  wallpaper = import ./wallpaper-runtime.nix { inherit config pkgs lib; };
   lock = pkgs.writeShellApplication {
     name = "screen-lock";
     runtimeInputs = [
@@ -21,7 +21,8 @@ let
       if ! flock --nonblock 9; then exit 0; fi
       # Returns only once the compositor has secured the screen, also before
       # sleep. The atomic marker records acquisition, not ongoing lock status.
-      swaylock --daemonize
+      ${wallpaper.resolve}
+      swaylock --image "$image" --daemonize
       ready="$XDG_RUNTIME_DIR/screen-lock.ready"
       printf '%s\n' "$$" > "$ready.$$"
       mv -f "$ready.$$" "$ready"
@@ -45,7 +46,7 @@ in
       settings = {
         # Path interpolation copies the tracked PNG into the store and retains
         # its dependency context. toString alone can leave a dangling source path.
-        image = "${wallpaper}";
+        image = "${wallpaper.default}";
         scaling = "fill";
         color = "1e1e2e";
         font = "sans-serif";

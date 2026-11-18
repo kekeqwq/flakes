@@ -1,7 +1,10 @@
 # Indeterminate boot/shutdown animation; no guessed percentages or boot timer.
 Window.SetBackgroundTopColor(0.118, 0.118, 0.180);
 Window.SetBackgroundBottomColor(0.118, 0.118, 0.180);
-background.original = Image("background.png");
+# Image() resolves names beneath ImageDir. The extra initrd and the real root
+# expose the same filename; older generations can still use the bundled PNG.
+background.original = Image("../../../../../../../var/lib/keke-plymouth/wallpaper.png");
+if (!background.original) background.original = Image("background.png");
 background.sprite = Sprite();
 background.sprite.SetZ(-100);
 logo.image = Image("logo.png");
