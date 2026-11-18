@@ -1,6 +1,114 @@
-{ config, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 let
+  emacsTextHandlers = pkgs.stdenv.mkDerivation {
+    pname = "emacs-file-handlers";
+    version = "1";
+    src = ./emacs-file-handlers.m;
+    dontUnpack = true;
+    buildPhase = ''
+      clang -fobjc-arc -framework AppKit -framework UniformTypeIdentifiers \
+        -x objective-c "$src" -o emacs-file-handlers
+    '';
+    installPhase = ''
+      install -Dm755 emacs-file-handlers "$out/bin/emacs-file-handlers"
+    '';
+  };
+  emacsTextTypes = [
+    # Native text types, including extensionless files recognized as text.
+    "public.text"
+    "public.plain-text"
+    "public.utf8-plain-text"
+    "public.utf16-plain-text"
+    "public.utf16-external-plain-text"
+    "public.source-code"
+    "public.script"
+    "public.xml"
+    "public.json"
+    "public.comma-separated-values-text"
+    "public.tab-separated-values-text"
+    "net.daringfireball.markdown"
+    # Explicit extensions for text formats macOS can report as dynamic types.
+    "txt"
+    "text"
+    "md"
+    "markdown"
+    "mdx"
+    "org"
+    "rst"
+    "adoc"
+    "tex"
+    "bib"
+    "log"
+    "conf"
+    "cfg"
+    "ini"
+    "env"
+    "nix"
+    "toml"
+    "yaml"
+    "yml"
+    "json"
+    "jsonc"
+    "jsonl"
+    "xml"
+    "csv"
+    "tsv"
+    "diff"
+    "patch"
+    "el"
+    "lisp"
+    "scm"
+    "clj"
+    "lua"
+    "vim"
+    "sh"
+    "bash"
+    "zsh"
+    "fish"
+    "py"
+    "rb"
+    "pl"
+    "php"
+    "awk"
+    "sql"
+    "js"
+    "mjs"
+    "cjs"
+    "jsx"
+    # Bare .ts remains MPEG transport stream (mpv), as configured below.
+    "mts"
+    "cts"
+    "tsx"
+    "css"
+    "scss"
+    "sass"
+    "less"
+    "vue"
+    "svelte"
+    "c"
+    "h"
+    "cc"
+    "cpp"
+    "hpp"
+    "m"
+    "mm"
+    "swift"
+    "rs"
+    "go"
+    "java"
+    "kt"
+    "kts"
+    "cs"
+    "zig"
+    "dart"
+    "typ"
+  ];
   dutiConfig = pkgs.writeText "duti-config" ''
     # Default Browser: Safari
     com.apple.Safari http
@@ -134,7 +242,11 @@ in
   };
   system.activationScripts.postActivation.text = ''
     echo "Configuring default application handlers via duti..." >&2
-    launchctl asuser "$(${pkgs.coreutils}/bin/id -u ${config.myuser.name})" sudo -u ${config.myuser.name} --set-home ${pkgs.duti}/bin/duti ${dutiConfig}
+    user_id="$(${pkgs.coreutils}/bin/id -u ${config.myuser.name})"
+    launchctl asuser "$user_id" sudo -u ${config.myuser.name} --set-home ${pkgs.duti}/bin/duti ${dutiConfig}
+    # Run after Home Manager has exposed the Emacs client app to LaunchServices.
+    launchctl asuser "$user_id" sudo -u ${config.myuser.name} --set-home \
+      ${emacsTextHandlers}/bin/emacs-file-handlers ${lib.escapeShellArgs emacsTextTypes}
     # keke is not a nix-darwin-created user, so users.users.shell is not applied.
     dscl . -create /Users/${config.myuser.name} UserShell /run/current-system/sw/bin/fish
   '';
