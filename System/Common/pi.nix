@@ -23,6 +23,7 @@ let
     mkdir -p "$out"
     cp ${./input-method/pi-ime.ts} "$out/input-method.ts"
   '';
+  codexUsage = import ./pi-codex-usage { inherit pkgs; };
   multiAccountSrc = pkgs.fetchzip {
     url = "https://registry.npmjs.org/pi-multi-account/-/pi-multi-account-1.28.1.tgz";
     hash = "sha256-TUjGG5hi83voCw/pek2NzvD/z4zKbChl4Rbv16MDDFg=";
@@ -80,6 +81,7 @@ in
     home.file.".local/bin/pi".source = "${config.programs.pi.coding-agent.finalPackage}/bin/pi";
     # home.file.".pi/agent/extensions/pi-multi-account".source = multiAccount;
     home.file.".pi/agent/extensions/input-method.ts".source = "${inputMethod}/input-method.ts";
+    home.file.".pi/agent/extensions/codex-usage".source = codexUsage;
     home.file.".pi/agent/themes/catppuccin-latte.json".source =
       "${catppuccinThemes}/catppuccin-latte.json";
     home.file.".pi/agent/themes/catppuccin-mocha.json".source =

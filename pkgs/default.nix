@@ -25,9 +25,13 @@ self: super: {
       rev = "0d1557ee656b121bbdb51f9852d12e93b9fb0555";
       hash = "sha256-S5Mzsad29UOzwwTj3M82qW6E85vJXyYwzBpUFKODVD0=";
     };
-    # nixpkgs' release-branch patches are useless against master; keep only
-    # the platform integration patches.
-    patches = super.lib.optionals super.stdenv.hostPlatform.isDarwin [
+    # Skip release security backports, but retain the Nix Darwin toolchain
+    # paths needed when downstream packages compile .eln files in a sandbox.
+    patches = super.lib.optionals super.stdenv.hostPlatform.isDarwin (
+      builtins.filter (p: super.lib.hasSuffix "-native-comp-driver-options-30.patch" (toString p)) (
+        old.patches or [ ]
+      )
+      ++ [
         (super.fetchpatch {
           url = "https://raw.githubusercontent.com/ryankask/homebrew-emacs-plus/d4e7cfe69322651794dfc10c09b2f6510caf6cd6/patches/emacs-32/round-undecorated-frame.patch";
           hash = "sha256-5/XyOD2ter4syVDSKnIqR2nvqeMbtXy4SKvMZqmCums=";
@@ -36,7 +40,8 @@ self: super: {
           url = "https://raw.githubusercontent.com/d12frosted/homebrew-emacs-plus/b7b77a8978cdfa9bbb67a8b93830813dab308a27/patches/emacs-31/system-appearance.patch";
           hash = "sha256-4+2U+4+2tpuaThNJfZOjy1JPnneGcsoge9r+WpgNDko=";
         })
-      ];
+      ]
+    );
     postPatch =
       (old.postPatch or "")
       + super.lib.optionalString super.stdenv.hostPlatform.isDarwin ''
