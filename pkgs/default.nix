@@ -18,26 +18,16 @@ self: super: {
 
   emacs-head = super.emacs.overrideAttrs (old: {
     pname = "emacs-head";
-    version = "2026-11-14";
+    version = "2026-11-17";
     src = super.fetchFromGitHub {
       owner = "emacs-mirror";
       repo = "emacs";
-      rev = "6fcbd85db7f70488027744d8af3f1446b73ca004";
-      hash = "sha256-Ilqy2CzQXdE9i1xXgOnf/lzu4cm2T2W3hgreUvwI/HI=";
+      rev = "0d1557ee656b121bbdb51f9852d12e93b9fb0555";
+      hash = "sha256-S5Mzsad29UOzwwTj3M82qW6E85vJXyYwzBpUFKODVD0=";
     };
-    patches =
-      builtins.filter (
-        p:
-        let
-          name = if builtins.isAttrs p && p ? name then p.name else baseNameOf (toString p);
-        in
-        # These release-branch security fixes are already present in master.
-        !(builtins.any (cve: super.lib.hasInfix cve name) [
-          "CVE-2024-53920"
-          "CVE-2026-108976"
-        ])
-      ) (old.patches or [ ])
-      ++ super.lib.optionals super.stdenv.hostPlatform.isDarwin [
+    # nixpkgs' release-branch patches are useless against master; keep only
+    # the platform integration patches.
+    patches = super.lib.optionals super.stdenv.hostPlatform.isDarwin [
         (super.fetchpatch {
           url = "https://raw.githubusercontent.com/ryankask/homebrew-emacs-plus/d4e7cfe69322651794dfc10c09b2f6510caf6cd6/patches/emacs-32/round-undecorated-frame.patch";
           hash = "sha256-5/XyOD2ter4syVDSKnIqR2nvqeMbtXy4SKvMZqmCums=";
