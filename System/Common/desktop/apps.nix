@@ -23,7 +23,10 @@
     ++ lib.optionals (stdenv.hostPlatform.isDarwin || stdenv.hostPlatform.isx86_64) [
       (spotify-spotx.override {
         # SpotX applies its free-tier patches by default. --premium skips them.
-        spotxArgs = [ "--hide" ];
+        spotxArgs = [ "--hide" ] ++ lib.optionals stdenv.hostPlatform.isDarwin [
+          # Prevent Spotify's macOS updater from replacing the Nix-built app.
+          "--blockupdates"
+        ];
       })
     ];
 }
