@@ -20,6 +20,13 @@ def load_actions(path):
                 raise ValueError("Expected nonempty argv vector")
             if not isinstance(action.get("confirm"), bool):
                 raise ValueError("Explicit confirmation policy required")
+            if action.get("auth") not in (None, "sudo"):
+                raise ValueError("Unsupported action authentication")
+            if action.get("confirm_message") is not None and not isinstance(action["confirm_message"], str):
+                raise ValueError("Expected confirmation message text")
+            state = action.get("requires_nonempty_file")
+            if state is not None and not (isinstance(state, str) and state.startswith("/") and "\0" not in state):
+                raise ValueError("Expected absolute state file path")
     return spec
 
 

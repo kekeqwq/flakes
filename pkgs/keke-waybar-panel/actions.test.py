@@ -17,6 +17,10 @@ with tempfile.TemporaryDirectory() as directory:
         {"common": [action | {"argv": "systemctl reboot"}], "private": []},
         {"common": [action | {"argv": []}], "private": []},
         {"common": [action | {"confirm": "yes"}], "private": []},
+        {"common": [action | {"auth": "polkit"}], "private": []},
+        {"common": [action | {"confirm_message": 7}], "private": []},
+        {"common": [action | {"requires_nonempty_file": "relative/state"}], "private": []},
+        {"common": [action | {"requires_nonempty_file": "/tmp/a\0b"}], "private": []},
     ]:
         path.write_text(json.dumps(invalid))
         try:
@@ -25,6 +29,17 @@ with tempfile.TemporaryDirectory() as directory:
             pass
         else:
             raise AssertionError("invalid control-center spec accepted")
+    valid = {
+        "id": "wallpaper-delete",
+        "label": "Delete Wallpaper",
+        "argv": ["wallpaper-ctl", "delete"],
+        "confirm": True,
+        "auth": "sudo",
+        "confirm_message": "Permanently delete this source file?",
+        "requires_nonempty_file": "/var/lib/keke-plymouth/current-source",
+    }
+    path.write_text(json.dumps({"common": [valid], "private": []}))
+    assert a.load_actions(path)["common"] == [valid]
 events = []
 a.execute_action(action, lambda: events.append("closed"), lambda *argv: events.append(argv))
 assert events == ["closed", ("screen-lock",)]

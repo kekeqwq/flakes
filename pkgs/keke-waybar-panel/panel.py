@@ -435,10 +435,11 @@ class Clock(Gtk.Box):
 
 
 class Control(Gtk.Box):
-    def __init__(self, close):
+    def __init__(self, close, reflow):
         super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=10)
         from actions import load_actions
         self.close_panel = close
+        self.reflow = reflow
         path = os.path.join(os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config")),
                             "keke-waybar-panel", "actions.json")
         spec = load_actions(path)
@@ -446,9 +447,13 @@ class Control(Gtk.Box):
         title.get_style_context().add_class("keke-title")
         self.pack_start(title, False, False, 0)
         self.stack = Gtk.Stack()
-        self.stack.set_homogeneous(True)
+        # Keep the width stable, but do not size the small auth page to the
+        # height of the full menu.
+        self.stack.set_hhomogeneous(True)
+        self.stack.set_vhomogeneous(False)
         self.pack_start(self.stack, True, True, 0)
         menu = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        self.stateful = []
         for section in ("common", "private"):
             if section == "private" and spec[section]:
                 menu.pack_start(Gtk.Separator(), False, False, 6)
@@ -457,6 +462,8 @@ class Control(Gtk.Box):
                 button = Gtk.Button(label=f"{item.get('icon', '')}  {item['label']}")
                 button.get_style_context().add_class("keke-action")
                 button.connect("clicked", lambda _button, action=item: self.select(action))
+                if item.get("requires_nonempty_file"):
+                    self.stateful.append((button, item))
                 menu.pack_start(button, False, False, 0)
         self.stack.add_named(menu, "menu")
         confirmation = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
@@ -476,37 +483,61 @@ class Control(Gtk.Box):
         authentication = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
         self.auth_label = Gtk.Label(xalign=0, wrap=True)
         authentication.pack_start(self.auth_label, False, False, 0)
-        self.password_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-        self.password_row.set_no_show_all(True)
         self.password = Gtk.Entry()
+        self.password.set_no_show_all(True)
+        self.password.set_width_chars(12)
+        self.password.set_max_width_chars(20)
+        self.password.get_style_context().add_class("keke-entry")
         self.password.set_visibility(False)
         self.password.set_input_purpose(Gtk.InputPurpose.PASSWORD)
         self.password.set_property("im-module", "gtk-im-context-simple")
         self.password.set_max_length(256)
         self.password.set_placeholder_text("Password")
         self.password.connect("activate", self.send_password)
-        self.password_row.pack_start(self.password, True, True, 0)
-        submit = Gtk.Button(label="Authorize")
-        submit.connect("clicked", self.send_password)
-        self.password_row.pack_start(submit, False, False, 0)
-        self.password.show()
-        submit.show()
-        authentication.pack_start(self.password_row, False, False, 0)
+        authentication.pack_start(self.password, False, False, 0)
+        auth_buttons = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        auth_buttons.set_halign(Gtk.Align.END)
+        # Leave room for theme focus outlines inside the scrolled viewport.
+        auth_buttons.set_margin_end(4)
+        auth_buttons.set_margin_bottom(4)
         self.cancel_auth = Gtk.Button(label="Cancel")
+        self.cancel_auth.get_style_context().add_class("keke-action")
         self.cancel_auth.connect("clicked", self.dismiss_auth)
-        authentication.pack_start(self.cancel_auth, False, False, 0)
+        auth_buttons.pack_start(self.cancel_auth, False, False, 0)
+        self.submit_auth = Gtk.Button(label="Authorize")
+        self.submit_auth.get_style_context().add_class("keke-action")
+        self.submit_auth.set_no_show_all(True)
+        self.submit_auth.connect("clicked", self.send_password)
+        auth_buttons.pack_start(self.submit_auth, False, False, 0)
+        authentication.pack_start(auth_buttons, False, False, 0)
         self.stack.add_named(authentication, "auth")
         self.stack.set_visible_child_name("menu")
+        self.refresh_state()
+        self.stack.connect("notify::visible-child", self.refresh_state)
+        self.stack.connect("notify::visible-child", lambda *_: self.reflow())
+
+    @staticmethod
+    def state_ready(path):
+        try:
+            return os.path.isfile(path) and os.path.getsize(path) > 0
+        except OSError:
+            return False
+
+    def refresh_state(self, *_):
+        for button, item in self.stateful:
+            button.set_sensitive(self.state_ready(item["requires_nonempty_file"]))
 
     def select(self, action):
-        if action["id"] == "wallpaper-random" and action["argv"][-1] == "--panel":
-            self.begin_auth(action["argv"])
+        path = action.get("requires_nonempty_file")
+        if path and not self.state_ready(path):
+            self.refresh_state()
             return
         if not action["confirm"]:
             self.execute(action)
             return
         self.pending = action
-        self.question.set_text(f"{action['label']}?\nThis will end the current session. Save your work first.")
+        message = action.get("confirm_message") or "This will end the current session. Save your work first."
+        self.question.set_text(f"{action['label']}?\n{message}")
         self.confirm.set_label(action["label"])
         self.stack.set_visible_child_name("confirm")
 
@@ -515,8 +546,9 @@ class Control(Gtk.Box):
             return
         self.auth_state = state
         self.password.set_text("")
-        self.password_row.set_visible(state == "password")
-        self.cancel_auth.set_label("Back" if state == "failed" else "Cancel")
+        self.password.set_visible(state == "password")
+        self.submit_auth.set_visible(state == "password")
+        self.cancel_auth.set_label("Back" if state in ("failed", "source-kept") else "Cancel")
         self.cancel_auth.set_sensitive(state != "working")
         self.auth_label.set_text({
             "checking": "Waiting for sudo…",
@@ -524,9 +556,11 @@ class Control(Gtk.Box):
             "password": "Enter your sudo password.",
             "working": "Changing wallpaper…",
             "failed": "Authorization or wallpaper change failed.",
+            "source-kept": "Wallpaper changed, but the previous source was not deleted.",
         }[state])
         if state == "password":
             self.password.grab_focus()
+        self.reflow()
 
     def begin_auth(self, argv):
         from sudo_prompt import SudoPrompt
@@ -543,12 +577,12 @@ class Control(Gtk.Box):
         if self.auth is None:
             return False
         state = self.auth.poll()
-        if state in ("done", "failed"):
+        if state in ("done", "failed", "source-kept"):
             self.auth = None
             if state == "done":
                 self.close_panel()
             else:
-                self.auth_view("failed")
+                self.auth_view(state)
             return False
         self.auth_view(state)
         return True
@@ -572,6 +606,9 @@ class Control(Gtk.Box):
         self.stack.set_visible_child_name("menu")
 
     def execute(self, action):
+        if action.get("auth") == "sudo":
+            self.begin_auth(action["argv"])
+            return
         from actions import execute_action
         execute_action(action, self.close_panel, spawn)
 
@@ -648,6 +685,7 @@ class Panel(Gtk.Window):
         self.section = section
         self.group = group
         self.placed = False
+        self.reflow_pending = False
         card = Gtk.EventBox()
         card.set_visible_window(False)
         card.add_events(Gdk.EventMask.BUTTON_PRESS_MASK)
@@ -667,7 +705,7 @@ class Panel(Gtk.Window):
         card.connect("draw", self.paint_card)
         # Clicks inside the card must not dismiss it.
         card.connect("button-press-event", lambda *_: True)
-        page = Control(group.close) if section == "control" else {
+        page = Control(group.close, self.queue_reflow) if section == "control" else {
             "brightness": Brightness,
             "audio": Audio,
             "network": Network,
@@ -732,17 +770,29 @@ class Panel(Gtk.Window):
         self.group.activate(self, event.x)
         return False
 
+    def queue_reflow(self):
+        if self.placed and not self.reflow_pending:
+            self.reflow_pending = True
+            GLib.idle_add(self.reflow)
+
+    def reflow(self):
+        self.reflow_pending = False
+        self.place(self.anchor_x)
+        return False
+
     def place(self, pointer_x):
         from geometry import placement
 
         width, height = self.get_allocated_width(), self.get_allocated_height()
         if width < 2 or height < 2:
             return
-        self.placed = True
+        self.anchor_x = pointer_x
+        if not self.placed:
+            self.placed = True
+            self.card.set_no_show_all(False)
+            self.card.show_all()
         top = BAR_TOP + BAR_HEIGHT + GAP
         available = max(80, height - top - MARGIN)
-        self.card.set_no_show_all(False)
-        self.card.show_all()
         card_width = min(max(340, self.page.get_preferred_width()[0] + 40), width - 2 * MARGIN)
         page_height = self.page.get_preferred_height_for_width(card_width - 40)[1]
         card_height = min(page_height + 38, available)

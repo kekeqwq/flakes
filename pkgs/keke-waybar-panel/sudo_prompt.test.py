@@ -42,4 +42,6 @@ assert p.feed(b'word]') == 'password'
 assert p.feed(b'[keke-sudo-authorized]') == 'working'
 assert p.feed(b'[keke-sudo-password]') == 'working'
 wait(p, 'failed')
+p = Prompt([sys.executable, '-c', "print('[keke-sudo-authorized]'); raise SystemExit(5)"])
+wait(p, 'source-kept')
 print('Inline sudo prompts: key cue, fallback, cancellation and failure PASS')

@@ -7,8 +7,6 @@
 let
   user = config.myuser.name;
   wallpaper = import ./wallpaper-runtime.nix { inherit config pkgs lib; };
-  asUser = "${pkgs.util-linux}/bin/runuser -u ${lib.escapeShellArg user} --";
-
 in
 {
   # Linux desktop policy only. No dataset names, passwords or machine-specific
@@ -20,22 +18,16 @@ in
       (pkgs.callPackage ../../pkgs/keke-plymouth { wallpaper = wallpaper.default; })
     ];
   };
-  environment.systemPackages = [ wallpaper.random ];
+  environment.systemPackages = [ wallpaper.ctl ];
   system.boot.extraInitrd.paths = lib.optional config.boot.loader.systemd-boot.enable wallpaper.archiveName;
   boot.loader.systemd-boot.extraInstallCommands = wallpaper.seedBoot;
-  system.activationScripts.randomWallpaper = {
+  # Fresh installs start in default mode. A later switch must not rotate: the
+  # user's mode and image survive every rebuild until they change them.
+  system.activationScripts.seedWallpaper = {
     deps = [ "users" ];
     text = ''
-      if [ "''${NIXOS_ACTION:-}" = switch ]; then
-        if ${lib.getExe wallpaper.rotate}; then
-          uid=$(${pkgs.coreutils}/bin/id -u ${lib.escapeShellArg user})
-          if [ -S "/run/user/$uid/bus" ]; then
-            ${asUser} ${pkgs.coreutils}/bin/env XDG_RUNTIME_DIR="/run/user/$uid" \
-              DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$uid/bus" ${wallpaper.refresh} || true
-          fi
-        else
-          echo 'Wallpaper selection failed; leaving the current image in place.' >&2
-        fi
+      if [ ! -f ${wallpaper.current} ]; then
+        ${lib.getExe wallpaper.rotate} seed
       fi
     '';
   };

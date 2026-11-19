@@ -51,7 +51,9 @@ class SudoPrompt:
         code = self.process.poll()
         if code is not None:
             self.finish()
-            return 'done' if code == 0 else 'failed'
+            if code == 0:
+                return 'done'
+            return 'source-kept' if self.authorized and code == 5 else 'failed'
         return self.state
 
     def password(self, value):
@@ -70,7 +72,7 @@ class SudoPrompt:
 
     def cancel(self):
         # Read any final authorization marker before deciding whether to stop.
-        if self.poll() in ('done', 'failed'):
+        if self.poll() in ('done', 'failed', 'source-kept'):
             return
         if not self.authorized:
             try:

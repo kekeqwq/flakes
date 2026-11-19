@@ -20,47 +20,23 @@ let
         type = lib.types.bool;
         default = true;
       };
+      confirm_message = lib.mkOption {
+        type = lib.types.nullOr lib.types.str;
+        default = null;
+      };
+      # "sudo" renders this action through the inline authorization view.
+      auth = lib.mkOption {
+        type = lib.types.nullOr (lib.types.enum [ "sudo" ]);
+        default = null;
+      };
+      # The button stays disabled while this file is empty or missing.
+      requires_nonempty_file = lib.mkOption {
+        type = lib.types.nullOr lib.types.str;
+        default = null;
+      };
     };
   };
-  common = [
-    {
-      id = "lock";
-      label = "Lock screen";
-      icon = "󰌾";
-      argv = [ "screen-lock" ];
-      confirm = false;
-    }
-    {
-      id = "wallpaper-random";
-      label = "Random Switch";
-      icon = "󰋩";
-      argv = [
-        "${wallpaper.random}/bin/wallpaper-random"
-        "--panel"
-      ];
-      confirm = false;
-    }
-    {
-      id = "reboot";
-      label = "Restart";
-      icon = "󰜉";
-      argv = [
-        "${pkgs.systemd}/bin/systemctl"
-        "reboot"
-      ];
-      confirm = true;
-    }
-    {
-      id = "poweroff";
-      label = "Power off";
-      icon = "󰐥";
-      argv = [
-        "${pkgs.systemd}/bin/systemctl"
-        "poweroff"
-      ];
-      confirm = true;
-    }
-  ];
+  common = import ./control-center-actions.nix { inherit pkgs wallpaper; };
   actions = pkgs.writeText "control-center-actions.json" (
     builtins.toJSON {
       inherit common;

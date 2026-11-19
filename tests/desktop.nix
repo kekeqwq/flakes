@@ -54,6 +54,32 @@ assert builtins.elem "keke-wallpaper.cpio" c.system.boot.extraInitrd.paths;
 assert !(builtins.elem "keke-wallpaper.cpio" off.system.boot.extraInitrd.paths);
 assert !(c.home-manager.users.keke.systemd.user.services ? wallpaper-polkit-agent);
 assert !(off.home-manager.users.keke.systemd.user.services ? wallpaper-polkit-agent);
+assert
+  c.system.activationScripts ? seedWallpaper && !(off.system.activationScripts ? seedWallpaper);
+assert (
+  let
+    wallpaper = import ../NixOS/desktop/wallpaper-runtime.nix {
+      config = c;
+      inherit pkgs;
+      inherit (inputs.nixpkgs) lib;
+    };
+    common = import ../NixOS/desktop/control-center-actions.nix { inherit pkgs wallpaper; };
+    wallpapers = builtins.filter (a: lib.hasPrefix "wallpaper-" a.id) common;
+    byId = id: lib.findFirst (a: a.id == id) null wallpapers;
+    delete = byId "wallpaper-delete";
+  in
+  lib.all (id: byId id != null) [
+    "wallpaper-random"
+    "wallpaper-default"
+    "wallpaper-delete"
+  ]
+  && lib.all (a: a.auth == "sudo" && lib.length a.argv == 2) wallpapers
+  && lib.all (a: lib.last a.argv == lib.removePrefix "wallpaper-" a.id) wallpapers
+  && delete.requires_nonempty_file == "/var/lib/keke-plymouth/current-source"
+  && delete.confirm
+  && delete.confirm_message != null
+  && (byId "wallpaper-default").confirm == false
+);
 assert c.my.desktop.controlCenter.extraActions == [ ];
 assert !(off.home-manager.users.keke.xdg.configFile ? "keke-waybar-panel/actions.json");
 assert map (a: a.id) deck.config.my.desktop.controlCenter.extraActions == [ "steam" ];
