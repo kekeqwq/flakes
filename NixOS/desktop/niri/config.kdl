@@ -1,5 +1,7 @@
 input {
     mod-key "Alt"
+    // Disable Niri's built-in suspend binding; use the lock binding below.
+    disable-power-key-handling
 }
 layout {
     gaps 14
@@ -85,6 +87,9 @@ binds {
         spawn "rofi" "-show" "drun"
     }
     Super+L hotkey-overlay-title="Lock screen" {
+        spawn "screen-lock"
+    }
+    XF86PowerOff repeat=false allow-inhibiting=false hotkey-overlay-title="Lock screen" {
         spawn "screen-lock"
     }
     Print hotkey-overlay-title="Copy screenshot region" {

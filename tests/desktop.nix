@@ -34,6 +34,14 @@ let
   off = disabled.config;
   homePackages = system: map toString system.config.home-manager.users.keke.home.packages;
   genericPackages = homePackages enabled;
+  niriConfig = builtins.readFile ../NixOS/desktop/niri/config.kdl;
+  lockEvents = {
+    HandlePowerKey = "ignore";
+    HandlePowerKeyLongPress = "ignore";
+    HandleLidSwitch = "lock";
+    HandleLidSwitchExternalPower = "lock";
+    HandleLidSwitchDocked = "lock";
+  };
 in
 assert !(enabled.options ? jovian);
 assert !(disabled.options ? jovian);
@@ -124,7 +132,18 @@ assert
     "WAYLAND_DISPLAY"
     "XDG_CURRENT_DESKTOP=niri"
   ];
-assert lib.hasInfix "Super+L" (builtins.readFile ../NixOS/desktop/niri/config.kdl);
+assert lib.hasInfix "Super+L" niriConfig;
+assert lib.hasInfix "disable-power-key-handling" niriConfig;
+assert lib.hasInfix ''
+  XF86PowerOff repeat=false allow-inhibiting=false hotkey-overlay-title="Lock screen" {
+          spawn "screen-lock"'' niriConfig;
+assert lib.all (
+  key:
+  c.services.logind.settings.Login.${key} == lockEvents.${key}
+  && deck.config.services.logind.settings.Login.${key} == lockEvents.${key}
+  && !(off.services.logind.settings.Login ? ${key})
+) (builtins.attrNames lockEvents);
+assert lib.hasSuffix "/bin/screen-lock" c.home-manager.users.keke.services.swayidle.events.lock;
 assert (builtins.head c.home-manager.users.keke.services.swayidle.timeouts).timeout == 300;
 assert c.home-manager.users.keke.programs.swaylock.package == enabled.pkgs.swaylock-security-key;
 assert c.security.pam.services.sudo.u2f.enable && off.security.pam.services.sudo.u2f.enable;

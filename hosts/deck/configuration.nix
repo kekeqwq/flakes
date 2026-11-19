@@ -43,13 +43,6 @@
   networking.hostId = "00bab10d";
   networking.firewall.enable = false;
 
-  services = {
-    logind.settings.Login = {
-      HandlePowerKey = "ignore";
-      HandlePowerKeyLongPress = "suspend";
-    };
-  };
-
   myuser.hm.programs.fish = {
     interactiveShellInit = ''
       set -Ux WLR_BACKENDS headless

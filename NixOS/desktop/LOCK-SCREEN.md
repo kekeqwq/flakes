@@ -26,11 +26,17 @@ new NixOS instances inherit the same sudo policy and desktop instances inherit
 the lock policy without per-host switches. This does not enroll a disk: each
 LUKS2 volume requires its own installation-time hardware enrollment.
 
-Desktop and lock screen import the same tracked `wallpaper.nix` image. A 140 px
+Desktop and lock screen share the selected wallpaper, falling back to the
+tracked `wallpaper.nix` image. A 140 px
 clock is centered on each output; the idle ring is transparent. Click anywhere,
 type the user's password, then Enter; Ctrl+U clears the input. Alternatively,
 just touch the blinking authorized Key. Clicking does not unlock. **Win+L (`Super+L`)** locks immediately, independently of the Alt-based
-Niri `Mod` setting.
+Niri `Mod` setting. **Pressing the power button in Niri** uses the same lock
+command instead of Niri's built-in suspend action. **Closing the lid** sends a
+logind session lock event, including on external power or with an external
+monitor. Neither event requests suspend. Logind ignores power-button long
+presses; this does not override a firmware-enforced hard power-off. This
+policy does not change Gamescope's own controls or disable manual suspend.
 
 `screen-lock` holds an owner-session flock across the daemon's lifetime.
 `swaylock --daemonize` waits for secure locking before returning; `swayidle -w`

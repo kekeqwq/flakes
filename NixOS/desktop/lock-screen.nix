@@ -30,6 +30,17 @@ let
   };
 in
 {
+  services.logind.settings.Login = {
+    # Niri binds the power key to screen-lock. Do not also power off or sleep
+    # from logind, including a long press detected by logind (not firmware).
+    HandlePowerKey = "ignore";
+    HandlePowerKeyLongPress = "ignore";
+    # logind sends the session Lock event; swayidle below owns the locker.
+    HandleLidSwitch = "lock";
+    HandleLidSwitchExternalPower = "lock";
+    HandleLidSwitchDocked = "lock";
+  };
+
   # Password authentication must never wait behind the hardware-key attempt.
   security.pam.services.swaylock.u2f.enable = false;
   # A separate strict stack for the locker's private background worker. No
