@@ -18,12 +18,12 @@ self: super: {
 
   emacs-head = super.emacs.overrideAttrs (old: {
     pname = "emacs-head";
-    version = "2026-11-17";
+    version = "2026-11-18";
     src = super.fetchFromGitHub {
       owner = "emacs-mirror";
       repo = "emacs";
-      rev = "0d1557ee656b121bbdb51f9852d12e93b9fb0555";
-      hash = "sha256-S5Mzsad29UOzwwTj3M82qW6E85vJXyYwzBpUFKODVD0=";
+      rev = "dcdd799a863fc8c261e0628dede6da6dc64429d2";
+      hash = "sha256-l8BMsBBTZdef3T2oKSbzupF9kDcA2hhKnhSzzLJafg0=";
     };
     # Skip release security backports, but retain the platform-specific Nix
     # toolchain paths on both Linux and Darwin for downstream .eln builds.
