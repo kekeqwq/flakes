@@ -32,19 +32,38 @@ global.height = 0;
 fun layout() {
   global.width = Window.GetWidth();
   global.height = Window.GetHeight();
-  scale = global.width / background.original.GetWidth();
-  if (global.height / background.original.GetHeight() > scale)
-    scale = global.height / background.original.GetHeight();
+  # Center on the largest real display. Window.GetWidth() without an index
+  # is the virtual bounding box and shifts the spinner right during DRM handoff.
+  best_x = 0;
+  best_y = 0;
+  best_w = global.width;
+  best_h = global.height;
+  best_area = 0;
+  for (i = 0; i < 8; i++) {
+    w = Window.GetWidth(i);
+    h = Window.GetHeight(i);
+    if (w && h && w * h > best_area) {
+      best_area = w * h;
+      best_x = Window.GetX(i);
+      best_y = Window.GetY(i);
+      best_w = w;
+      best_h = h;
+    }
+  }
+  scale = best_w / background.original.GetWidth();
+  if (best_h / background.original.GetHeight() > scale)
+    scale = best_h / background.original.GetHeight();
   width = Math.Int(background.original.GetWidth() * scale);
   height = Math.Int(background.original.GetHeight() * scale);
   background.sprite.SetImage(background.original.Scale(width, height));
-  background.sprite.SetPosition((global.width - width) / 2, (global.height - height) / 2, -100);
-  center = global.width / 2;
-  logo.sprite.SetPosition(center - logo.image.GetWidth() / 2, global.height / 2 - 100, 1);
-  spinner.sprite.SetPosition(center - 32, global.height / 2 + 112, 2);
+  background.sprite.SetPosition(best_x + (best_w - width) / 2, best_y + (best_h - height) / 2, -100);
+  center = best_x + best_w / 2;
+  mid = best_y + best_h / 2;
+  logo.sprite.SetPosition(center - logo.image.GetWidth() / 2, mid - 100, 1);
+  spinner.sprite.SetPosition(center - spinner.images[0].GetWidth() / 2, mid + 112, 2);
   entry.x = center - 180;
   # Move the entire password group down, preserving spacing within the group.
-  entry.y = global.height / 2 + 104;
+  entry.y = mid + 104;
   entry.sprite.SetPosition(entry.x, entry.y, 3);
   prompt.sprite.SetPosition(center - prompt.width / 2, entry.y + 62, 4);
   # Leave clear space below the 64px loading ring for touch/error messages.
