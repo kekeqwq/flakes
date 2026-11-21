@@ -93,6 +93,7 @@ in
     nodejs # JavaScript runtime for PyExecJS.
     (python3.withPackages (
       ps: with ps; [
+        pytest
         httpx
         jsonpath
         jsonpath-ng
