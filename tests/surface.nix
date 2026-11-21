@@ -22,6 +22,7 @@ assert cfg.hardware.deviceTree.name == "qcom/x1e80100-microsoft-denali-oled.dtb"
 assert cfg.my.desktop.niri.outputs == cfg.surface.devices.denali.niriOutputs;
 assert cfg.my.desktop.niri.extraConfig == "";
 assert !(cfg.environment.sessionVariables ? FD_MESA_DEBUG);
+assert cfg.home-manager.users.keke.programs.ghostty.settings.background-opacity == 0.70;
 assert cfg.fileSystems."/".fsType == "ext4";
 assert cfg.fileSystems."/".device == "/dev/disk/by-label/NIXOS_ROOT";
 assert !cfg.my.luks.enable && cfg.boot.initrd.luks.devices == { };

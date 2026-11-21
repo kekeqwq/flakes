@@ -46,7 +46,7 @@ in
         "U+FE0F=${emoji}"
         "U+1F000-U+1FAFF=${emoji}"
       ];
-      background-opacity = 0.95;
+      background-opacity = 0.70;
       unfocused-split-opacity = 1;
       # Give both the tmux bar and terminal content room inside rounded edges.
       window-padding-x = 12;
