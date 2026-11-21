@@ -28,6 +28,8 @@ assert cfg.fileSystems."/".device == "/dev/disk/by-label/NIXOS_ROOT";
 assert !cfg.my.luks.enable && cfg.boot.initrd.luks.devices == { };
 assert !cfg.services.qemuGuest.enable;
 assert !cfg.boot.loader.grub.enable && cfg.boot.loader.systemd-boot.enable;
+assert cfg.boot.loader.systemd-boot.consoleMode == "auto";
+assert !lib.any (lib.hasPrefix "plymouth.use-simpledrm") cfg.boot.kernelParams;
 assert cfg.system.activationScripts.surfacePrivateFirmware.deps == [ "udevd" ];
 assert cfg.security.pam.services.sudo.u2f.enable;
 assert cfg.security.pam.services.sudo-i.u2f.enable;

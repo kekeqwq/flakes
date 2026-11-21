@@ -1,8 +1,12 @@
-{ config, pkgs, ... }:
+{ lib, pkgs, ... }:
 
 {
-  # Boot
-  boot.loader.systemd-boot.enable = true;
+  # Let systemd-boot pick a firmware text mode based on the screen resolution.
+  # This is a UEFI console mode, not a pixel-size setting or a KMS mode.
+  boot.loader.systemd-boot = {
+    enable = true;
+    consoleMode = lib.mkDefault "auto";
+  };
   boot.loader.efi.canTouchEfiVariables = true;
   boot.supportedFilesystems = [ "ntfs" ];
   services.openssh.enable = true;

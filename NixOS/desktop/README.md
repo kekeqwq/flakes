@@ -43,6 +43,25 @@ login overrides, and `system.stateVersion`. Optional display profiles go in
 user's password/SSH credentials separately; do not commit secrets. No VM or
 `mynewvpc` host has been created yet.
 
+## Boot and shutdown
+
+Desktop Plymouth retains the boot splash for the compositor and starts its
+shutdown splash after the user sessions and logind have stopped. Late kernel
+console output goes to a background VT rather than over the splash; kernel
+logging remains enabled. This is not a guarantee against a black interval while
+firmware or the display driver changes modes. No splash delay is added.
+
+The common NixOS systemd-boot configuration uses `console-mode auto`. The loader
+uses the GOP resolution and firmware text modes to pick a suitable console mode;
+it does not scale glyphs independently, and some firmware offers no better mode.
+A console mode selected manually in the boot menu can override this setting.
+Stock systemd-boot does not draw the Plymouth wallpaper in its menu.
+
+Deferred: evaluate rEFInd or GRUB for a graphical HiDPI menu with larger text
+and an optional shared wallpaper. Keep systemd-boot until the alternative can
+boot the existing ARM64 Denali UKIs and preserve NixOS generation rollback.
+Test it alongside the current loader before changing the default.
+
 ## Random wallpaper
 
 One PNG snapshot at `/var/lib/keke-plymouth/wallpaper.png` is shared by Niri,
