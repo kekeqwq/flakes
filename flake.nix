@@ -1,6 +1,10 @@
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable-small";
+    surface = {
+      url = "github:kekeqwq/surface.nix/main";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     chinese-fonts-overlay = {
       url = "github:brsvh/chinese-fonts-overlay/a14d554299d1c8a5f4329a215d4d6217d99bf307";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -117,6 +121,10 @@
         modules = [ ./hosts/lab ];
       };
       nixosConfigurations.secret-lab = mkNixos { modules = [ ./hosts/secret-lab ]; };
+      nixosConfigurations.surface = mkNixos {
+        system = "aarch64-linux";
+        modules = [ ./hosts/surface ];
+      };
       darwinConfigurations.mba = mkDarwin { modules = [ ./hosts/mba ]; };
 
       formatter = forAllSystems (system: treefmtFor.${system}.config.build.wrapper);
@@ -189,6 +197,10 @@
           };
         }
         // lib.optionalAttrs (system == "aarch64-linux") {
+          surface-boundaries = import ./tests/surface.nix {
+            pkgs = pkgsFor.${system};
+            surface = self.nixosConfigurations.surface;
+          };
           package-boundaries = import ./tests/aarch64-linux.nix {
             inherit inputs;
             baseModule = self.nixosModules.default;
