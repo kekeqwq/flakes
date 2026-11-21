@@ -230,12 +230,17 @@ class Network(Gtk.Box):
         self.message = Gtk.Label()
         self.message.set_xalign(0)
         self.message.get_style_context().add_class("keke-sub")
+        self.wifi_iface = None
+        self.scanning = False
+        self.scan_button = Gtk.Button(label="Refresh")
+        self.scan_button.connect("clicked", self.scan)
 
         head = Gtk.Box(spacing=8)
         head.pack_start(Gtk.Label(label="󰖟"), False, False, 0)
         title = Gtk.Label(label="Network")
         title.get_style_context().add_class("keke-title")
         head.pack_start(title, False, False, 0)
+        head.pack_end(self.scan_button, False, False, 0)
         self.pack_start(head, False, False, 0)
         self.pack_start(self.info, False, False, 0)
         section = Gtk.Label(label="AVAILABLE NETWORKS")
@@ -246,6 +251,7 @@ class Network(Gtk.Box):
         self.pack_start(self.password, False, False, 0)
         self.pack_start(self.message, False, False, 0)
         self.refresh()
+        self.scan()
 
     def refresh(self):
         lines = []
@@ -272,20 +278,66 @@ class Network(Gtk.Box):
                 mac = entry.get("address", "")
             signal = ""
             if kind == "wifi":
-                for row in run("nmcli", "-t", "-f", "IN-USE,SIGNAL", "device", "wifi").splitlines():
+                for row in run(
+                    "nmcli", "-t", "-f", "IN-USE,SIGNAL", "device", "wifi", "list",
+                    "ifname", device, "--rescan", "no",
+                ).splitlines():
                     if row.startswith("*"):
                         signal = f" · {row.split(':')[-1]}%"
                         break
             lines.append(f"{device} ({kind}) · {connection}{signal}\n{', '.join(ips)} · {mac}")
         self.info.set_text("\n".join(lines) or "No active connection")
+        self.wifi_iface = wifi_iface
+        self.scan_button.set_sensitive(bool(wifi_iface) and not self.scanning)
+        rows = run(*self.wifi_list_command(wifi_iface, "no")) if wifi_iface else ""
+        self.show_networks(rows)
 
+    @staticmethod
+    def wifi_list_command(iface, rescan):
+        return (
+            "nmcli", "-t", "-f", "IN-USE,SSID,SIGNAL,SECURITY", "device", "wifi", "list",
+            "ifname", iface, "--rescan", rescan,
+        )
+
+    def scan(self, _button=None):
+        if not self.wifi_iface or self.scanning:
+            return
+        self.scanning = True
+        self.scan_button.set_sensitive(False)
+        self.scan_button.set_label("Scanning…")
+        threading.Thread(target=self.scan_worker, args=(self.wifi_iface,), daemon=True).start()
+
+    def scan_worker(self, iface):
+        try:
+            result = subprocess.run(
+                self.wifi_list_command(iface, "yes"),
+                capture_output=True, text=True, timeout=18, check=True,
+            )
+            rows, error = result.stdout, ""
+        except subprocess.TimeoutExpired:
+            rows, error = None, "Wi-Fi scan timed out; showing cached results"
+        except subprocess.CalledProcessError as exc:
+            rows, error = None, exc.stderr.strip()[:160] or "Wi-Fi scan failed; showing cached results"
+        except OSError:
+            rows, error = None, "Unable to start Wi-Fi scan; showing cached results"
+        GLib.idle_add(self.scan_done, iface, rows, error)
+
+    def scan_done(self, iface, rows, error):
+        self.scanning = False
+        self.scan_button.set_label("Retry scan" if error else "Refresh")
+        self.scan_button.set_sensitive(bool(self.wifi_iface))
+        self.scan_button.set_tooltip_text(error or None)
+        if iface == self.wifi_iface and rows is not None:
+            self.show_networks(rows)
+        return GLib.SOURCE_REMOVE
+
+    def show_networks(self, rows):
         for child in self.wifi_list.get_children():
             self.wifi_list.remove(child)
-        if not wifi_iface:
+        if not self.wifi_iface:
             self.wifi_list.pack_start(Gtk.Label(label="No wireless adapter"), False, False, 0)
         else:
             seen = set()
-            rows = run("nmcli", "-t", "-f", "IN-USE,SSID,SIGNAL,SECURITY", "device", "wifi", "list", "--rescan", "no")
             for line in rows.splitlines():
                 parts = re.split(r"(?<!\\):", line)
                 if len(parts) < 4:

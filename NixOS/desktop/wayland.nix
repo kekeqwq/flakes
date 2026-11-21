@@ -13,18 +13,21 @@ let
   trayIcons = "${
     config.home-manager.users.${config.myuser.name}.gtk.iconTheme.package
   }/share/icons/Papirus-Dark/22x22/panel";
+  # The CSS border and Niri shadow cutout must share a radius.
+  waybarRadius = "12";
   niriConfig = pkgs.writeText "niri-unchecked.kdl" (
     config.my.desktop.niri.outputs
     + config.my.desktop.niri.extraConfig
     +
       builtins.replaceStrings
-        [ "    // SNIPASTE_BINDINGS" ]
+        [ "    // SNIPASTE_BINDINGS" "@WAYBAR_RADIUS@" ]
         [
           (lib.optionalString pkgs.stdenv.hostPlatform.isx86_64 ''
             F3 hotkey-overlay-title="Pin clipboard with Snipaste" {
                 spawn "${lib.getExe (import ./pin-clipboard.nix { inherit pkgs; })}"
             }
           '')
+          waybarRadius
         ]
         (builtins.readFile ./niri/config.kdl)
   );
@@ -254,7 +257,7 @@ in
           background: rgba(30, 30, 46, 0.96);
           color: #cdd6f4;
           border: 1px solid #45475a;
-          border-radius: 12px;
+          border-radius: ${waybarRadius}px;
       }
 
       .modules-left,

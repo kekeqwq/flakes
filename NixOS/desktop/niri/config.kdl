@@ -56,8 +56,11 @@ layer-rule {
 }
 layer-rule {
     match namespace="waybar"
+    geometry-corner-radius @WAYBAR_RADIUS@
+}
+layer-rule {
+    match namespace="waybar"
     match namespace="rofi"
-    match at-startup=true
     opacity 0.8
     shadow {
         on
@@ -65,6 +68,9 @@ layer-rule {
         spread 10
         offset x=0 y=5
     }
+}
+layer-rule {
+    match namespace="rofi"
     geometry-corner-radius 10
 }
 window-rule {
