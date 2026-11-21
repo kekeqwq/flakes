@@ -448,11 +448,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1795251339,
-        "narHash": "sha256-bvDsJ38TDplnQuL35wKiwW9LZ2aTxCpPX0a0Y+BbYVc=",
+        "lastModified": 1795251461,
+        "narHash": "sha256-LuBrYgQ2X4Jp3FRviRyZyW1YKaAG+ExpmWFkRyOHm9Y=",
         "owner": "kekeqwq",
         "repo": "surface.nix",
-        "rev": "1d29871c5a83a223880b63371cd09913e36f8b93",
+        "rev": "a73bffe569a0470f956777fc70073eae8f45314f",
         "type": "github"
       },
       "original": {
