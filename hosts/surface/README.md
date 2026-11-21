@@ -4,7 +4,7 @@
 
 - Hardware, kernel, device tree, touch, and zboot UKI lifecycle: the `surface.nix` input.
 - Desktop and accounts: the standard NixOS desktop and shared programs in this flake.
-- Existing NVMe root `NIXOS_ROOT` (ext4) and `/boot` `NIXOS_EFI` (vfat), no swap or implicit encryption migration.
+- The test install keeps NVMe root `NIXOS_ROOT` (ext4) and ESP `NIXOS_EFI` (VFAT), no swap, NTFS or initrd LVM. The formal install will separately review `secret-lab`'s LUKS2/FIDO2 setup and Btrfs/zstd; this configuration does not repartition, encrypt or enroll keys.
 - Provision owner-held firmware at `/var/lib/surface-firmware` as documented in `surface.nix`. Keep firmware, private UKIs and SSH credentials out of Git and the public Nix store. The existing SSH authorized keys are deployed privately.
 
 ```sh
