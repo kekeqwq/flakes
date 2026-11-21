@@ -16,6 +16,8 @@
   surface.devices.denali = {
     enable = true;
     privateFirmwareDirectory = "/var/lib/surface-firmware";
+    # This test device lacks an accessible factory Bluetooth address.
+    bluetoothAddress = "02:11:5A:AD:00:01";
   };
   my.desktop.niri.outputs = config.surface.devices.denali.niriOutputs;
 
