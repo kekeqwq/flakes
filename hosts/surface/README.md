@@ -40,7 +40,7 @@ The regular systemd-boot generation list boots Denali UKIs. Keep the separately 
   kept the first-error logs privately. The initial trigger of recovery is
   not established. This result applies to original Gen21 only.
 
-## Gen21 audio repair candidate (2026-11-25)
+## Gen22 test default: Gen21 audio repair (2026-11-25)
 
 Hardware input `0b5e96b` retains `next-20261124` and the reviewed endpoint
 settings, but replaces a previously started DSP graph before re-PREPARE.
@@ -49,5 +49,9 @@ Native one-shot `3v4hgqi9…` passed three idle/reopen rounds followed by
 regression also armed both graph epochs after full two-period priming; the
 old graph's CLOSE and UNMAP were acknowledged. The one-shot rechecked
 pinned SSH, `sudo -n`, greetd, Niri, FL/FR routing and the Adreno renderer.
-These tests do not establish long-term listening stability or formal-use
-readiness. The test-only SSH/PAM and sudo exceptions are unchanged.
+After 20 playback cycles and a five-minute continuous playback soak passed,
+`nixos-rebuild switch` installed that exact closure as Gen22. It rebooted from
+its regular default entry, passed three more idle/reopen and duplex rounds,
+and detected all three timed test tones on MicArray. The short runs do not
+establish long-term listening stability or formal-use readiness. The test-only
+SSH/PAM and sudo exceptions and the endpoint volume settings are unchanged.
