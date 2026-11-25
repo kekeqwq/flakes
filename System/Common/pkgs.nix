@@ -93,6 +93,9 @@ in
     nodejs # JavaScript runtime for PyExecJS.
     (python3.withPackages (
       ps: with ps; [
+        idna
+        tldextract
+        playwright
         pytest
         httpx
         jsonpath

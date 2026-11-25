@@ -1,8 +1,0 @@
-{
-  "name": "pi-codex-usage-runtime",
-  "version": "0.69.3",
-  "private": true,
-  "dependencies": {
-    "@narumitw/pi-tui-kit": "0.70.0"
-  }
-}

@@ -2,6 +2,7 @@ _: {
   imports = [
     ../../System/Common
     ./system.nix
+    ./tailscale-routes.nix
     ./security.nix
     ./fonts.nix
     ./ghostty.nix

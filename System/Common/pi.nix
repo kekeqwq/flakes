@@ -23,7 +23,14 @@ let
     mkdir -p "$out"
     cp ${./input-method/pi-ime.ts} "$out/input-method.ts"
   '';
-  codexUsage = import ./pi-codex-usage { inherit pkgs; };
+  webSearch = pkgs.fetchzip {
+    url = "https://registry.npmjs.org/pi-web-search/-/pi-web-search-1.7.0.tgz";
+    hash = "sha256-8HgICeK/HB07pLb+KRpB6kxIRW9Vc8s0VcJmtutuKr8=";
+  };
+  codexGoal = pkgs.fetchzip {
+    url = "https://registry.npmjs.org/pi-codex-goal/-/pi-codex-goal-0.7.11.tgz";
+    hash = "sha256-VLtDvSZ/xeR7pyTriilFvCos7NPh00jBRDlquqqrlKg=";
+  };
   multiAccountSrc = pkgs.fetchzip {
     url = "https://registry.npmjs.org/pi-multi-account/-/pi-multi-account-1.28.1.tgz";
     hash = "sha256-TUjGG5hi83voCw/pek2NzvD/z4zKbChl4Rbv16MDDFg=";
@@ -81,7 +88,10 @@ in
     home.file.".local/bin/pi".source = "${config.programs.pi.coding-agent.finalPackage}/bin/pi";
     # home.file.".pi/agent/extensions/pi-multi-account".source = multiAccount;
     home.file.".pi/agent/extensions/input-method.ts".source = "${inputMethod}/input-method.ts";
-    home.file.".pi/agent/extensions/codex-usage".source = codexUsage;
+    # The published entry point is src/index.ts; Pi supplies all runtime imports.
+    home.file.".pi/agent/extensions/pi-web-search".source = "${webSearch}/src";
+    home.file.".pi/agent/extensions/pi-codex-goal".source = codexGoal;
+    home.file.".pi/agent/prompts/create-goal.md".source = "${codexGoal}/prompts/create-goal.md";
     home.file.".pi/agent/themes/catppuccin-latte.json".source =
       "${catppuccinThemes}/catppuccin-latte.json";
     home.file.".pi/agent/themes/catppuccin-mocha.json".source =

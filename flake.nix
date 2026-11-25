@@ -155,6 +155,7 @@
             themes = self.checks.${system}.pi-catppuccin;
           };
           tmux-foreground = import ./tests/tmux-foreground.nix { pkgs = pkgsFor.${system}; };
+          zoxide-fish = import ./tests/zoxide-fish.nix { pkgs = pkgsFor.${system}; };
           wallpaper-selection =
             let
               pkgs = pkgsFor.${system};
