@@ -13,4 +13,29 @@ nix build .#checks.aarch64-linux.surface-boundaries --no-link
 sudo nixos-rebuild switch --flake .#surface
 ```
 
-The regular systemd-boot generation list boots Denali UKIs. Keep the separately archived, verified rescue UKIs and their closures until the new generation passes a real boot and desktop test. No test render overrides belong in this host.
+The regular systemd-boot generation list boots Denali UKIs. Keep the separately archived, verified rescue UKIs and their closures until the new generation passes a real boot and desktop test. Do not add alternate test render profiles to this host.
+
+## Gen21 test checkpoint (2026-11-25)
+
+- `7.4.0-rc4-next-20261124-surface-fullio`, hardware input `d004185`, booted
+  `/nix/store/06n33m9l1r5pd27lkgxjkngprxahnsnl-nixos-system-surface-26.11.20261121.56f282a`
+  from the regular default Gen21 entry after `nixos-rebuild switch`. The
+  two candidate one-shot images were validated separately; the consumed ESP
+  entry is removed. Gen20 and the private ESP recovery archive are retained.
+- Display/GPU: the desktop reported internal 2880×1920 at 120 Hz, scale 2;
+  the headless GLES renderer was Adreno X1-85, with 1024 successful pixel
+  readbacks. Pinned SSH, `sudo -n`, greetd and Wi-Fi were verified.
+- Audio with a held graph: both WSA884x devices bound, FL→FL/FR→FR links,
+  one endpoint arm on the running graph, 20 low-volume play/stop cycles,
+  and five one-minute playback windows at about 48 kHz with no matching
+  kernel errors. Probe tones were detected by MicArray and 192,000-frame
+  duplex capture passed. This was not a long-term listening test.
+- **Do not promote Gen21 as audio-stable.** An ordinary graph close reached
+  SoundWire runtime suspend with both devices still Attached, then reopened
+  and armed a new graph. Playback with capture after that reopen entered
+  ALSA recovery: the compact mute readback reported an unmuted endpoint,
+  PREPARE failed, and the PCM transfer path warned about a missing DMA area.
+  PipeWire repeatedly attempted recovery. Stopped the audio user services
+  for the current boot, verified PCM closed and DSP CLOSE/UNMAP ACKs, and
+  kept the first-error logs privately. The initial trigger of recovery is
+  not established. Preserve Gen20 and do not repeat the fault on this boot.
