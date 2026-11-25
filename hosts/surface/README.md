@@ -38,4 +38,16 @@ The regular systemd-boot generation list boots Denali UKIs. Keep the separately 
   PipeWire repeatedly attempted recovery. Stopped the audio user services
   for the current boot, verified PCM closed and DSP CLOSE/UNMAP ACKs, and
   kept the first-error logs privately. The initial trigger of recovery is
-  not established. Preserve Gen20 and do not repeat the fault on this boot.
+  not established. This result applies to original Gen21 only.
+
+## Gen21 audio repair candidate (2026-11-25)
+
+Hardware input `0b5e96b` retains `next-20261124` and the reviewed endpoint
+settings, but replaces a previously started DSP graph before re-PREPARE.
+Native one-shot `3v4hgqi9…` passed three idle/reopen rounds followed by
+192,000-frame playback/MicArray duplex runs. The same-fd ALSA DROP/PREPARE
+regression also armed both graph epochs after full two-period priming; the
+old graph's CLOSE and UNMAP were acknowledged. The one-shot rechecked
+pinned SSH, `sudo -n`, greetd, Niri, FL/FR routing and the Adreno renderer.
+These tests do not establish long-term listening stability or formal-use
+readiness. The test-only SSH/PAM and sudo exceptions are unchanged.
