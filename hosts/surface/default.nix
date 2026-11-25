@@ -1,6 +1,7 @@
 {
   config,
   lib,
+  pkgs,
   inputs,
   ...
 }:
@@ -44,11 +45,44 @@
   boot.loader.timeout = 5;
   my.sunshine.enable = false;
 
+  # Dedicated test machine only. Remove before formal deployment.
+  security.sudo.extraRules = [
+    {
+      users = [ "keke" ];
+      commands = [
+        {
+          command = "ALL";
+          options = [ "NOPASSWD" ];
+        }
+      ];
+    }
+  ];
+
   users.mutableUsers = true;
   services.openssh.authorizedKeysFiles = [ "/etc/ssh/authorized_keys.d/%u" ];
   services.openssh.settings = {
     PasswordAuthentication = false;
     KbdInteractiveAuthentication = false;
     PermitRootLogin = "no";
+    PermitEmptyPasswords = false;
+  };
+  # Dedicated test host only. OpenSSH's `none` request checks the empty
+  # password via PAM; substitute a host-local exception for keke, without
+  # touching the shadow password, local login PAM, or other SSH accounts.
+  services.openssh.extraConfig = ''
+    Match User keke
+      PasswordAuthentication yes
+      PermitEmptyPasswords yes
+  '';
+  security.pam.services.sshd.rules.auth.surface-test-keke = {
+    order = 100;
+    control = "sufficient";
+    modulePath = "${pkgs.linux-pam}/lib/security/pam_succeed_if.so";
+    args = [
+      "quiet"
+      "user"
+      "="
+      "keke"
+    ];
   };
 }

@@ -31,6 +31,30 @@ assert !cfg.boot.loader.grub.enable && cfg.boot.loader.systemd-boot.enable;
 assert cfg.boot.loader.systemd-boot.consoleMode == "auto";
 assert !lib.any (lib.hasPrefix "plymouth.use-simpledrm") cfg.boot.kernelParams;
 assert cfg.system.activationScripts.surfacePrivateFirmware.deps == [ "udevd" ];
+assert lib.any (
+  rule:
+  rule.users == [ "keke" ]
+  &&
+    rule.commands == [
+      {
+        command = "ALL";
+        options = [ "NOPASSWD" ];
+      }
+    ]
+) cfg.security.sudo.extraRules;
+assert cfg.security.sudo.wheelNeedsPassword;
+assert cfg.services.openssh.settings.PermitRootLogin == "no";
+assert !cfg.services.openssh.settings.PasswordAuthentication;
+assert !cfg.services.openssh.settings.KbdInteractiveAuthentication;
+assert !cfg.services.openssh.settings.PermitEmptyPasswords;
+assert lib.hasInfix "Match User keke\n" cfg.services.openssh.extraConfig;
+assert
+  cfg.security.pam.services.sshd.rules.auth.surface-test-keke.args == [
+    "quiet"
+    "user"
+    "="
+    "keke"
+  ];
 assert cfg.security.pam.services.sudo.u2f.enable;
 assert cfg.security.pam.services.sudo-i.u2f.enable;
 assert cfg.environment.etc."security/flakes-u2f-keys".enable;

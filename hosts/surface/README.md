@@ -6,6 +6,7 @@
 - Desktop and accounts: the standard NixOS desktop and shared programs in this flake.
 - The test install keeps NVMe root `NIXOS_ROOT` (ext4) and ESP `NIXOS_EFI` (VFAT), no swap, NTFS or initrd LVM. The formal install will separately review `secret-lab`'s LUKS2/FIDO2 setup and Btrfs/zstd; this configuration does not repartition, encrypt or enroll keys.
 - Provision owner-held firmware at `/var/lib/surface-firmware` as documented in `surface.nix`. Keep firmware, private UKIs and SSH credentials out of Git and the public Nix store. The existing SSH authorized keys are deployed privately.
+- Dedicated testing only: `ssh -o BatchMode=yes keke@<Surface-IP>` needs neither a password nor a client key and has no source-IP restriction. Since `keke` also has a host-local `NOPASSWD: ALL` sudo rule, anyone who can reach SSH can become root. Do not expose this test system to an untrusted network. Direct SSH root login remains disabled; remove both the SSH/PAM and sudo exceptions before formal use.
 
 ```sh
 nix build .#checks.aarch64-linux.surface-boundaries --no-link
