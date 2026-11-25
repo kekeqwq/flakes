@@ -17,7 +17,13 @@ assert surface.pkgs.stdenv.hostPlatform.system == "aarch64-linux";
 assert cfg.my.desktop.enable && cfg.programs.niri.enable;
 assert cfg.services.iptsd.enable;
 assert cfg.surface.devices.denali.enable;
-assert cfg.boot.kernelPackages.kernel == surface.pkgs.surfacePackages.surfaceNext;
+assert lib.hasSuffix "-surface-fullio" cfg.boot.kernelPackages.kernel.modDirVersion;
+assert cfg.systemd.user.services ? fullio-graph-holder;
+assert cfg.systemd.user.services ? fullio-endpoint-keeper;
+assert !(cfg.systemd.user.services ? fullio-audio-monitor);
+assert builtins.all (
+  name: !(lib.hasPrefix "sp11-fullio-" name || lib.hasPrefix "fullio-audio-" name)
+) names;
 assert cfg.hardware.deviceTree.name == "qcom/x1e80100-microsoft-denali-oled.dtb";
 assert cfg.my.desktop.niri.outputs == cfg.surface.devices.denali.niriOutputs;
 assert cfg.my.desktop.niri.extraConfig == "";

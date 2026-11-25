@@ -9,6 +9,7 @@
   imports = [
     ../../NixOS/desktop/baseline.nix
     inputs.surface.nixosModules.default
+    inputs.surface.nixosModules.fullio-reference-render
   ];
 
   networking.hostName = "surface";
