@@ -1,58 +1,26 @@
-# Surface
+# Surface 正式安装草案（待确认，不能 switch 到现有测试盘）
 
-`nixosConfigurations.surface` is the native AArch64 installation and replaces the old standalone and `secret-lab-surface-test` configurations. The unrelated `secret-lab` instance is unchanged.
+- 实例 `flakes#surface`、主机名 `surface`、原生 AArch64。硬件来自锁定的 `surface.nix`，保留 Denali HHKB、触屏、OLED 和已验收的 0 dB FullIO。
+- 从公共桌面和 server 配置继承用户 `keke`、SSH、sudo 和 PAM；不保留测试机的无凭据登录、专用 SSH 授权文件与 `NOPASSWD`。新装的 `keke` 登录密码或授权公钥须按公共约定私下配置，不能把 Live 的 root 免密带进目标系统。
+- Niri 只配置内置 `eDP-1`（2880×1920、120 Hz、缩放 2）；Sunshine 串流同一块屏幕，不创建虚拟输出、不设 nginx 代理或路由器转发，UPnP 关闭。首装后仍须实测 Sunshine 串流。
+- 正式首装用 NixOS **27.05**。安装锁定 `nixos-unstable-small` 的 `aa156634ecca12217a808ff1d8fc2793115923bb`，求值得到 `config.system.nixos.release = "27.05"`；新实例采用 `system.stateVersion = "27.05"`，安装后不随升级改变。
 
-- Hardware, kernel, device tree, touch, and zboot UKI lifecycle: the `surface.nix` input.
-- Desktop and accounts: the standard NixOS desktop and shared programs in this flake. The host explicitly selects the Denali protected FullIO render module for its internal stereo speakers and MicArray. It does not install experimental audio monitors or tools into the user profile.
-- The running install keeps NVMe root `NIXOS_ROOT` (ext4) and ESP `NIXOS_EFI` (VFAT). Do not switch this host to LUKS/Btrfs mounts until that volume exists; doing so would make the current disk unbootable.
-- Formal layout, matching `secret-lab`: one LUKS2 container, Btrfs `@root`/`@nix`/`@home` with `compress=zstd:3`, touch-only FIDO2 plus a retained recovery password. The Denali kernel now builds `BTRFS_FS=m`, and its initrd keeps `dm_mod`, `dm_crypt` and `btrfs`. AES, xHCI and USB HID are built in. Still absent until the private migration: the LUKS volume and partlabel, per-volume YubiKey enrollment, removal of the test SSH/sudo exceptions, and firmware remaining available after unlock. No key or recovery password belongs in Git.
-- Provision owner-held firmware at `/var/lib/surface-firmware` as documented in `surface.nix`. Keep firmware, private UKIs and SSH credentials out of Git and the public Nix store. The existing SSH authorized keys are deployed privately.
-- Dedicated testing only: `ssh -o BatchMode=yes keke@<Surface-IP>` needs neither a password nor a client key and has no source-IP restriction. Since `keke` also has a host-local `NOPASSWD: ALL` sudo rule, anyone who can reach SSH can become root. Do not expose this test system to an untrusted network. Direct SSH root login remains disabled; remove both the SSH/PAM and sudo exceptions before formal use.
+## 磁盘布局
 
-```sh
-nix build .#checks.aarch64-linux.surface-boundaries --no-link
-sudo nixos-rebuild switch --flake .#surface
-```
+使用 `fdisk` 在明确确认的内置 NVMe 上建立 GPT（Live USB 不是目标）。仅下表第一项是 UEFI 规定的明文启动区，其他所有系统和用户数据放进一个 LUKS2 容器。**没有 LVM，首装不启用 swap 或休眠，不预留独立 swap 分区。**
 
-The regular systemd-boot generation list boots Denali UKIs. Keep the separately archived, verified rescue UKIs and their closures until the new generation passes a real boot and desktop test. Do not add alternate test render profiles to this host.
+| GPT 分区名 | 用途 | 挂载 |
+| --- | --- | --- |
+| `surface-efi` | FAT32 ESP，建议 2 GiB，`umask=0077` | `/boot` |
+| `surface-cryptroot` | 其余空间，LUKS2 → `/dev/mapper/cryptroot` → Btrfs | `@root` → `/`，`@nix` → `/nix`，`@home` → `/home` |
 
-## Gen21 test checkpoint (2026-11-25)
+文件系统启用 `compress=zstd:3,noatime`。以后需要 swap 时，可在同一个加密 Btrfs 里新建 `@swap` 子卷，用 `btrfs filesystem mkswapfile` 按需创建交换文件，并启用 Denali 内核的 `CONFIG_SWAP`，不必重分区。若再做休眠，initrd 要先解锁 `cryptroot` 再定位休眠镜像；须另行启用内核休眠支持并验证真机恢复。
 
-- `7.4.0-rc4-next-20261124-surface-fullio`, hardware input `d004185`, booted
-  `/nix/store/06n33m9l1r5pd27lkgxjkngprxahnsnl-nixos-system-surface-26.11.20261121.56f282a`
-  from the regular default Gen21 entry after `nixos-rebuild switch`. The
-  two candidate one-shot images were validated separately; the consumed ESP
-  entry is removed. Gen20 and the private ESP recovery archive are retained.
-- Display/GPU: the desktop reported internal 2880×1920 at 120 Hz, scale 2;
-  the headless GLES renderer was Adreno X1-85, with 1024 successful pixel
-  readbacks. Pinned SSH, `sudo -n`, greetd and Wi-Fi were verified.
-- Audio with a held graph: both WSA884x devices bound, FL→FL/FR→FR links,
-  one endpoint arm on the running graph, 20 low-volume play/stop cycles,
-  and five one-minute playback windows at about 48 kHz with no matching
-  kernel errors. Probe tones were detected by MicArray and 192,000-frame
-  duplex capture passed. This was not a long-term listening test.
-- **Do not promote Gen21 as audio-stable.** An ordinary graph close reached
-  SoundWire runtime suspend with both devices still Attached, then reopened
-  and armed a new graph. Playback with capture after that reopen entered
-  ALSA recovery: the compact mute readback reported an unmuted endpoint,
-  PREPARE failed, and the PCM transfer path warned about a missing DMA area.
-  PipeWire repeatedly attempted recovery. Stopped the audio user services
-  for the current boot, verified PCM closed and DSP CLOSE/UNMAP ACKs, and
-  kept the first-error logs privately. The initial trigger of recovery is
-  not established. This result applies to original Gen21 only.
+先创建能独立使用的恢复密码，再为这个 LUKS2 容器逐只登记指定 YubiKey（一次触摸，无 PIN）；sudo/锁屏的公有 PAM 授权不能代替磁盘登记。登记时插入指定 Key，指示灯闪烁后触摸。密码和 LUKS 头备份只私下保存。须分别验证无 Key 密码回退与登记 Key 冷启动解锁。
 
-## Gen22 test default: Gen21 audio repair (2026-11-25)
+## 安装顺序（确认后）
 
-Hardware input `0b5e96b` retains `next-20261124` and the reviewed endpoint
-settings, but replaces a previously started DSP graph before re-PREPARE.
-Native one-shot `3v4hgqi9…` passed three idle/reopen rounds followed by
-192,000-frame playback/MicArray duplex runs. The same-fd ALSA DROP/PREPARE
-regression also armed both graph epochs after full two-period priming; the
-old graph's CLOSE and UNMAP were acknowledged. The one-shot rechecked
-pinned SSH, `sudo -n`, greetd, Niri, FL/FR routing and the Adreno renderer.
-After 20 playback cycles and a five-minute continuous playback soak passed,
-`nixos-rebuild switch` installed that exact closure as Gen22. It rebooted from
-its regular default entry, passed three more idle/reopen and duplex rounds,
-and detected all three timed test tones on MicArray. The short runs do not
-establish long-term listening stability or formal-use readiness. The test-only
-SSH/PAM and sudo exceptions and the endpoint volume settings are unchanged.
+1. 用已通过实机检查的私有 Live USB 启动、连接可信网络。记录目标盘身份和备份，确认后才分区并建卷。ESP 与内部数据的备份须存放在目标盘之外。
+2. 挂载全部目标子卷与 ESP。将确认过的 `flakes` 和 `surface.nix` 对应提交与输入锁同步并提交后，从 Git 获取 `flakes` 到目标 `/mnt/etc/nixos`，使用其已提交的锁定输入。
+3. 从 Live 的 `/iso/surface-install/firmware/` 校验并部署到目标 `/mnt/var/lib/surface-firmware`，再执行 `nixos-install --root /mnt --flake /mnt/etc/nixos#surface`，使安装流程生成含私有固件的 UKI。固件、私有 UKI、恢复密码均不进 Git 或 Nix store。
+4. 关机后拔开安装 U 盘，第一次由内置盘启动。检查系统与三个子卷、Key 和密码回退、公共 SSH/sudo、触屏和 HHKB、桌面和 Sunshine、0 dB 扬声器与 MicArray。Live 通过不是空白盘首启通过。
