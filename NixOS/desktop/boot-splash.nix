@@ -32,8 +32,8 @@ in
       fi
     '';
   };
-  boot.consoleLogLevel = 0;
-  boot.kernelParams = [
+  boot.consoleLogLevel = lib.mkIf config.boot.plymouth.enable 0;
+  boot.kernelParams = lib.mkIf config.boot.plymouth.enable [
     "quiet"
     "udev.log_level=3"
     "rd.udev.log_level=3"
@@ -44,7 +44,7 @@ in
   # Space at power-on still opens systemd-boot's recovery/generation menu.
   boot.loader.timeout = lib.mkDefault 0;
 
-  systemd.services = {
+  systemd.services = lib.mkIf config.boot.plymouth.enable ({
     plymouth-quit.serviceConfig.ExecStart = [
       ""
       "-${plymouth} quit --retain-splash"
@@ -68,5 +68,5 @@ in
     # off the splash. Logs still go to kmsg; /dev/console and watchdog policy
     # are unchanged. A system without VTs can still shut down normally.
     serviceConfig.ExecStartPre = "-${setlogcons} --console=/dev/tty63 63";
-  });
+  }));
 }

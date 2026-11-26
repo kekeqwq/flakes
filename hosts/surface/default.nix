@@ -66,7 +66,16 @@ in
   boot.initrd.luks.cryptoModules = [ "aes" "xts" "sha256" "sha512" "input_leds" ];
   # LUKS maps a raw partition directly to Btrfs, with no LVM layer.
   boot.initrd.services.lvm.enable = lib.mkForce false;
-  boot.kernelParams = [ "nohibernate" ];
+  # Keep the LUKS prompt and early display diagnostics on the built-in console.
+  boot.plymouth.enable = lib.mkForce false;
+  boot.consoleLogLevel = 7;
+  boot.kernelParams = [
+    "nohibernate"
+    "console=tty0"
+    "fbcon=font:TER16x32,nodefer"
+    "rd.systemd.show_status=yes"
+    "systemd.show_status=yes"
+  ];
   boot.loader.timeout = 5;
   boot.loader.systemd-boot.configurationLimit = 8;
   fileSystems = {
