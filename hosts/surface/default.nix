@@ -88,6 +88,20 @@ in
     "/nix" = (btrfsSubvolume "@nix") // { neededForBoot = true; };
     "/home" = btrfsSubvolume "@home";
   };
+  # Boot A/B: reuse the hardware-tested Live kernel and DTB with this host's
+  # installed userspace and encrypted root, not the Live login policy.
+  specialisation.live-kernel.configuration =
+    let
+      live = inputs.surface-live-baseline.nixosConfigurations.surface-live.config;
+    in {
+      system.nixos.tags = [ "live-kernel-ab" ];
+      surface.fullio.referenceRender.enable = false;
+      surface.fullio.checkedCapture = lib.mkForce false;
+      surface.fullio.swrResumeAudit = lib.mkForce false;
+      surface.fullio.feedbackParityRender = lib.mkForce false;
+      boot.kernelPackages = lib.mkForce live.boot.kernelPackages;
+      hardware.deviceTree.package = lib.mkForce live.hardware.deviceTree.package;
+    };
   # A Btrfs swapfile can be added inside cryptroot later without repartitioning.
   swapDevices = [ ];
 }
