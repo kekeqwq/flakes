@@ -26,6 +26,10 @@ for _ in 1 2; do tmux -L "$name" source-file "$config"; done
 [ "$(tmux -L "$name" show -gv dark-theme-light-grey)" = '#a6adc8' ]
 [ "$(tmux -L "$name" show -gv light-theme-blue)" = '#d81b80' ]
 [ "$(tmux -L "$name" show -gv dark-theme-blue)" = '#89b4fa' ]
+# Context menus must use per-client colour slots, not fixed RGB or tmux defaults.
+[ "$(tmux -L "$name" show -gv menu-style)" = 'bg=themeblack,fg=themewhite' ]
+[ "$(tmux -L "$name" show -gv menu-border-style)" = 'bg=themeblack,fg=themelightgrey' ]
+[ "$(tmux -L "$name" show -gv menu-selected-style)" = 'bg=themeblue,fg=themeblack' ]
 [[ $(tmux -L "$name" show -gv status-left) != *'bg=themeblue'* ]]
 [ "$(tmux -L "$name" show -gv status)" = 2 ]
 separator=$(tmux -L "$name" show -gv 'status-format[1]')
@@ -69,4 +73,4 @@ for mode in light dark; do
   [[ $(tmux -L "$name" show -gv window-status-format) == *themelightgrey* ]]
   [[ $(tmux -L "$name" show -gv window-status-current-format) == *themeblue* ]]
 done
-printf '%s\n' 'tmux reload, identity token, session emoji, plain windows, adaptive separator and per-client palettes: PASS'
+printf '%s\n' 'tmux reload, identity token, session emoji, plain windows, adaptive separator, context menus and per-client palettes: PASS'

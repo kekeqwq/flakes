@@ -157,6 +157,10 @@ in
       set -g message-style 'bg=default,fg=themeblue'
       set -g message-command-style 'bg=default,fg=themeblue'
       set -g mode-style 'bg=themeblue,fg=themeblack'
+      # Built-in context menus use the same per-client palette as the bar.
+      set -g menu-style 'bg=themeblack,fg=themewhite'
+      set -g menu-border-style 'bg=themeblack,fg=themelightgrey'
+      set -g menu-selected-style 'bg=themeblue,fg=themeblack'
     '';
   };
 }

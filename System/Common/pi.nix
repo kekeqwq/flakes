@@ -27,6 +27,14 @@ let
     url = "https://registry.npmjs.org/pi-web-search/-/pi-web-search-1.7.0.tgz";
     hash = "sha256-8HgICeK/HB07pLb+KRpB6kxIRW9Vc8s0VcJmtutuKr8=";
   };
+  # Shared Heptabase CLI skill, pinned to one GitHub commit for all platforms.
+  # Runtime prerequisite: `heptabase` CLI >= 0.10.0 from the desktop app.
+  heptabaseSkills = pkgs.fetchFromGitHub {
+    owner = "heptameta";
+    repo = "heptabase-cli-skills";
+    rev = "e7bdc81c46f95e0bbde93108bc713e5e6fb9d02b";
+    hash = "sha256-oaG6dhjq9grRkJc0A8iq3zS3AV+UVV9xJ7ec9F4C7yc=";
+  };
   codexGoal = pkgs.fetchzip {
     url = "https://registry.npmjs.org/pi-codex-goal/-/pi-codex-goal-0.7.11.tgz";
     hash = "sha256-VLtDvSZ/xeR7pyTriilFvCos7NPh00jBRDlquqqrlKg=";
@@ -92,6 +100,21 @@ in
     home.file.".pi/agent/extensions/pi-web-search".source = "${webSearch}/src";
     home.file.".pi/agent/extensions/pi-codex-goal".source = codexGoal;
     home.file.".pi/agent/prompts/create-goal.md".source = "${codexGoal}/prompts/create-goal.md";
+    home.file.".pi/agent/skills/heptabase-cli".source = "${heptabaseSkills}/skills/heptabase-cli";
+    # Seed the public endpoint without replacing the user's mutable MCP config.
+    # OAuth authorization is done per user through /mcp, outside activation.
+    home.activation.seedHeptabaseMcp = inputs.home-manager.lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+      agentDir="''${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}"
+      mcpConfig="$agentDir/mcp.json"
+      hasHeptabase=false
+      if [[ -e "$mcpConfig" ]]; then
+        hasHeptabase="$(${pkgs.jq}/bin/jq -r '.mcpServers // {} | has("heptabase")' "$mcpConfig")"
+      fi
+      if [[ "$hasHeptabase" == false ]]; then
+        run ${config.programs.pi.coding-agent.finalPackage}/bin/pi mcp add heptabase \
+          --url https://api.heptabase.com/mcp
+      fi
+    '';
     home.file.".pi/agent/themes/catppuccin-latte.json".source =
       "${catppuccinThemes}/catppuccin-latte.json";
     home.file.".pi/agent/themes/catppuccin-mocha.json".source =
