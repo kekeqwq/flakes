@@ -2,6 +2,9 @@
 let
   cfg = surface.config;
   lib = pkgs.lib;
+  unity = cfg.surface.fullio.feedbackParityRender or false;
+  keeper = cfg.systemd.user.services.fullio-endpoint-keeper;
+  holder = cfg.systemd.user.services.fullio-graph-holder;
   packages = cfg.environment.systemPackages ++ cfg.home-manager.users.keke.home.packages;
   names = map (p: p.pname or (p.name or "")) packages;
   excluded = [
@@ -17,9 +20,20 @@ assert surface.pkgs.stdenv.hostPlatform.system == "aarch64-linux";
 assert cfg.my.desktop.enable && cfg.programs.niri.enable;
 assert cfg.services.iptsd.enable;
 assert cfg.surface.devices.denali.enable;
-assert lib.hasSuffix "-surface-fullio" cfg.boot.kernelPackages.kernel.modDirVersion;
-assert cfg.systemd.user.services ? fullio-graph-holder;
-assert cfg.systemd.user.services ? fullio-endpoint-keeper;
+assert lib.hasSuffix (
+  if unity then "-surface-fullio-checked-capture" else "-surface-fullio"
+) cfg.boot.kernelPackages.kernel.modDirVersion;
+assert builtins.elem "default.target" holder.wantedBy;
+assert builtins.elem "default.target" keeper.wantedBy;
+assert lib.hasSuffix " 0" keeper.serviceConfig.ExecStart == unity;
+assert !unity || (
+  keeper.serviceConfig.Restart == "no"
+  && cfg.surface.fullio.checkedCapture
+  && cfg.surface.fullio.swrResumeAudit
+  && !cfg.surface.fullio.feedbackParityAudit
+  && !cfg.surface.fullio.preSpLoggerAudit
+  && cfg.security.rtkit.enable
+);
 assert !(cfg.systemd.user.services ? fullio-audio-monitor);
 assert builtins.all (
   name: !(lib.hasPrefix "sp11-fullio-" name || lib.hasPrefix "fullio-audio-" name)

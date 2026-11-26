@@ -10,10 +10,18 @@
     ../../NixOS/desktop/baseline.nix
     inputs.surface.nixosModules.default
     inputs.surface.nixosModules.fullio-reference-render
+    inputs.surface.nixosModules.fullio-reference-clock-audit
   ];
 
   networking.hostName = "surface";
   system.stateVersion = "26.05";
+
+  security.rtkit.enable = true;
+  surface.fullio = {
+    checkedCapture = true;
+    swrResumeAudit = true;
+    feedbackParityRender = true;
+  };
 
   surface.devices.denali = {
     enable = true;
