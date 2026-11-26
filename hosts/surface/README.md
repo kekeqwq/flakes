@@ -16,6 +16,8 @@
 
 上述大小适用于这块 953.87 GiB NVMe；另留 GPT 和对齐所需的少量扇区。systemd-boot 最多保留八个启动代，实际容量取决于完整 UKI 的大小。
 
+根卷使用 LUKS2 AES-XTS（`cryptsetup luksFormat --type luks2 --cipher aes-xts-plain64 --key-size 512`）。Denali initrd 只纳入此根卷所需的加密模块，不请求通用列表中的旧密码算法和 AF_ALG；保留 `dm_crypt`，用户空间的 cryptsetup 使用 OpenSSL/libargon2。改用其他根卷密码算法时须同步检查 initrd 配置。
+
 文件系统启用 `compress=zstd:3,noatime`。以后需要 swap 时，可在同一个加密 Btrfs 里新建 `@swap` 子卷，用 `btrfs filesystem mkswapfile` 按需创建交换文件，并启用 Denali 内核的 `CONFIG_SWAP`，不必重分区。若再做休眠，initrd 要先解锁 `cryptroot` 再定位休眠镜像；须另行启用内核休眠支持并验证真机恢复。
 
 先创建能独立使用的恢复密码，再为这个 LUKS2 容器逐只登记指定 YubiKey（一次触摸，无 PIN）；sudo/锁屏的公有 PAM 授权不能代替磁盘登记。登记时插入指定 Key，指示灯闪烁后触摸。密码和 LUKS 头备份只私下保存。须分别验证无 Key 密码回退与登记 Key 冷启动解锁。

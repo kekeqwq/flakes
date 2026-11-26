@@ -57,6 +57,7 @@ assert cfg.swapDevices == [ ];
 assert builtins.elem "nohibernate" cfg.boot.kernelParams;
 assert cfg.my.luks.enable && cfg.boot.initrd.systemd.fido2.enable;
 assert cfg.boot.initrd.luks.devices.cryptroot.device == "/dev/disk/by-partlabel/surface-cryptroot";
+assert cfg.boot.initrd.luks.cryptoModules == [ "aes" "xts" "sha256" "sha512" "input_leds" ];
 assert lib.all (opt: builtins.elem opt cfg.boot.initrd.luks.devices.cryptroot.crypttabExtraOpts)
   [ "fido2-device=auto" "fido2-pin=no" "fido2-up=yes" "tries=0" ];
 assert cfg.services.sunshine.enable && !cfg.my.sunshine.proxy;

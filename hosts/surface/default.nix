@@ -60,6 +60,10 @@ in
     "btrfs"
     "vfat"
   ];
+  # This volume uses LUKS2 AES-XTS; cryptsetup handles key derivation
+  # through OpenSSL/libargon2, not the optional kernel AF_ALG interface.
+  # Do not request the generic initrd list's unbuilt legacy ciphers.
+  boot.initrd.luks.cryptoModules = [ "aes" "xts" "sha256" "sha512" "input_leds" ];
   # LUKS maps a raw partition directly to Btrfs, with no LVM layer.
   boot.initrd.services.lvm.enable = lib.mkForce false;
   boot.kernelParams = [ "nohibernate" ];
