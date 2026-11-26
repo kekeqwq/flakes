@@ -64,6 +64,7 @@ in
   boot.initrd.services.lvm.enable = lib.mkForce false;
   boot.kernelParams = [ "nohibernate" ];
   boot.loader.timeout = 5;
+  boot.loader.systemd-boot.configurationLimit = 8;
   fileSystems = {
     "/boot" = {
       device = "/dev/disk/by-partlabel/surface-efi";

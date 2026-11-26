@@ -11,8 +11,10 @@
 
 | GPT 分区名 | 用途 | 挂载 |
 | --- | --- | --- |
-| `surface-efi` | FAT32 ESP，建议 2 GiB，`umask=0077` | `/boot` |
-| `surface-cryptroot` | 其余空间，LUKS2 → `/dev/mapper/cryptroot` → Btrfs | `@root` → `/`，`@nix` → `/nix`，`@home` → `/home` |
+| `surface-efi` | FAT32 ESP，889 MiB（约 0.87 GiB），`umask=0077` | `/boot` |
+| `surface-cryptroot` | 953 GiB，LUKS2 → `/dev/mapper/cryptroot` → Btrfs | `@root` → `/`，`@nix` → `/nix`，`@home` → `/home` |
+
+上述大小适用于这块 953.87 GiB NVMe；另留 GPT 和对齐所需的少量扇区。systemd-boot 最多保留八个启动代，实际容量取决于完整 UKI 的大小。
 
 文件系统启用 `compress=zstd:3,noatime`。以后需要 swap 时，可在同一个加密 Btrfs 里新建 `@swap` 子卷，用 `btrfs filesystem mkswapfile` 按需创建交换文件，并启用 Denali 内核的 `CONFIG_SWAP`，不必重分区。若再做休眠，initrd 要先解锁 `cryptroot` 再定位休眠镜像；须另行启用内核休眠支持并验证真机恢复。
 
