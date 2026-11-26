@@ -1,11 +1,11 @@
 {
   config,
   lib,
-  pkgs,
   inputs,
   ...
 }:
 let
+  stableBoot = inputs.surface-stable-system.nixosConfigurations.surface.config;
   btrfsSubvolume = name: {
     device = "/dev/mapper/cryptroot";
     fsType = "btrfs";
@@ -67,12 +67,16 @@ in
   boot.initrd.luks.cryptoModules = [ "aes" "xts" "sha256" "sha512" "input_leds" ];
   # LUKS maps a raw partition directly to Btrfs, with no LVM layer.
   boot.initrd.services.lvm.enable = lib.mkForce false;
+  # Import only the known-good internal-boot kernel and FullIO OLED DTB.
+  boot.kernelPackages = lib.mkOverride 30 stableBoot.boot.kernelPackages;
+  hardware.deviceTree.package = lib.mkForce stableBoot.hardware.deviceTree.package;
   # Keep the LUKS prompt and early display diagnostics on the built-in console.
   boot.plymouth.enable = lib.mkForce false;
   boot.consoleLogLevel = 7;
   boot.kernelParams = [
     "nohibernate"
     "console=tty0"
+    "earlycon=efifb"
     "fbcon=font:TER16x32,nodefer"
     "rd.systemd.show_status=yes"
     "systemd.show_status=yes"
@@ -89,36 +93,6 @@ in
     "/nix" = (btrfsSubvolume "@nix") // { neededForBoot = true; };
     "/home" = btrfsSubvolume "@home";
   };
-  # Boot A/B: reuse the hardware-tested Live kernel and DTB with this host's
-  # installed userspace and encrypted root, not the Live login policy.
-  specialisation.live-kernel.configuration =
-    let
-      live = inputs.surface-live-baseline.nixosConfigurations.surface-live.config;
-    in {
-      system.nixos.tags = [ "live-kernel-ab" ];
-      surface.fullio.referenceRender.enable = false;
-      surface.fullio.checkedCapture = lib.mkForce false;
-      surface.fullio.swrResumeAudit = lib.mkForce false;
-      surface.fullio.feedbackParityRender = lib.mkForce false;
-      boot.kernelPackages = lib.mkForce live.boot.kernelPackages;
-      hardware.deviceTree.package = lib.mkForce live.hardware.deviceTree.package;
-      boot.initrd.systemd.storePaths = [ "${pkgs.coreutils}/bin/printf" "${pkgs.coreutils}/bin/sleep" ];
-      boot.initrd.systemd.services.denali-console-proof = {
-        description = "Show the Denali console checkpoint before LUKS";
-        wantedBy = [ "systemd-cryptsetup@cryptroot.service" ];
-        before = [ "systemd-cryptsetup@cryptroot.service" ];
-        after = [ "systemd-modules-load.service" "systemd-udev-trigger.service" ];
-        unitConfig.DefaultDependencies = false;
-        serviceConfig = {
-          Type = "oneshot";
-          StandardOutput = "tty";
-          TTYPath = "/dev/tty0";
-          ExecStart = ''${pkgs.coreutils}/bin/printf "\\nSURFACE: early console visible (before LUKS)\\n\\n"'';
-          ExecStartPost = "${pkgs.coreutils}/bin/sleep 3";
-          TimeoutStartSec = "8s";
-        };
-      };
-    };
   # A Btrfs swapfile can be added inside cryptroot later without repartitioning.
   swapDevices = [ ];
 }

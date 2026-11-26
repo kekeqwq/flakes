@@ -5,8 +5,8 @@
       url = "github:kekeqwq/surface.nix/main";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    # Exact hardware and independent Nixpkgs lock of the physical r4 Live test.
-    surface-live-baseline.url = "github:kekeqwq/surface.nix/c7dbb7a2675ef12cb383fc2914d0b421ef1d18ee";
+    # Last internal-NVMe deployment confirmed on the Denali OLED.
+    surface-stable-system.url = "github:kekeqwq/flakes/bd56d073544eadf42fb70ff5b784031c242df554";
     chinese-fonts-overlay = {
       url = "github:brsvh/chinese-fonts-overlay/a14d554299d1c8a5f4329a215d4d6217d99bf307";
       inputs.nixpkgs.follows = "nixpkgs";

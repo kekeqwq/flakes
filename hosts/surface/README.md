@@ -29,4 +29,4 @@
 3. 从 Live 的 `/iso/surface-install/firmware/` 校验并部署到目标 `/mnt/var/lib/surface-firmware`，再执行 `nixos-install --root /mnt --flake /mnt/etc/nixos#surface`，使安装流程生成含私有固件的 UKI。固件、私有 UKI、恢复密码均不进 Git 或 Nix store。
 4. 关机后拔开安装 U 盘，第一次由内置盘启动。检查系统与三个子卷、Key 和密码回退、公共 SSH/sudo、触屏和 HHKB、桌面和 Sunshine、0 dB 扬声器与 MicArray。Live 通过不是空白盘首启通过。
 
-黑屏排查用的 `live-kernel` specialisation 不改变普通 FullIO 启动项。它使用实机验收的 r4 内核和 OLED DTB，但使用内置盘的 LUKS2/Btrfs、27.05 initrd 和正式账号策略；不启用 FullIO 音频。它不是正式音频基线。
+正式启动暂用该 Surface 上一次内置盘日用版本（`bd56d07`）的 FullIO 内核与 OLED DTB；不继承旧系统的分区、用户或认证配置。27.05 仍使用现有 LUKS2/Btrfs。`earlycon=efifb` 让内核尽早向 EFI framebuffer 输出；黑屏是否消失需要实机确认。
