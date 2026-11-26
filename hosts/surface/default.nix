@@ -1,6 +1,7 @@
 {
   config,
   lib,
+  pkgs,
   inputs,
   ...
 }:
@@ -101,6 +102,22 @@ in
       surface.fullio.feedbackParityRender = lib.mkForce false;
       boot.kernelPackages = lib.mkForce live.boot.kernelPackages;
       hardware.deviceTree.package = lib.mkForce live.hardware.deviceTree.package;
+      boot.initrd.systemd.storePaths = [ "${pkgs.coreutils}/bin/printf" "${pkgs.coreutils}/bin/sleep" ];
+      boot.initrd.systemd.services.denali-console-proof = {
+        description = "Show the Denali console checkpoint before LUKS";
+        wantedBy = [ "systemd-cryptsetup@cryptroot.service" ];
+        before = [ "systemd-cryptsetup@cryptroot.service" ];
+        after = [ "systemd-modules-load.service" "systemd-udev-trigger.service" ];
+        unitConfig.DefaultDependencies = false;
+        serviceConfig = {
+          Type = "oneshot";
+          StandardOutput = "tty";
+          TTYPath = "/dev/tty0";
+          ExecStart = ''${pkgs.coreutils}/bin/printf "\\nSURFACE: early console visible (before LUKS)\\n\\n"'';
+          ExecStartPost = "${pkgs.coreutils}/bin/sleep 3";
+          TimeoutStartSec = "8s";
+        };
+      };
     };
   # A Btrfs swapfile can be added inside cryptroot later without repartitioning.
   swapDevices = [ ];
