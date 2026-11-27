@@ -72,6 +72,9 @@ in
   hardware.deviceTree.package = lib.mkForce stableBoot.hardware.deviceTree.package;
   # Keep the LUKS prompt and early display diagnostics on the built-in console.
   boot.plymouth.enable = lib.mkForce false;
+  # Modprobe's symbol dependency closure doesn't include the independent
+  # device-tree clock suppliers used by MDSS and the GPU/GMU component.
+  boot.initrd.kernelModules = [ "dispcc-x1e80100" "gpucc-x1e80100" ];
   boot.consoleLogLevel = 7;
   boot.kernelParams = [
     "nohibernate"
