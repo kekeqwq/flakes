@@ -43,22 +43,49 @@ let
         }
     ) base.profiles;
   };
+  karabinerSeed = pkgs.writeText "karabiner-seed.json" (builtins.toJSON karabiner);
+  seedKarabiner = pkgs.writeShellScript "seed-karabiner" ''
+    set -eu
+    dir=$1
+    target="$dir/karabiner.json"
+    seed=${karabinerSeed}
+    legacy=$(readlink "$target" || true)
+    if [ -L "$target" ]; then
+      case "$legacy" in
+        ${builtins.storeDir}/*-home-manager-files/.config/karabiner/karabiner.json)
+          # Keep the exact config in use, not just the current template.
+          if [ -f "$target" ]; then seed="$target"; fi ;;
+        *) exit 0 ;;
+      esac
+    elif [ -e "$target" ]; then
+      exit 0
+    fi
+
+    umask 077
+    mkdir -p "$dir"
+    temp=$(mktemp "$dir/.karabiner.json.XXXXXX")
+    trap 'rm -f "$temp"' EXIT
+    cp "$seed" "$temp"
+    chmod 600 "$temp"
+    if [ -n "$legacy" ]; then
+      if [ "$(readlink "$target" || true)" = "$legacy" ]; then
+        mv -f "$temp" "$target"
+      fi
+    else
+      # Install only if Karabiner has not created the file in the meantime.
+      ln -h "$temp" "$target" || [ -e "$target" ] || [ -L "$target" ]
+    fi
+  '';
 in
 {
   myuser.hm = lib.mkMerge [
     (lib.mkIf pkgs.stdenv.hostPlatform.isDarwin {
-      xdg.configFile."karabiner/karabiner.json" = {
-        text = builtins.toJSON karabiner;
-        force = true;
-      };
-      home.activation.backupKarabinerBeforeNix =
-        inputs.home-manager.lib.hm.dag.entryBetween [ "linkGeneration" ] [ "writeBoundary" ]
-          ''
-            target="$HOME/.config/karabiner/karabiner.json"
-            if [ -f "$target" ] && [ ! -L "$target" ]; then
-              cp -p "$target" "$target.before-nix-$(date +%Y%m%d-%H%M%S)"
-            fi
-          '';
+      # Karabiner 17 requires a writable regular file. Migrate before Home
+      # Manager removes its old symlink; leave subsequent GUI edits alone.
+      home.activation.seedKarabinerConfig =
+        inputs.home-manager.lib.hm.dag.entryBetween [ "linkGeneration" ] [ "writeBoundary" ] ''
+          run ${seedKarabiner} "$HOME/.config/karabiner"
+        '';
     })
   ];
 }
