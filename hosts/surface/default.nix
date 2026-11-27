@@ -5,7 +5,7 @@
   ...
 }:
 let
-  stableBoot = inputs.surface-stable-system.nixosConfigurations.surface.config;
+  dailyBoot = inputs.surface.denaliDailyBoot;
   btrfsSubvolume = name: {
     device = "/dev/mapper/cryptroot";
     fsType = "btrfs";
@@ -30,11 +30,6 @@ in
   system.stateVersion = "27.05";
 
   security.rtkit.enable = true;
-  surface.fullio = {
-    checkedCapture = true;
-    swrResumeAudit = true;
-    feedbackParityRender = true;
-  };
   surface.devices.denali = {
     enable = true;
     boot = {
@@ -78,9 +73,9 @@ in
   boot.initrd.luks.cryptoModules = [ "aes" "xts" "sha256" "sha512" "input_leds" ];
   # Keep the defaults set by luksroot.nix: its lvm2 package supplies the
   # device-mapper udev rules and dmsetup even for LUKS directly over Btrfs.
-  # Import only the known-good internal-boot kernel and FullIO OLED DTB.
-  boot.kernelPackages = lib.mkOverride 30 stableBoot.boot.kernelPackages;
-  hardware.deviceTree.package = lib.mkForce stableBoot.hardware.deviceTree.package;
+  # The hardware flake owns the single validated internal-boot payload.
+  boot.kernelPackages = lib.mkOverride 30 dailyBoot.kernelPackages;
+  hardware.deviceTree.package = lib.mkForce dailyBoot.dtbs;
   # Use the shared desktop Plymouth/FIDO2 path, as on secret-lab.
   boot.kernelParams = [ "nohibernate" ];
   boot.loader.timeout = 5;
