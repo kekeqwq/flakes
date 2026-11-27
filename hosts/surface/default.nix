@@ -11,7 +11,7 @@ let
     fsType = "btrfs";
     options = [
       "subvol=${name}"
-      "compress=zstd:3"
+      "compress=zstd:5"
       "noatime"
     ];
   };

@@ -40,7 +40,7 @@ assert cfg.fileSystems."/boot".device == "/dev/disk/by-partlabel/surface-efi";
 assert cfg.fileSystems."/boot".fsType == "vfat";
 assert lib.all (path: let fs = cfg.fileSystems.${path}; in
   fs.fsType == "btrfs" && fs.device == "/dev/mapper/cryptroot"
-  && builtins.elem "compress=zstd:3" fs.options
+  && builtins.elem "compress=zstd:5" fs.options
 ) [ "/" "/nix" "/home" ];
 assert cfg.fileSystems."/nix".neededForBoot;
 assert cfg.swapDevices == [ ];
