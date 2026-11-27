@@ -77,6 +77,9 @@ in
     "nohibernate"
     "console=tty0"
     "earlycon=efifb"
+    # The OLED showed early EFI output, then lost it when tty0 registered
+    # against dummycon. Keep early printk visible through that handoff.
+    "keep_bootcon"
     "fbcon=font:TER16x32,nodefer"
     "rd.systemd.show_status=yes"
     "systemd.show_status=yes"
