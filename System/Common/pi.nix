@@ -94,6 +94,7 @@ in
     # that were already running before this activation.
     home.sessionPath = [ "${config.programs.pi.coding-agent.finalPackage}/bin" ];
     home.file.".local/bin/pi".source = "${config.programs.pi.coding-agent.finalPackage}/bin/pi";
+    home.file.".pi/agent/extensions/chatgpt-account-3.ts".source = ./pi-chatgpt-account-3.ts;
     # home.file.".pi/agent/extensions/pi-multi-account".source = multiAccount;
     home.file.".pi/agent/extensions/input-method.ts".source = "${inputMethod}/input-method.ts";
     # The published entry point is src/index.ts; Pi supplies all runtime imports.
