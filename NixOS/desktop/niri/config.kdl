@@ -2,6 +2,13 @@ input {
     mod-key "Alt"
     // Disable Niri's built-in suspend binding; use the lock binding below.
     disable-power-key-handling
+
+    touchpad {
+        tap
+        natural-scroll
+        dwt
+        click-method "clickfinger"
+    }
 }
 layout {
     gaps 14
