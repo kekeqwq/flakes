@@ -17,17 +17,18 @@ MAX_PIXELS = 48_000_000
 MAX_HEADER = 4096
 EXTENSIONS = {'.png', '.jpg', '.jpeg', '.webp', '.avif', '.bmp', '.tif', '.tiff', '.gif'}
 PNG = b'\x89PNG\r\n\x1a\n'
+MODE_DIRS = {'random': 'Wallpapers', 'sfw': 'SFWWallpapers'}
 Image.MAX_IMAGE_PIXELS = MAX_PIXELS
 
 
 @contextmanager
-def folder(home):
+def folder(home, mode):
     # Resolve one component at a time, refusing symlinks and pinning the
     # directory descriptor even if a component is renamed concurrently.
     flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
     fd = os.open(home, flags)
     try:
-        for name in ('Downloads', 'Wallpapers'):
+        for name in ('Downloads', MODE_DIRS[mode]):
             child = os.open(name, flags, dir_fd=fd)
             os.close(fd)
             fd = child
@@ -65,9 +66,9 @@ def render(fd, name):
         return out.getvalue(), identity(st)
 
 
-def choose(home, default, previous=None, exclude=None):
+def choose(home, default, previous=None, exclude=None, mode='random'):
     try:
-        with folder(home) as fd:
+        with folder(home, mode) as fd:
             candidates = [name for name in os.listdir(fd) if valid_name(name) and name != exclude]
             random.SystemRandom().shuffle(candidates)
             fallback = None
@@ -78,15 +79,39 @@ def choose(home, default, previous=None, exclude=None):
                     continue
                 if exclude is not None and png == previous:
                     continue  # Deletion must visibly switch away from the old image.
-                result = png, {'name': name, 'identity': source_id}
+                result = png, {'name': name, 'identity': source_id, 'mode': mode}
                 if png != previous:
                     return result
                 fallback = result
             if fallback is not None:
                 return fallback
-    except FileNotFoundError:
+    except OSError:
+        # Missing, symlinked or unreadable directories never consult another mode.
         pass
     return default.read_bytes(), None
+
+
+def slide(home, mode, previous):
+    """Return a temporary frame, or None if the folder is too small."""
+    try:
+        with folder(home, mode) as fd:
+            candidates = [name for name in os.listdir(fd) if valid_name(name)]
+            random.SystemRandom().shuffle(candidates)
+            valid = 0
+            selected = None
+            for name in candidates:
+                try:
+                    png, _ = render(fd, name)
+                except (OSError, ValueError, SyntaxError, Image.DecompressionBombError):
+                    continue
+                valid += 1
+                if selected is None and png != previous:
+                    selected = png
+                if valid >= 3 and selected is not None:
+                    return selected
+    except OSError:
+        pass
+    return None
 
 
 def source_record(value):
@@ -95,7 +120,10 @@ def source_record(value):
     fields = value.get('identity')
     if not isinstance(fields, list) or len(fields) != 5 or any(type(n) is not int for n in fields):
         raise ValueError('invalid wallpaper source identity')
-    return {'name': value['name'], 'identity': fields}
+    mode = value.get('mode', 'random')  # Migrate old ordinary-random records.
+    if not isinstance(mode, str) or mode not in MODE_DIRS:
+        raise ValueError('invalid wallpaper source mode')
+    return {'name': value['name'], 'identity': fields, 'mode': mode}
 
 
 def read_record(stream):
@@ -138,7 +166,7 @@ def require_current(image, record_path):
 def check_source(home, record, delete=False):
     record = source_record(record)
     name = record['name']
-    with folder(home) as fd:
+    with folder(home, record['mode']) as fd:
         st = os.stat(name, dir_fd=fd, follow_symlinks=False)
         if not stat.S_ISREG(st.st_mode) or identity(st) != record['identity']:
             raise ValueError('wallpaper source missing or changed; not deleting')
@@ -156,19 +184,37 @@ def main(operation, *args):
             raise ValueError('source operations must run as the desktop user')
         if operation == 'pick':
             home, default, current = map(Path, args[:3])
-            deleting = args[3] == 'delete'
+            mode = args[3]
+            deleting = mode == 'delete'
             exclude = None
             if deleting:
                 record = source_record(read_record(sys.stdin.buffer))
                 check_source(home, record)
                 exclude = record['name']
+                mode = record['mode']
+            if mode not in MODE_DIRS:
+                raise ValueError('unknown selection mode')
             try:
                 previous = current.read_bytes()
             except FileNotFoundError:
                 previous = None
-            png, record = choose(home, default, previous, exclude)
+            png, record = choose(home, default, previous, exclude, mode)
             write_record(sys.stdout.buffer, record)
             sys.stdout.buffer.write(png)
+        elif operation == 'mode':
+            current, metadata = map(Path, args)
+            require_current(current, metadata)
+            with metadata.open('rb') as stream:
+                print(source_record(read_record(stream))['mode'])
+        elif operation == 'slide':
+            home, current = map(Path, args[:2])
+            mode = args[2]
+            if mode not in MODE_DIRS:
+                raise ValueError('unknown slideshow mode')
+            previous = sys.stdin.buffer.read(MAX_BYTES + 1) or current.read_bytes()
+            frame = slide(home, mode, previous)
+            if frame is not None:
+                sys.stdout.buffer.write(frame)
         elif operation == 'unlink':
             check_source(Path(args[0]), read_record(sys.stdin.buffer), delete=True)
         else:

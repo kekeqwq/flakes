@@ -28,15 +28,35 @@ LUKS2 volume requires its own installation-time hardware enrollment.
 
 Desktop and lock screen share the selected wallpaper, falling back to the
 tracked `wallpaper.nix` image. A 140 px
-clock is centered on each output; the idle ring is transparent. Click anywhere,
-type the user's password, then Enter; Ctrl+U clears the input. Alternatively,
-just touch the blinking authorized Key. Clicking does not unlock. **Win+L (`Super+L`)** locks immediately, independently of the Alt-based
-Niri `Mod` setting. **Pressing the power button in Niri** uses the same lock
+clock is centered on each output, with a vector lock and battery/power
+status below the date. The idle ring is transparent. Type the user's password, then Enter;
+Ctrl+U clears the input. Alternatively, touch the blinking authorized Key.
+Clicking does not unlock. **Mod+L** (Alt+L on a regular keyboard) locks
+immediately; **Win+L (`Super+L`)** remains an alias. **Pressing the power button in Niri** uses the same lock
 command instead of Niri's built-in suspend action. **Closing the lid** sends a
 logind session lock event, including on external power or with an external
 monitor. Neither event requests suspend. Logind ignores power-button long
 presses; this does not override a firmware-enforced hard power-off. This
 policy does not change Gamescope's own controls or disable manual suspend.
+
+The Control Center offers Default, Random (`~/Downloads/Wallpapers`), and
+SFW Random (`~/Downloads/SFWWallpapers`). Random selection and deletion
+operate only in the recorded source directory. A persistent wallpaper change
+with an unavailable source uses the built-in image, never the other pool.
+Desktop, Plymouth, and the start of every lock use the selected image.
+
+In either random mode, the same secure swaylock draws a temporary background
+from that mode alone, starting eight seconds after the compositor confirms the
+lock and then every eight seconds while at least three valid images exist.
+If there is no suitable next frame, keep the image already on the screen;
+the slideshow itself has no fallback. The decoder runs without Wayland, authentication or singleton-lock file
+descriptors. Temporary frames stay in memory and are discarded on unlock;
+they never modify the desktop selection or Plymouth archive. Default mode
+never starts the slideshow. On Denali, the EFI stub supplies the current boot
+wallpaper from `loader/credentials/keke-wallpaper.png.cred` on the ESP;
+Plymouth prefers this fresh image to any image embedded in that UKI.
+As before, deliberately selected Plymouth wallpaper is visible before disk
+unlock and must not contain private material.
 
 `screen-lock` holds an owner-session flock across the daemon's lifetime.
 `swaylock --daemonize` waits for secure locking before returning; `swayidle -w`

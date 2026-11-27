@@ -93,6 +93,7 @@ assert (
   in
   lib.all (id: byId id != null) [
     "wallpaper-random"
+    "wallpaper-sfw"
     "wallpaper-default"
     "wallpaper-delete"
   ]

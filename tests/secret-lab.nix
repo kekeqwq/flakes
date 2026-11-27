@@ -13,6 +13,8 @@ assert c.networking.hostName == "secret-lab";
 assert c.networking.hostId != lab.config.networking.hostId;
 assert c.my.luks.enable && c.my.luks.fido2.enable;
 assert c.boot.initrd.systemd.fido2.enable;
+assert c.my.luks.fido2.deviceTimeoutSeconds == 10;
+assert c.boot.initrd.systemd.services.plymouth-fido2-wait.wantedBy == [ "sysinit.target" ];
 assert c.boot.initrd.luks.devices.cryptroot.device == "/dev/disk/by-partlabel/secret-lab-cryptroot";
 assert c.boot.initrd.luks.devices.cryptroot.keyFile == null;
 assert lib.all (opt: builtins.elem opt c.boot.initrd.luks.devices.cryptroot.crypttabExtraOpts) [

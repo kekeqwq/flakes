@@ -15,12 +15,17 @@ let
   }/share/icons/Papirus-Dark/22x22/panel";
   # The CSS border and Niri shadow cutout must share a radius.
   waybarRadius = "12";
+  mediaNotify = pkgs.writeShellApplication {
+    name = "keke-media-notify";
+    runtimeInputs = with pkgs; [ wireplumber brightnessctl libnotify util-linux systemd gawk ];
+    text = builtins.readFile ./media-notify.sh;
+  };
   niriConfig = pkgs.writeText "niri-unchecked.kdl" (
     config.my.desktop.niri.outputs
     + config.my.desktop.niri.extraConfig
     +
       builtins.replaceStrings
-        [ "    // SNIPASTE_BINDINGS" "@WAYBAR_RADIUS@" ]
+        [ "    // SNIPASTE_BINDINGS" "@WAYBAR_RADIUS@" "@MEDIA_NOTIFY@" ]
         [
           (lib.optionalString pkgs.stdenv.hostPlatform.isx86_64 ''
             F3 hotkey-overlay-title="Pin clipboard with Snipaste" {
@@ -28,6 +33,7 @@ let
             }
           '')
           waybarRadius
+          (lib.getExe mediaNotify)
         ]
         (builtins.readFile ./niri/config.kdl)
   );
@@ -40,34 +46,13 @@ let
   clockStatus = pkgs.writeShellScript "waybar-clock" ''
     exec ${pkgs.coreutils}/bin/date '+%I:%M %p' | ${pkgs.gnused}/bin/sed 's/^0//'
   '';
-  brightnessStatus = pkgs.writeShellScript "waybar-brightness" ''
-    level=$(${pkgs.brightnessctl}/bin/brightnessctl -m | ${pkgs.gawk}/bin/awk -F, '{print $4}')
-    ${pkgs.coreutils}/bin/printf '󰃠 %s\n' "$level"
-  '';
-  audioStatus = pkgs.writeShellScript "waybar-audio" ''
-    if ${pkgs.pulseaudio}/bin/pactl get-sink-mute @DEFAULT_SINK@ | ${pkgs.gnugrep}/bin/grep -q yes; then
-      ${pkgs.coreutils}/bin/printf '󰝟 muted\n'
-      exit 0
-    fi
-    level=$(${pkgs.pulseaudio}/bin/pactl get-sink-volume @DEFAULT_SINK@ |
-      ${pkgs.gnugrep}/bin/grep -o '[0-9]\\+%' | ${pkgs.coreutils}/bin/head -1)
-    ${pkgs.coreutils}/bin/printf '󰕾 %s\n' "$level"
-  '';
   networkStatus = pkgs.writeShellScript "waybar-network" (
     builtins.replaceStrings
-      [ "@NMCLI@" "@AWK@" ]
-      [ "${pkgs.networkmanager}/bin/nmcli" "${pkgs.gawk}/bin/awk" ]
+      [ "@NMCLI@" "@IW@" "@AWK@" ]
+      [ "${pkgs.networkmanager}/bin/nmcli" "${pkgs.iw}/bin/iw" "${pkgs.gawk}/bin/awk" ]
       (builtins.readFile ./waybar/network-status.sh)
   );
-  bluetoothStatus = pkgs.writeShellScript "waybar-bluetooth" (
-    builtins.replaceStrings
-      [ "@BLUETOOTHCTL@" "@AWK@" ]
-      [ "${pkgs.bluez}/bin/bluetoothctl" "${pkgs.gawk}/bin/awk" ]
-      (builtins.readFile ./waybar/bluetooth-status.sh)
-  );
-  batteryStatus = pkgs.writeShellScript "waybar-battery" (
-    builtins.readFile ./waybar/battery-status.sh
-  );
+
 in
 {
   myuser.hm.programs.rofi = {
@@ -138,6 +123,7 @@ in
     # Popup panels behind the Waybar modules.
     keke-waybar-panel
     brightnessctl
+    playerctl
     # Niri need statllite
     xwayland-satellite
     wev
@@ -157,6 +143,49 @@ in
     alsa.enable = lib.mkDefault true;
   };
 
+  myuser.hm.services.mako = {
+    enable = true;
+    settings = {
+      anchor = "top-right";
+      layer = "overlay";
+      outer-margin = "12,12,0,0";
+      margin = "0,0,8,0";
+      padding = "10,14";
+      width = 320;
+      border-radius = 12;
+      border-size = 1;
+      background-color = "#1e1e2ef5";
+      text-color = "#cdd6f4";
+      border-color = "#45475a";
+      default-timeout = 5000;
+      max-visible = 4;
+      "urgency=critical".border-color = "#f38ba8";
+      "app-name=keke-media" = {
+        format = "<b>%s</b>";
+        progress-color = "over #cba6f755";
+        border-color = "#cba6f7";
+        max-icon-size = 22;
+        actions = 0;
+        history = 0;
+        default-timeout = 1350;
+      };
+    };
+  };
+  # Use the same bus name for ordinary application notices and the media OSD.
+  systemd.user.services.mako = {
+    description = "Wayland desktop notifications";
+    wantedBy = [ "graphical-session.target" ];
+    partOf = [ "graphical-session.target" ];
+    after = [ "graphical-session.target" ];
+    serviceConfig = {
+      Type = "dbus";
+      BusName = "org.freedesktop.Notifications";
+      ExecCondition = "${pkgs.runtimeShell} -c 'test -n \"$WAYLAND_DISPLAY\"'";
+      ExecStart = lib.getExe pkgs.mako;
+      ExecReload = "${lib.getExe' pkgs.mako "makoctl"} reload";
+    };
+  };
+
   myuser.hm.programs.waybar = {
     enable = true;
     systemd.enable = true;
@@ -172,17 +201,23 @@ in
         margin-right = 12;
         modules-left = [
           "niri/workspaces"
+          "niri/window"
         ];
+        "niri/window" = {
+          format = "{}";
+          max-length = 36;
+          tooltip = true;
+        };
         modules-center = [
           "custom/clock"
         ];
         modules-right = [
           "tray"
-          "custom/bluetooth"
           "custom/network"
-          "custom/audio"
-          "custom/brightness"
-          "custom/battery"
+          "wireplumber"
+          "backlight"
+          "bluetooth"
+          "battery"
           "custom/control-center"
         ];
 
@@ -202,37 +237,51 @@ in
           on-click-right = "${panel}/bin/keke-waybar-panel clock";
         };
 
-        "custom/brightness" = {
-          exec = "${brightnessStatus}";
-          interval = 3;
+        backlight = {
+          format = "{icon}";
+          format-icons = [ "󰃞" "󰃟" "󰃠" ];
+          tooltip-format = "Brightness";
           on-click = "${panel}/bin/keke-waybar-panel brightness";
-          on-scroll-up = "${pkgs.brightnessctl}/bin/brightnessctl set +5%";
-          on-scroll-down = "${pkgs.brightnessctl}/bin/brightnessctl set 5%-";
+          on-scroll-up = "${pkgs.brightnessctl}/bin/brightnessctl -c backlight set +5%";
+          on-scroll-down = "${pkgs.brightnessctl}/bin/brightnessctl -c backlight set 5%-";
         };
 
-        "custom/audio" = {
-          exec = "${audioStatus}";
-          interval = 2;
+        wireplumber = {
+          format = "{icon}";
+          format-muted = "󰝟";
+          format-icons = [ "󰕿" "󰖀" "󰕾" ];
+          tooltip-format = "{node_name}";
+          scroll-step = 5;
           on-click = "${panel}/bin/keke-waybar-panel audio";
-          on-scroll-up = "${pkgs.pulseaudio}/bin/pactl set-sink-volume @DEFAULT_SINK@ +5%";
-          on-scroll-down = "${pkgs.pulseaudio}/bin/pactl set-sink-volume @DEFAULT_SINK@ -5%";
         };
 
         "custom/network" = {
           exec = "${networkStatus}";
-          interval = 3;
+          interval = 2;
           on-click = "${panel}/bin/keke-waybar-panel network";
         };
 
-        "custom/bluetooth" = {
-          exec = "${bluetoothStatus}";
-          interval = 5;
+        bluetooth = {
+          format = "󰂯 0";
+          format-on = "󰂯 0";
+          format-off = "󰂲 0";
+          format-disabled = "󰂲 0";
+          format-no-controller = "󰂲 0";
+          format-connected = "󰂱 {num_connections}";
+          tooltip-format-connected = "{device_enumerate}";
+          tooltip-format-enumerate-connected = "{device_alias}";
           on-click = "${panel}/bin/keke-waybar-panel bluetooth";
         };
 
-        "custom/battery" = {
-          exec = "${batteryStatus}";
+        battery = {
           interval = 5;
+          format = "{icon} {capacity}%";
+          format-icons = [ "󱊡" "󱊢" "󱊣" ];
+          format-charging = "󰂄 {capacity}%";
+          format-full = "󰁹 {capacity}%";
+          format-discharging-low = "󰂎 {capacity}%";
+          format-not-charging-low = "󰂎 {capacity}%";
+          states.low = 15;
         };
 
         tray = {
@@ -313,11 +362,11 @@ in
 
       #clock,
       #tray,
-      #custom-brightness,
-      #custom-audio,
+      #backlight,
+      #wireplumber,
       #custom-network,
-      #custom-bluetooth,
-      #custom-battery,
+      #bluetooth,
+      #battery,
       #custom-control-center {
           background: #313244;
           color: #cdd6f4;
@@ -339,11 +388,11 @@ in
           padding: 4px 12px;
       }
 
-      #custom-brightness {
+      #backlight {
           color: #f9e2af;
       }
 
-      #custom-audio {
+      #wireplumber {
           color: #89b4fa;
       }
 
@@ -351,24 +400,26 @@ in
           color: #94e2d5;
       }
 
-      #custom-bluetooth {
+      #bluetooth {
           color: #b4befe;
       }
 
-      #custom-battery {
+      #battery {
           color: #a6e3a1;
       }
 
-      #custom-battery.charging {
+      #battery.charging {
           color: #f9e2af;
+          animation: battery-charge 2s ease-in-out infinite alternate;
       }
 
-      #custom-battery.warning {
-          color: #fab387;
-      }
-
-      #custom-battery.critical {
+      #battery.low {
           color: #f38ba8;
+      }
+
+      @keyframes battery-charge {
+          from { color: #f9e2af; }
+          to { color: #a6e3a1; }
       }
 
       #tray {

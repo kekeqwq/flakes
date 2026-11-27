@@ -8,7 +8,7 @@ from pathlib import Path
 from PIL import Image
 
 api = runpy.run_path(sys.argv[1])
-choose, unpack = api['choose'], api['unpack']
+choose, unpack, slide = api['choose'], api['unpack'], api['slide']
 check_source, require_current = api['check_source'], api['require_current']
 
 
@@ -58,6 +58,32 @@ with tempfile.TemporaryDirectory() as directory:
     check_source(home, record, delete=True)
     assert not new.exists()
     assert choose(home, default)[1] == old
+
+    sfw = home / 'Downloads/SFWWallpapers'
+    assert choose(home, default, mode='sfw') == (default.read_bytes(), None)
+    assert slide(home, 'sfw', picked) is None
+    sfw.symlink_to(folder, target_is_directory=True)
+    assert choose(home, default, mode='sfw') == (default.read_bytes(), None)
+    assert slide(home, 'sfw', picked) is None
+    sfw.unlink()
+    sfw.mkdir()
+    for name, color in ((good.name, 'white'), ('blue.png', 'blue')):
+        Image.new('RGB', (4, 4), color).save(sfw / name)
+    (sfw / 'foreign.png').symlink_to(good)
+    assert slide(home, 'sfw', picked) is None
+    Image.new('RGB', (4, 4), 'yellow').save(sfw / 'yellow.png')
+    frame = slide(home, 'sfw', b'')
+    for _ in range(8):
+        updated = slide(home, 'sfw', frame)
+        assert updated and updated != frame
+        with Image.open(io.BytesIO(updated)) as preview:
+            assert preview.getpixel((0, 0)) in {(255, 255, 255), (0, 0, 255), (255, 255, 0)}
+        frame = updated
+    _, safe_record = choose(home, default, mode='sfw', exclude='blue.png')
+    assert safe_record['mode'] == 'sfw'
+    fails(check_source, home, safe_record | {'mode': 'random'}, True)
+    check_source(home, safe_record, delete=True)
+    assert good.is_file()
 
     saved = folder / 'saved.jpg'
     good.rename(saved)

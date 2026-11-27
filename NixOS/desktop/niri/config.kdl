@@ -99,7 +99,10 @@ binds {
     Mod+D {
         spawn "rofi" "-show" "drun"
     }
-    Super+L hotkey-overlay-title="Lock screen" {
+    Mod+L hotkey-overlay-title="Lock screen" {
+        spawn "screen-lock"
+    }
+    Super+L hotkey-overlay-title=null {
         spawn "screen-lock"
     }
     XF86PowerOff repeat=false allow-inhibiting=false hotkey-overlay-title="Lock screen" {
@@ -117,11 +120,45 @@ binds {
     Alt+Print hotkey-overlay-title="Copy focused window" {
         screenshot-window
     }
+    // Standard media keysyms, independent of the keyboard or its Fn layer.
     XF86AudioRaiseVolume allow-when-locked=true {
-        spawn "wpctl" "set-volume" "@DEFAULT_AUDIO_SINK@" "0.1+"
+        spawn "@MEDIA_NOTIFY@" "volume" "up"
     }
     XF86AudioLowerVolume allow-when-locked=true {
-        spawn "wpctl" "set-volume" "@DEFAULT_AUDIO_SINK@" "0.1-"
+        spawn "@MEDIA_NOTIFY@" "volume" "down"
+    }
+    XF86AudioMute repeat=false allow-when-locked=true {
+        spawn "@MEDIA_NOTIFY@" "volume" "mute"
+    }
+    XF86AudioMicMute repeat=false allow-when-locked=true {
+        spawn "@MEDIA_NOTIFY@" "mic" "mute"
+    }
+    XF86AudioPlay repeat=false allow-when-locked=true {
+        spawn "playerctl" "play-pause"
+    }
+    XF86AudioPause repeat=false allow-when-locked=true {
+        spawn "playerctl" "pause"
+    }
+    XF86AudioStop repeat=false allow-when-locked=true {
+        spawn "playerctl" "stop"
+    }
+    XF86AudioPrev repeat=false allow-when-locked=true {
+        spawn "playerctl" "previous"
+    }
+    XF86AudioNext repeat=false allow-when-locked=true {
+        spawn "playerctl" "next"
+    }
+    XF86AudioRewind allow-when-locked=true {
+        spawn "playerctl" "position" "10-"
+    }
+    XF86AudioForward allow-when-locked=true {
+        spawn "playerctl" "position" "10+"
+    }
+    XF86MonBrightnessUp allow-when-locked=true {
+        spawn "@MEDIA_NOTIFY@" "brightness" "up"
+    }
+    XF86MonBrightnessDown allow-when-locked=true {
+        spawn "@MEDIA_NOTIFY@" "brightness" "down"
     }
     Mod+M {
         maximize-column

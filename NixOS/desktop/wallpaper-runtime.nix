@@ -19,10 +19,37 @@ let
       config.boot.loader.efi.efiSysMountPoint;
   archiveName = "keke-wallpaper.cpio";
   archive = "${bootMount}/${archiveName}";
+  # Denali boots a composed UKI rather than a type-1 entry with an external
+  # initrd. The EFI stub reads this data file fresh on every boot.
+  useStubWallpaper = config.surface.devices.denali.enable or false;
+  bootWallpaper = "${bootMount}/loader/credentials/keke-wallpaper.png.cred";
+  installBootWallpaper = ''
+    ${pkgs.util-linux}/bin/mountpoint -q ${lib.escapeShellArg bootMount}
+    ${pkgs.coreutils}/bin/install -d -m0700 ${lib.escapeShellArg (builtins.dirOf bootWallpaper)}
+    staged=$(${pkgs.coreutils}/bin/mktemp ${lib.escapeShellArg "${bootWallpaper}.XXXXXXXX"})
+    if ${pkgs.coreutils}/bin/install -m0600 "$image" "$staged" &&
+       ${pkgs.coreutils}/bin/mv -fT -- "$staged" ${lib.escapeShellArg bootWallpaper}; then
+      ${pkgs.coreutils}/bin/sync -f ${lib.escapeShellArg bootMount}
+    else
+      ${pkgs.coreutils}/bin/rm -f -- "$staged"
+      exit 1
+    fi
+  '';
   python = pkgs.python3.withPackages (p: [ p.pillow ]);
   asUser = "${pkgs.util-linux}/bin/runuser -u ${lib.escapeShellArg user} --";
   select = pkgs.writeShellScript "wallpaper-selection" ''
     exec ${python}/bin/python3 -I ${./wallpaper-select.py} "$@"
+  '';
+  slideHelper = pkgs.writeShellScript "wallpaper-lock-slide" ''
+    exec ${pkgs.coreutils}/bin/timeout --kill-after=1 4 ${select} slide \
+      ${lib.escapeShellArg home} ${lib.escapeShellArg current} "$1"
+  '';
+  slideEnv = ''
+    unset KEKE_LOCK_SLIDE_HELPER KEKE_LOCK_SLIDE_MODE
+    if [ "$image" = ${lib.escapeShellArg current} ] &&
+       mode=$(${select} mode "$snapshot" ${lib.escapeShellArg sourceState} 2>/dev/null); then
+      export KEKE_LOCK_SLIDE_HELPER=${slideHelper} KEKE_LOCK_SLIDE_MODE="$mode"
+    fi
   '';
   # Only a single root-staged, normalized PNG enters the extra initrd. Keep
   # the previous boot file on any failure, and never write to an unmounted ESP.
@@ -38,6 +65,7 @@ let
     if [ -s ${current} ]; then
       image=${current}
     fi
+    ${lib.optionalString useStubWallpaper installBootWallpaper}
     if [ ! -s ${lib.escapeShellArg archive} ]; then
       ${packCurrent}
     fi
@@ -68,7 +96,7 @@ let
         # Decode as the desktop user. The shell opens the packet and old
         # metadata before runuser; the user cannot access the staging dir.
         (ulimit -f 131080; timeout 30 ${asUser} ${select} pick \
-          ${lib.escapeShellArg home} ${lib.escapeShellArg "${default}"} ${lib.escapeShellArg current} "$1" 9>&-) > "$work/packet"
+          ${lib.escapeShellArg home} ${lib.escapeShellArg "${default}"} ${lib.escapeShellArg current} "$1" 9>&-) > "$work/packet" || return
         ${select} unpack "$work/packet" "$image" "$metadata"
       }
 
@@ -76,6 +104,7 @@ let
         chmod 0644 "$image"
         if [ "$1" != seed ]; then
           ${if boot.enable then packCurrent else ":"}
+          ${lib.optionalString (boot.enable && useStubWallpaper) installBootWallpaper}
         fi
         mv -fT -- "$image" ${lib.escapeShellArg current}
         if [ -s "$metadata" ]; then
@@ -92,9 +121,12 @@ let
           install -m644 ${lib.escapeShellArg "${default}"} "$image"
           install_image "$1"
           ;;
-        random)
-          pick random < /dev/null
-          install_image random
+        random|sfw)
+          if ! pick "$1" < /dev/null; then
+            install -m644 ${lib.escapeShellArg "${default}"} "$image"
+            : > "$metadata"
+          fi
+          install_image "$1"
           ;;
         delete)
           if [ ! -s ${lib.escapeShellArg sourceState} ]; then
@@ -120,7 +152,11 @@ let
   ctl = pkgs.writeShellScriptBin "wallpaper-ctl" ''
     set -eu
     case "''${1:-}" in
-      random|default|delete) ;;
+      status)
+        ${select} mode ${lib.escapeShellArg current} ${lib.escapeShellArg sourceState} 2>/dev/null || printf 'default\n'
+        exit 0
+        ;;
+      random|sfw|default|delete) ;;
       *) exit 2 ;;
     esac
     rc=0
@@ -140,6 +176,7 @@ in
     refresh
     archiveName
     seedBoot
+    slideEnv
     ;
   packInitrd = pack;
   resolve = ''

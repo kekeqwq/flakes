@@ -1,0 +1,110 @@
+diff --git a/include/swaylock.h b/include/swaylock.h
+index de09ce8..0fbef7c 100644
+--- a/include/swaylock.h
++++ b/include/swaylock.h
+@@ -144,7 +144,7 @@ struct swaylock_surface {
+ 	struct swaylock_fade fade;
+ 	int events_pending;
+ 	bool configured;
+-	bool frame_pending, dirty;
++	bool frame_pending, dirty, slide_dirty;
+ 	uint32_t width, height;
+ 	uint32_t indicator_width, indicator_height;
+ 	int32_t scale;
+diff --git a/main.c b/main.c
+index e118646..d2990b0 100644
+--- a/main.c
++++ b/main.c
+@@ -21,6 +21,7 @@
+ #include "cairo.h"
+ #include "comm.h"
+ #include "key-auth-client.h"
++#include "wallpaper-slide.h"
+
+ static bool key_auth_locked = false;
+ #include "log.h"
+@@ -2033,6 +2034,7 @@ int main(int argc, char **argv) {
+ 	damage_state(&state);
+
+ 	state.run_display = true;
++	bool slides_started = false;
+ 	while (state.run_display) {
+ 		// Bound each attempt, including stuck PAM/HID operations. Cancel only
+ 		// the private auth child, never the compositor-facing secure locker.
+@@ -2056,8 +2058,13 @@ int main(int argc, char **argv) {
+ 			break;
+ 		}
+ 		loop_poll(state.eventloop);
++		if (state.run_display && key_auth_locked && !slides_started) {
++			slides_started = true;
++			wallpaper_slide_start(&state);
++		}
+ 	}
+
++	wallpaper_slide_stop();
+ 	key_auth_stop();
+ 	if (key_auth_fd >= 0) close(key_auth_fd);
+ 	finish_pw_backend();
+diff --git a/meson.build b/meson.build
+index b4e3df8..7ae075f 100644
+--- a/meson.build
++++ b/meson.build
+@@ -110,6 +110,8 @@ sources = [
+ 	'cairo.c',
+ 	'comm.c',
+ 	'key-auth-client.c',
++	'wallpaper-slide.c',
++	'lock-status.c',
+ 	'log.c',
+ 	'loop.c',
+ 	'main.c',
+diff --git a/render.c b/render.c
+index 368a4bc..8ef4aa1 100644
+--- a/render.c
++++ b/render.c
+@@ -6,6 +6,8 @@
+ #include "cairo.h"
+ #include "background-image.h"
+ #include "swaylock.h"
++#include "wallpaper-slide.h"
++#include "lock-status.h"
+
+ // glib might or might not have already defined MIN,
+ // depending on whether we have pixbuf or not...
+@@ -92,7 +94,11 @@ void render_frame_background(struct swaylock_surface *surface, bool commit) {
+ 	cairo_set_source_u32(cairo, state->args.colors.background);
+ 	cairo_pattern_set_filter(cairo_get_source(cairo), CAIRO_FILTER_BILINEAR);
+ 	cairo_paint(cairo);
+-	if (surface->image && state->args.mode != BACKGROUND_MODE_SOLID_COLOR) {
++	cairo_surface_t *slide = wallpaper_slide_image();
++	if (slide && state->args.mode != BACKGROUND_MODE_SOLID_COLOR) {
++		cairo_set_operator(cairo, CAIRO_OPERATOR_OVER);
++		render_background_image(cairo, slide, state->args.mode, buffer_width, buffer_height, 1);
++	} else if (surface->image && state->args.mode != BACKGROUND_MODE_SOLID_COLOR) {
+ 		cairo_set_operator(cairo, CAIRO_OPERATOR_OVER);
+ 		if (fade_is_complete(&surface->fade)) {
+ 			render_background_image(cairo, surface->image,
+@@ -110,6 +116,7 @@ void render_frame_background(struct swaylock_surface *surface, bool commit) {
+ 	wl_surface_set_buffer_scale(surface->surface, surface->scale);
+ 	wl_surface_attach(surface->surface, buffer->buffer, 0, 0);
+ 	wl_surface_damage_buffer(surface->surface, 0, 0, INT32_MAX, INT32_MAX);
++	surface->slide_dirty = false;
+ 	if (commit) {
+ 		wl_surface_commit(surface->surface);
+ 	}
+@@ -127,6 +134,7 @@ void render_background_fade(struct swaylock_surface *surface, uint32_t time) {
+ }
+
+ void render_frame(struct swaylock_surface *surface) {
++	if (surface->slide_dirty) render_frame_background(surface, true);
+ 	struct swaylock_state *state = surface->state;
+
+ 	int arc_radius = state->args.radius * surface->scale;
+@@ -358,6 +366,7 @@ void render_frame(struct swaylock_surface *surface) {
+ 			cairo_show_text(cairo, text_l2);
+ 			cairo_close_path(cairo);
+ 			cairo_new_sub_path(cairo);
++			draw_lock_status(cairo, buffer_width / 2.0, y_l2, arc_radius);
+
+ 			if (new_width < extents_l1.width)
+ 				new_width = extents_l1.width;

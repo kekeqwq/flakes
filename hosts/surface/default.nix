@@ -37,7 +37,10 @@ in
   };
   surface.devices.denali = {
     enable = true;
-    boot.earlyDisplay = true;
+    boot = {
+      earlyDisplay = true;
+      earlyBrightnessPercent = 100;
+    };
     keyboard.hhkb.enable = true;
     privateFirmwareDirectory = "/var/lib/surface-firmware";
     # This device lacks an accessible factory Bluetooth address.
@@ -58,6 +61,13 @@ in
     device = "/dev/disk/by-partlabel/surface-cryptroot";
     fido2.enable = true;
   };
+  # The Type-C host controller is built in, but its board PHY suppliers
+  # are modular. Load them before the initrd attempts FIDO2 discovery.
+  boot.initrd.kernelModules = [
+    "phy-qcom-eusb2-repeater"
+    "phy-qcom-qmp-combo"
+    "phy-snps-eusb2"
+  ];
   boot.supportedFilesystems = lib.mkForce [
     "btrfs"
     "vfat"

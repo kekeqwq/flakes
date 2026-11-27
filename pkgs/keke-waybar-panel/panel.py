@@ -506,6 +506,8 @@ class Control(Gtk.Box):
         self.pack_start(self.stack, True, True, 0)
         menu = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
         self.stateful = []
+        self.wallpaper_modes = {}
+        self.wallpaper_ctl = None
         for section in ("common", "private"):
             if section == "private" and spec[section]:
                 menu.pack_start(Gtk.Separator(), False, False, 6)
@@ -516,6 +518,11 @@ class Control(Gtk.Box):
                 button.connect("clicked", lambda _button, action=item: self.select(action))
                 if item.get("requires_nonempty_file"):
                     self.stateful.append((button, item))
+                if section == "common" and item["id"] in {
+                    "wallpaper-default", "wallpaper-random", "wallpaper-sfw",
+                }:
+                    self.wallpaper_modes[item["id"].removeprefix("wallpaper-")] = button
+                    self.wallpaper_ctl = item["argv"][0]
                 menu.pack_start(button, False, False, 0)
         self.stack.add_named(menu, "menu")
         confirmation = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
@@ -578,6 +585,16 @@ class Control(Gtk.Box):
     def refresh_state(self, *_):
         for button, item in self.stateful:
             button.set_sensitive(self.state_ready(item["requires_nonempty_file"]))
+        if self.wallpaper_ctl and self.stack.get_visible_child_name() == "menu":
+            mode = run(self.wallpaper_ctl, "status").strip()
+            for name, button in self.wallpaper_modes.items():
+                style = button.get_style_context()
+                if name == mode:
+                    style.add_class("suggested")
+                    button.set_tooltip_text("Current wallpaper mode")
+                else:
+                    style.remove_class("suggested")
+                    button.set_tooltip_text(None)
 
     def select(self, action):
         path = action.get("requires_nonempty_file")

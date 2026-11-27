@@ -21,6 +21,17 @@
     confirm = false;
   }
   {
+    id = "wallpaper-sfw";
+    label = "SFW Random";
+    icon = "󰌾";
+    argv = [
+      "${wallpaper.ctl}/bin/wallpaper-ctl"
+      "sfw"
+    ];
+    auth = "sudo";
+    confirm = false;
+  }
+  {
     id = "wallpaper-default";
     label = "Default Wallpaper";
     icon = "󰸈";

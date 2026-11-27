@@ -59,7 +59,15 @@ assert cfg.my.luks.enable && cfg.boot.initrd.systemd.fido2.enable;
 # No LVM volumes are used, but initrd LVM tooling installs the dm udev rules.
 assert cfg.boot.initrd.services.lvm.enable;
 assert cfg.boot.plymouth.enable;
+assert cfg.my.luks.fido2.deviceTimeoutSeconds == 10;
+assert cfg.boot.initrd.systemd.services.plymouth-fido2-wait.wantedBy == [ "sysinit.target" ];
+assert !(cfg.boot.initrd.systemd.services ? denali-fido-cold-trace);
+assert lib.all (m: builtins.elem m cfg.boot.initrd.kernelModules) [
+  "phy-qcom-eusb2-repeater" "phy-qcom-qmp-combo" "phy-snps-eusb2"
+];
 assert cfg.surface.devices.denali.boot.earlyDisplay;
+assert cfg.surface.devices.denali.boot.earlyBrightnessPercent == 100;
+assert lib.hasInfix ''ATTR{brightness}="4095"'' cfg.boot.initrd.services.udev.rules;
 assert lib.all (m: builtins.elem m cfg.boot.initrd.kernelModules) [
   "dispcc-x1e80100" "gpucc-x1e80100" "qcom_glink_smem" "qrtr"
   "pmic_glink" "pmic_glink_altmode" "ps883x"

@@ -6,10 +6,14 @@
 }:
 swaylock-effects.overrideAttrs (old: {
   pname = "swaylock-effects-security-key";
-  patches = (old.patches or [ ]) ++ [ ./parallel-key-auth.patch ];
+  patches = (old.patches or [ ]) ++ [ ./parallel-key-auth.patch ./wallpaper-slide.patch ];
   postPatch = (old.postPatch or "") + ''
     cp ${./key-auth-client.c} key-auth-client.c
     cp ${./key-auth-client.h} key-auth-client.h
+    cp ${./wallpaper-slide.c} wallpaper-slide.c
+    cp ${./wallpaper-slide.h} wallpaper-slide.h
+    cp ${./lock-status.c} lock-status.c
+    cp ${./lock-status.h} lock-status.h
     substituteInPlace key-auth-client.c \
       --replace-fail '@keyAuthHelper@' "$out/libexec/swaylock-key-auth"
   '';

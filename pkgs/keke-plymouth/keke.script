@@ -3,7 +3,9 @@ Window.SetBackgroundTopColor(0.118, 0.118, 0.180);
 Window.SetBackgroundBottomColor(0.118, 0.118, 0.180);
 # Image() resolves names beneath ImageDir. The extra initrd and the real root
 # expose the same filename; older generations can still use the bundled PNG.
-background.original = Image("../../../../../../../var/lib/keke-plymouth/wallpaper.png");
+# UKIs load this public image fresh from the ESP via systemd-stub.
+background.original = Image("../../../../../../../.extra/global_credentials/keke-wallpaper.png.cred");
+if (!background.original) background.original = Image("../../../../../../../var/lib/keke-plymouth/wallpaper.png");
 if (!background.original) background.original = Image("background.png");
 background.sprite = Sprite();
 background.sprite.SetZ(-100);
@@ -21,6 +23,7 @@ prompt.width = 0;
 prompt.sprite = Sprite();
 prompt.sprite.SetOpacity(0);
 message.width = 0;
+message.text = "";
 message.sprite = Sprite();
 message.sprite.SetOpacity(0);
 global.password = 0;
@@ -109,13 +112,20 @@ fun password(text, count) {
   layout();
 }
 fun show_message(text) {
+  message.text = text;
   message.image = Image.Text(text, 0.95, 0.55, 0.65);
   message.width = message.image.GetWidth();
   message.sprite.SetImage(message.image);
   message.sprite.SetOpacity(1);
   layout();
 }
-fun hide_message(text) { message.sprite.SetOpacity(0); }
+fun hide_message(text) {
+  # A countdown cleanup must not hide a newer FIDO2 touch request.
+  if (message.text == text) {
+    message.text = "";
+    message.sprite.SetOpacity(0);
+  }
+}
 Plymouth.SetRefreshFunction(refresh);
 Plymouth.SetDisplayNormalFunction(normal);
 Plymouth.SetDisplayPasswordFunction(password);

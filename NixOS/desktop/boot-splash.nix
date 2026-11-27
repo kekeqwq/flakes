@@ -8,6 +8,13 @@ let
   wallpaper = import ./wallpaper-runtime.nix { inherit config pkgs lib; };
   plymouth = lib.getExe' config.boot.plymouth.package "plymouth";
   setlogcons = lib.getExe' pkgs.kbd "setlogcons";
+  luks = config.my.luks;
+  initrdSystemd = config.boot.initrd.systemd.package;
+  keyWait = pkgs.writeShellApplication {
+    name = "plymouth-fido2-wait";
+    runtimeInputs = [ config.boot.plymouth.package initrdSystemd pkgs.coreutils ];
+    text = builtins.readFile ./fido2-wait-splash.sh;
+  };
 in
 {
   # Linux desktop policy only. No dataset names, passwords or machine-specific
@@ -18,6 +25,28 @@ in
     themePackages = [
       (pkgs.callPackage ../../pkgs/keke-plymouth { wallpaper = wallpaper.default; })
     ];
+  };
+  boot.initrd.systemd = lib.mkIf (config.boot.plymouth.enable && luks.enable && luks.fido2.enable) {
+    storePaths = [
+      keyWait
+      plymouth
+      "${initrdSystemd}/bin/journalctl"
+      "${initrdSystemd}/bin/systemd-escape"
+      "${pkgs.coreutils}/bin/sleep"
+    ];
+    services.plymouth-fido2-wait = {
+      description = "Show the native FIDO2 discovery countdown in Plymouth";
+      wantedBy = [ "sysinit.target" ];
+      after = [ "plymouth-start.service" "systemd-journald.socket" ];
+      before = [ "initrd-switch-root.target" ];
+      conflicts = [ "initrd-switch-root.target" ];
+      unitConfig.DefaultDependencies = false;
+      serviceConfig = {
+        Type = "exec";
+        ExecStart = "${lib.getExe keyWait} ${lib.escapeShellArg luks.name} ${toString luks.fido2.deviceTimeoutSeconds}";
+        RuntimeMaxSec = "90s";
+      };
+    };
   };
   environment.systemPackages = [ wallpaper.ctl ];
   system.boot.extraInitrd.paths = lib.optional config.boot.loader.systemd-boot.enable wallpaper.archiveName;

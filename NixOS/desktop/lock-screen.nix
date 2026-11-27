@@ -22,7 +22,11 @@ let
       # Returns only once the compositor has secured the screen, also before
       # sleep. The atomic marker records acquisition, not ongoing lock status.
       ${wallpaper.resolve}
-      swaylock --image "$image" --daemonize
+      snapshot=$(mktemp "$XDG_RUNTIME_DIR/screen-lock-image.XXXXXXXX")
+      trap 'rm -f -- "$snapshot"' EXIT
+      cp -- "$image" "$snapshot"
+      ${wallpaper.slideEnv}
+      swaylock --image "$snapshot" --daemonize
       ready="$XDG_RUNTIME_DIR/screen-lock.ready"
       printf '%s\n' "$$" > "$ready.$$"
       mv -f "$ready.$$" "$ready"
