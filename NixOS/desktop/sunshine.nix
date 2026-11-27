@@ -1,6 +1,7 @@
 {
   config,
   lib,
+  pkgs,
   ...
 }:
 let
@@ -40,6 +41,9 @@ in
     (lib.mkIf (config.my.desktop.enable && cfg.enable) {
       services.sunshine = {
         enable = true;
+        package = lib.mkDefault (pkgs.sunshine.overrideAttrs (old: {
+          patches = (old.patches or [ ]) ++ [ ../../pkgs/sunshine-stable-linux-tray-menu.patch ];
+        }));
         autoStart = lib.mkDefault true;
         capSysAdmin = lib.mkDefault true;
         openFirewall = lib.mkDefault true;

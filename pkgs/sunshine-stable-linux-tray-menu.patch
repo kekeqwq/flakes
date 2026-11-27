@@ -1,0 +1,27 @@
+Keep Sunshine's static Linux tray menu stable across stream status changes.
+Qt assigns new D-Bus menu item IDs to new QActions; hosts may still send
+clicks for an already open menu. Publish a populated menu at initialization
+and keep its actions alive while updating the icon, tooltip and notification.
+Sunshine's dynamic VirtualHID menu is not used on Linux.
+
+--- a/third-party/tray/src/QtTrayMenu.cpp
++++ b/third-party/tray/src/QtTrayMenu.cpp
+@@ -153,3 +153,2 @@ int QtTrayMenu::init(struct tray *tray, const bool notification) {
+
+-  trayIcon->setContextMenu(trayTopMenu.get());
+   trayIcon->show();
+@@ -174,3 +173,7 @@ void QtTrayMenu::onUpdate(struct tray *tray, const bool notify) {
++#if !defined(__linux__)
+   updateMenu(trayStruct->menu);
++#endif
++  // Sunshine's Linux actions are static. Replacing them during a status
++  // update invalidates the D-Bus IDs held by a tray host's open menu.
+   if (notify) {
+     createNotification();
+@@ -232,5 +235,5 @@ void QtTrayMenu::updateMenu(struct tray_menu *items) {
+-  trayIcon->setContextMenu(newTrayTopMenu.get());
+   // Fill new tray menu instance
+   createMenu(items, newTrayTopMenu.get());
++  trayIcon->setContextMenu(newTrayTopMenu.get());
+   trayTopMenu = std::move(newTrayTopMenu);
+ }
