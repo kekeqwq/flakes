@@ -71,7 +71,7 @@ assert cfg.boot.initrd.luks.cryptoModules == [ "aes" "xts" "sha256" "sha512" "in
 assert lib.all (opt: builtins.elem opt cfg.boot.initrd.luks.devices.cryptroot.crypttabExtraOpts)
   [ "fido2-device=auto" "fido2-pin=no" "fido2-up=yes" "tries=0" ];
 assert cfg.services.sunshine.enable && !cfg.my.sunshine.proxy;
-assert cfg.services.sunshine.settings.output_name == "eDP-1";
+assert cfg.services.sunshine.settings.output_name == "DP-1";
 assert cfg.services.sunshine.settings.upnp == "disabled";
 assert !(cfg.services.nginx.virtualHosts ? sunshine-proxy);
 assert !cfg.services.qemuGuest.enable;

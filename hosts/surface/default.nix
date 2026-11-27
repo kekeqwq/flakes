@@ -41,11 +41,11 @@ in
     # This device lacks an accessible factory Bluetooth address.
     bluetoothAddress = "02:11:5A:AD:00:01";
   };
-  # Stream the built-in OLED as-is. No separate output or virtual monitor.
   my.desktop.niri.outputs = config.surface.devices.denali.niriOutputs;
+  # Stream the physical external display without creating a virtual output.
   my.sunshine = {
     enable = true;
-    capture = "eDP-1";
+    capture = "DP-1";
     proxy = false;
     settings.sunshine_name = "surface";
   };
