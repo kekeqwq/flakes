@@ -1,4 +1,4 @@
-# Surface 正式安装草案（待确认，不能 switch 到现有测试盘）
+# Surface 正式安装（Gen 13 已启动，待空白盘复现）
 
 - 实例 `flakes#surface`、主机名 `surface`、原生 AArch64。硬件来自锁定的 `surface.nix`，保留 Denali HHKB、触屏、OLED 和已验收的 0 dB FullIO。
 - 从公共桌面和 server 配置继承用户 `keke`、SSH、sudo 和 PAM；不保留测试机的无凭据登录、专用 SSH 授权文件与 `NOPASSWD`。新装的 `keke` 登录密码或授权公钥须按公共约定私下配置，不能把 Live 的 root 免密带进目标系统。
@@ -16,7 +16,7 @@
 
 上述大小适用于这块 953.87 GiB NVMe；另留 GPT 和对齐所需的少量扇区。systemd-boot 最多保留八个启动代，实际容量取决于完整 UKI 的大小。
 
-根卷使用 LUKS2 AES-XTS（`cryptsetup luksFormat --type luks2 --cipher aes-xts-plain64 --key-size 512`）。Denali initrd 只纳入此根卷所需的加密模块，不请求通用列表中的旧密码算法和 AF_ALG；保留 `dm_crypt`，用户空间的 cryptsetup 使用 OpenSSL/libargon2。改用其他根卷密码算法时须同步检查 initrd 配置。
+根卷使用 LUKS2 AES-XTS（`cryptsetup luksFormat --type luks2 --cipher aes-xts-plain64 --key-size 512`）。Denali initrd 只纳入此根卷所需的加密模块，不请求通用列表中的旧密码算法和 AF_ALG；保留 `dm_crypt`，用户空间的 cryptsetup 使用 OpenSSL/libargon2。改用其他根卷密码算法时须同步检查 initrd 配置。不要强制关闭 `boot.initrd.services.lvm.enable`：NixOS 的 LUKS 默认借它安装 `10-dm.rules` 等 device-mapper 规则。这不会增加 LVM 分区或逻辑卷；缺少规则时，FIDO2 解密成功后仍会无限等待 `/dev/mapper/cryptroot`。
 
 文件系统启用 `compress=zstd:3,noatime`。以后需要 swap 时，可在同一个加密 Btrfs 里新建 `@swap` 子卷，用 `btrfs filesystem mkswapfile` 按需创建交换文件，并启用 Denali 内核的 `CONFIG_SWAP`，不必重分区。若再做休眠，initrd 要先解锁 `cryptroot` 再定位休眠镜像；须另行启用内核休眠支持并验证真机恢复。
 
@@ -29,4 +29,6 @@
 3. 从 Live 的 `/iso/surface-install/firmware/` 校验并部署到目标 `/mnt/var/lib/surface-firmware`，再执行 `nixos-install --root /mnt --flake /mnt/etc/nixos#surface`，使安装流程生成含私有固件的 UKI。固件、私有 UKI、恢复密码均不进 Git 或 Nix store。
 4. 关机后拔开安装 U 盘，第一次由内置盘启动。检查系统与三个子卷、Key 和密码回退、公共 SSH/sudo、触屏和 HHKB、桌面和 Sunshine、0 dB 扬声器与 MicArray。Live 通过不是空白盘首启通过。
 
-正式启动暂用该 Surface 上一次内置盘日用版本（`bd56d07`）的 FullIO 内核与 OLED DTB；不继承旧系统的分区、用户或认证配置。27.05 仍使用现有 LUKS2/Btrfs。`earlycon=efifb` 让内核尽早向 EFI framebuffer 输出；黑屏是否消失需要实机确认。
+正式启动保留上一内置盘日用版本（`bd56d07`）的 FullIO 内核与 OLED DTB；不继承旧系统的分区、用户或认证配置。Denali 的 `boot.earlyDisplay` 在 initrd 启用 OLED 所需的显示时钟和桥接驱动，且让 QRTR 先于 PMIC GLINK 加载。走与 `secret-lab` 相同的 Plymouth/FIDO2 路径，不需要 `earlycon`、`keep_bootcon` 或向 ESP 写诊断日志。
+
+在逐代修正后的内置盘 Gen 13 上，已实测 YubiKey 触摸后进入桌面，并确认 `cryptroot`、三子卷及 OLED 120 Hz。Gen 12 先独立证实了未解锁时 `msmdrmfb` 接管控制台。以上均不是空白盘首次启动验收；必须从发布的锁定源码重装后再单独记录。

@@ -37,6 +37,7 @@ in
   };
   surface.devices.denali = {
     enable = true;
+    boot.earlyDisplay = true;
     keyboard.hhkb.enable = true;
     privateFirmwareDirectory = "/var/lib/surface-firmware";
     # This device lacks an accessible factory Bluetooth address.
@@ -65,28 +66,13 @@ in
   # through OpenSSL/libargon2, not the optional kernel AF_ALG interface.
   # Do not request the generic initrd list's unbuilt legacy ciphers.
   boot.initrd.luks.cryptoModules = [ "aes" "xts" "sha256" "sha512" "input_leds" ];
-  # LUKS maps a raw partition directly to Btrfs, with no LVM layer.
-  boot.initrd.services.lvm.enable = lib.mkForce false;
+  # Keep the defaults set by luksroot.nix: its lvm2 package supplies the
+  # device-mapper udev rules and dmsetup even for LUKS directly over Btrfs.
   # Import only the known-good internal-boot kernel and FullIO OLED DTB.
   boot.kernelPackages = lib.mkOverride 30 stableBoot.boot.kernelPackages;
   hardware.deviceTree.package = lib.mkForce stableBoot.hardware.deviceTree.package;
-  # Keep the LUKS prompt and early display diagnostics on the built-in console.
-  boot.plymouth.enable = lib.mkForce false;
-  # Modprobe's symbol dependency closure doesn't include the independent
-  # device-tree clock suppliers used by MDSS and the GPU/GMU component.
-  boot.initrd.kernelModules = [ "dispcc-x1e80100" "gpucc-x1e80100" ];
-  boot.consoleLogLevel = 7;
-  boot.kernelParams = [
-    "nohibernate"
-    "console=tty0"
-    "earlycon=efifb"
-    # The OLED showed early EFI output, then lost it when tty0 registered
-    # against dummycon. Keep early printk visible through that handoff.
-    "keep_bootcon"
-    "fbcon=font:TER16x32,nodefer"
-    "rd.systemd.show_status=yes"
-    "systemd.show_status=yes"
-  ];
+  # Use the shared desktop Plymouth/FIDO2 path, as on secret-lab.
+  boot.kernelParams = [ "nohibernate" ];
   boot.loader.timeout = 5;
   boot.loader.systemd-boot.configurationLimit = 8;
   fileSystems = {

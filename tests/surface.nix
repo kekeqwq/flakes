@@ -56,6 +56,18 @@ assert cfg.fileSystems."/nix".neededForBoot;
 assert cfg.swapDevices == [ ];
 assert builtins.elem "nohibernate" cfg.boot.kernelParams;
 assert cfg.my.luks.enable && cfg.boot.initrd.systemd.fido2.enable;
+# No LVM volumes are used, but initrd LVM tooling installs the dm udev rules.
+assert cfg.boot.initrd.services.lvm.enable;
+assert cfg.boot.plymouth.enable;
+assert cfg.surface.devices.denali.boot.earlyDisplay;
+assert lib.all (m: builtins.elem m cfg.boot.initrd.kernelModules) [
+  "dispcc-x1e80100" "gpucc-x1e80100" "qcom_glink_smem" "qrtr"
+  "pmic_glink" "pmic_glink_altmode" "ps883x"
+];
+assert lib.hasInfix "softdep pmic_glink pre: qrtr"
+  cfg.boot.initrd.systemd.contents."/etc/modprobe.d/denali-display.conf".text;
+assert !lib.any (p: p == "keep_bootcon" || lib.hasPrefix "earlycon=" p) cfg.boot.kernelParams;
+assert !(cfg.boot.initrd.systemd.services ? denali-preunlock-display);
 assert cfg.boot.initrd.luks.devices.cryptroot.device == "/dev/disk/by-partlabel/surface-cryptroot";
 assert cfg.boot.initrd.luks.cryptoModules == [ "aes" "xts" "sha256" "sha512" "input_leds" ];
 assert lib.all (opt: builtins.elem opt cfg.boot.initrd.luks.devices.cryptroot.crypttabExtraOpts)
