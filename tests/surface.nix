@@ -31,6 +31,8 @@ assert builtins.all (
 assert cfg.hardware.deviceTree.name == "qcom/x1e80100-microsoft-denali-oled.dtb";
 assert cfg.my.desktop.niri.outputs == cfg.surface.devices.denali.niriOutputs;
 assert cfg.my.desktop.niri.extraConfig == "";
+assert cfg.my.desktop.battery.device == "BAT1";
+assert cfg.home-manager.users.keke.programs.waybar.settings.mainBar.battery.bat == "BAT1";
 assert !(cfg.environment.sessionVariables ? FD_MESA_DEBUG);
 assert cfg.home-manager.users.keke.programs.ghostty.settings.background-opacity == [ 0.70 ];
 assert cfg.networking.hostName == "surface" && cfg.networking.networkmanager.enable;

@@ -494,6 +494,9 @@ in
           format-discharging-low = "󰂎 {capacity}%";
           format-not-charging-low = "󰂎 {capacity}%";
           states.low = 15;
+        }
+        // lib.optionalAttrs (config.my.desktop.battery.device != null) {
+          bat = config.my.desktop.battery.device;
         };
 
         tray = {

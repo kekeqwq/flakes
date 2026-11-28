@@ -31,6 +31,7 @@ swaylock-effects.overrideAttrs (old: {
     ${python3}/bin/python3 ${./worker.test.py} ${./key-auth-worker.c} ${lib.getDev pam}/include "$CC"
     ${python3}/bin/python3 ${./client.test.py} ${./key-auth-client.c} ${./key-auth-client.h} "$CC"
     ${python3}/bin/python3 ${./loop.test.py} ${old.src}/loop.c ${old.src}/log.c ${old.src}/include "$CC"
+    ${python3}/bin/python3 ${./lock-status.test.py} ../lock-status.c "$CC"
     runHook postCheck
   '';
   postInstall = (old.postInstall or "") + ''

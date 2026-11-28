@@ -26,6 +26,10 @@ let
       trap 'rm -f -- "$snapshot"' EXIT
       cp -- "$image" "$snapshot"
       ${wallpaper.slideEnv}
+      unset KEKE_SWAYLOCK_BATTERY
+      ${lib.optionalString (config.my.desktop.battery.device != null) ''
+        export KEKE_SWAYLOCK_BATTERY=${lib.escapeShellArg config.my.desktop.battery.device}
+      ''}
       appearance=$(readlink ${lib.escapeShellArg "${config.my.desktop.appearance.root}/current"} || :)
       colors=()
       if [[ ''${appearance##*/} == light ]]; then

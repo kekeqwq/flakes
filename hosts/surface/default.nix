@@ -41,6 +41,8 @@ in
     # This device lacks an accessible factory Bluetooth address.
     bluetoothAddress = "02:11:5A:AD:00:01";
   };
+  # SAM and Qualcomm report the same physical pack. Display the SAM gauge.
+  my.desktop.battery.device = "BAT1";
   my.desktop.niri.outputs = config.surface.devices.denali.niriOutputs;
   # Stream the physical external display without creating a virtual output.
   my.sunshine = {

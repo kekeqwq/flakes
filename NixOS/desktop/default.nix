@@ -1,6 +1,11 @@
 { config, lib, ... }:
 {
   options.my.desktop = {
+    battery.device = lib.mkOption {
+      type = lib.types.nullOr (lib.types.strMatching "[A-Za-z0-9_-]+");
+      default = null;
+      description = "Power-supply name to use in Waybar and the lock screen. Null keeps automatic multi-battery reporting.";
+    };
     appearance = {
       root = lib.mkOption {
         type = lib.types.str;
