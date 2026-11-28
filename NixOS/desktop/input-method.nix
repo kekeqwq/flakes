@@ -8,6 +8,13 @@
 let
   shared = ../../System/Common/input-method;
   hm = config.home-manager.users.${config.myuser.name};
+  # Remove this once the pinned Fcitx redraws a shown panel after theme reload.
+  desktopFcitx = pkgs.qt6Packages.fcitx5-with-addons.override {
+    inherit (config.i18n.inputMethod.fcitx5) addons;
+    fcitx5 = pkgs.fcitx5.overrideAttrs (old: {
+      patches = (old.patches or [ ]) ++ [ ./input-method/fcitx5-repaint-classicui.patch ];
+    });
+  };
   classicUI =
     mode:
     pkgs.writeText "fcitx5-classicui-${mode}.conf" ''
@@ -61,6 +68,7 @@ in
   i18n.inputMethod = {
     enable = true;
     type = "fcitx5";
+    package = lib.mkForce desktopFcitx;
     fcitx5 = {
       # Never ignore the user directory: each instance keeps its own training.
       ignoreUserConfig = false;

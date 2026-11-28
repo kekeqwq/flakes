@@ -1,0 +1,24 @@
+From: Surface desktop maintainers
+Subject: [PATCH] classicui: repaint candidate windows when the palette changes
+
+Reloading a theme updates the renderer but leaves the last candidate buffer
+submitted to the compositor until the next key event. Repaint focused server-
+rendered panels using their existing input context, without resetting preedit.
+
+--- a/src/ui/classic/classicui.cpp
++++ b/src/ui/classic/classicui.cpp
+@@ -251,2 +251,14 @@ void ClassicUI::reloadTheme() {
+     theme_.populateColor(accentColor_);
++
++    if (!suspended_ && instance_->currentUI() == "classicui") {
++        instance_->inputContextManager().foreachFocused(
++            [this](InputContext *ic) {
++                if (!ic->capabilityFlags().test(CapabilityFlag::ClientSideInputPanel) &&
++                    !ic->inputPanel().customInputPanelCallback() &&
++                    !ic->inputPanel().customVirtualKeyboardCallback()) {
++                    update(UserInterfaceComponent::InputPanel, ic);
++                }
++                return true;
++            });
++    }
+ }
