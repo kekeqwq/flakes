@@ -39,8 +39,19 @@ let
         + config.my.desktop.niri.extraConfig
         +
           builtins.replaceStrings
-            [ "    // SNIPASTE_BINDINGS" "@WAYBAR_RADIUS@" "@MEDIA_NOTIFY@" ''active-color "#cba6f7"'' ]
             [
+              "    // HOST_TOUCH_OUTPUT"
+              "    // SNIPASTE_BINDINGS"
+              "@WAYBAR_RADIUS@"
+              "@MEDIA_NOTIFY@"
+              ''active-color "#cba6f7"''
+            ]
+            [
+              (lib.optionalString (config.my.desktop.niri.touchOutput != null) ''
+                touch {
+                    map-to-output ${builtins.toJSON config.my.desktop.niri.touchOutput}
+                }
+              '')
               (lib.optionalString pkgs.stdenv.hostPlatform.isx86_64 ''
                 F3 hotkey-overlay-title="Pin clipboard with Snipaste" {
                     spawn "${lib.getExe (import ./pin-clipboard.nix { inherit pkgs; })}"

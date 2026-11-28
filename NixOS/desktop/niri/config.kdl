@@ -1,4 +1,5 @@
 input {
+    // HOST_TOUCH_OUTPUT
     mod-key "Alt"
     // Disable Niri's built-in suspend binding; use the lock binding below.
     disable-power-key-handling

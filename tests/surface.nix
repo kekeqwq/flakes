@@ -110,7 +110,7 @@ assert cfg.services.sunshine.enable && !cfg.my.sunshine.proxy;
 assert !(cfg.services.sunshine.settings ? output_name);
 assert lib.hasInfix "sunshine-output.py" cfg.systemd.user.services.sunshine.serviceConfig.ExecStart;
 assert builtins.elem "xdg-desktop-portal.service" cfg.systemd.user.services.sunshine.after;
-assert nativeTouch;
+assert nativeTouch && cfg.my.desktop.niri.touchOutput == "eDP-1";
 assert cfg.services.sunshine.settings.upnp == "disabled";
 assert !(cfg.services.nginx.virtualHosts ? sunshine-proxy);
 assert !cfg.services.qemuGuest.enable;

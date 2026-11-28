@@ -50,6 +50,7 @@ in
   # SAM and Qualcomm report the same physical pack. Display the SAM gauge.
   my.desktop.battery.device = "BAT1";
   my.desktop.niri.outputs = config.surface.devices.denali.niriOutputs;
+  my.desktop.niri.touchOutput = "eDP-1";
   # Stream the physical external display without creating a virtual output.
   my.sunshine = {
     enable = true;

@@ -25,6 +25,11 @@
       default = "";
       description = "Host-specific Niri output/display configuration. Every instance has different monitors, so only that host sets modes, scale and positions.";
     };
+    niri.touchOutput = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+      description = "Output name for a host's touchscreen; null retains Niri's default mapping.";
+    };
     niri.extraConfig = lib.mkOption {
       type = lib.types.lines;
       default = "";
