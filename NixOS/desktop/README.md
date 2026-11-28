@@ -163,11 +163,9 @@ Escape dismiss without executing. Nothing calls sudo or a shell command string.
 
 Plymouth is desktop-only and uses the same tracked mountain wallpaper as the
 locker, with a Mocha overlay and lavender loading-ring/password UI. Early DRM
-modules are hardware-private (Deck: amdgpu; secret-lab: virtio_gpu). Encryption
-is not enabled by desktop: the instance owns its filesystem/key-prompt policy.
-See `hosts/secret-lab/README.md` for native encrypted/compressed ZFS installation
-and the explicit first-boot viewing gate. `lab` keeps its existing ext4 private
-configuration. Firmware/modesetting black frames cannot be promised away.
+modules are hardware-private. Encryption is not enabled by desktop: the
+instance owns its filesystem and disk-unlock policy. Firmware/modesetting
+black frames cannot be promised away.
 
 ## Clipboard capture and idle lock
 
@@ -183,7 +181,7 @@ procedure; fullscreen alone is deliberately not an idle exemption.
 ## Niri configuration
 
 - `niri/config.kdl` is the main template. Home Manager installs a read-only store symlink at `~/.config/niri/config.kdl` and replaces older hand-edited copies.
-- Displays are per instance: each host sets `my.desktop.niri.outputs` (Deck reads `hosts/deck/outputs.kdl`, lab pins its virtio `Virtual-1`). It is concatenated before `niri.extraConfig` and the shared template at build time: there are **no runtime includes**. The old `~/Downloads/deck.kdl` is no longer used and is left untouched as a backup.
+- Displays are per instance: each host sets `my.desktop.niri.outputs` (for example, Deck reads `hosts/deck/outputs.kdl`). It is concatenated before `niri.extraConfig` and the shared template at build time: there are **no runtime includes**. The old `~/Downloads/deck.kdl` is no longer used and is left untouched as a backup.
 - The AVerMedia capture card and PNP(LTM) LCD have EDID-specific profiles. A DP-1 fallback keeps replacement displays (including Ugreen/SAMZHE) at `(0,0)`, 1920×1080 at 60 Hz, so hotplug does not shift Sunshine's input coordinates. The internal LCD uses `transform "normal"` and scale 1.5: the kernel's built-in 270° panel orientation already makes it landscape. Copying the effective transform reported by `niri msg outputs` back into the configuration would rotate it twice.
 - The exact complete installed configuration is validated during the build and again before Home Manager activation. Invalid keybindings stop activation before files are replaced.
 - Change permanent display settings in `hosts/deck/outputs.kdl` and rebuild. `switchscreen` only toggles eDP-1 at runtime through niri IPC; it never edits the managed configuration.

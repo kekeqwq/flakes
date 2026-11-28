@@ -247,6 +247,8 @@ assert
   }}";
 assert !(off.home-manager.users.keke.home.file ? ".local/share/emacs-rime-native");
 assert c.my.desktop.niri.extraConfig == "" && c.my.desktop.niri.outputs == "";
+assert lib.any (p: (p.pname or "") == "pycharm") c.environment.systemPackages;
+assert !lib.any (p: (p.pname or "") == "pycharm") off.environment.systemPackages;
 assert lib.all (font: builtins.elem (toString font) (map toString c.fonts.packages)) [
   enabled.pkgs.dejavu_fonts
   enabled.pkgs.nerd-fonts.symbols-only

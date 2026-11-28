@@ -29,7 +29,7 @@
 3. 从 Live 的 `/iso/surface-install/firmware/` 校验并部署到目标 `/mnt/var/lib/surface-firmware`，再执行 `nixos-install --root /mnt --flake /mnt/etc/nixos#surface`，使安装流程生成含私有固件的 UKI。固件、私有 UKI、恢复密码均不进 Git 或 Nix store。
 4. 关机后拔开安装 U 盘，第一次由内置盘启动。检查系统与三个子卷、Key 和密码回退、公共 SSH/sudo、触屏和 HHKB、桌面和 Sunshine、0 dB 扬声器与 MicArray。Live 通过不是空白盘首启通过。
 
-正式启动直接使用硬件仓库 `denaliDailyBoot` 的 FullIO 内核与 OLED DTB；其独立工具链锁用于复现已验证的启动产物，不再引用历史主机 flake。Denali 的 `boot.earlyDisplay` 在 initrd 启用 OLED 所需的显示时钟和桥接驱动，且让 QRTR 先于 PMIC GLINK 加载。走与 `secret-lab` 相同的 Plymouth/FIDO2 路径，不需要 `earlycon`、`keep_bootcon` 或向 ESP 写诊断日志。
+正式启动直接使用硬件仓库 `denaliDailyBoot` 的 FullIO 内核与 OLED DTB；其独立工具链锁用于复现已验证的启动产物，不再引用历史主机 flake。Denali 的 `boot.earlyDisplay` 在 initrd 启用 OLED 所需的显示时钟和桥接驱动，且让 QRTR 先于 PMIC GLINK 加载。使用共享桌面层的 Plymouth/FIDO2 路径，不需要 `earlycon`、`keep_bootcon` 或向 ESP 写诊断日志。
 
 在逐代修正后的内置盘 Gen 13 上，已实测 YubiKey 触摸后进入桌面，并确认 `cryptroot`、三子卷及 OLED 120 Hz。Gen 12 先独立证实了未解锁时 `msmdrmfb` 接管控制台。后续日用配置包括启动亮度 100%（桌面仍恢复上次亮度）、共享 Plymouth 10 秒等 Key 倒计时，以及三个独立的壁纸模式。Surface 的 EFI stub 会从 ESP 加载当前选定的启动壁纸；锁屏幻灯片不改启动或桌面壁纸。
 

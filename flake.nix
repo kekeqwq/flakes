@@ -111,16 +111,6 @@
       };
 
       nixosConfigurations.deck = mkNixos { modules = [ ./hosts/deck ]; };
-      nixosConfigurations.lab = mkNixos {
-        system = "aarch64-linux";
-        modules = [ ./hosts/lab ];
-      };
-      # Same private lab file. Only the NixOS system differs.
-      nixosConfigurations.lab-x86 = mkNixos {
-        system = "x86_64-linux";
-        modules = [ ./hosts/lab ];
-      };
-      nixosConfigurations.secret-lab = mkNixos { modules = [ ./hosts/secret-lab ]; };
       nixosConfigurations.surface = mkNixos {
         system = "aarch64-linux";
         modules = [ ./hosts/surface ];
@@ -136,7 +126,7 @@
             pkgs =
               {
                 aarch64-darwin = self.darwinConfigurations.mba.pkgs;
-                aarch64-linux = self.nixosConfigurations.lab.pkgs;
+                aarch64-linux = self.nixosConfigurations.surface.pkgs;
                 x86_64-linux = self.nixosConfigurations.deck.pkgs;
               }
               .${system};
@@ -205,17 +195,12 @@
           package-boundaries = import ./tests/aarch64-linux.nix {
             inherit inputs;
             baseModule = self.nixosModules.default;
-            desktop = self.nixosConfigurations.lab;
+            desktop = self.nixosConfigurations.surface;
             pkgs = pkgsFor.${system};
           };
         }
         // lib.optionalAttrs (system == "x86_64-linux") {
           niri-session = import ./tests/niri-session.nix { pkgs = pkgsFor.${system}; };
-          secret-lab-boundaries = import ./tests/secret-lab.nix {
-            pkgs = pkgsFor.${system};
-            secretLab = self.nixosConfigurations.secret-lab;
-            lab = self.nixosConfigurations.lab-x86;
-          };
           desktop-boundaries = import ./tests/desktop.nix {
             inherit inputs;
             pkgs = pkgsFor.${system};

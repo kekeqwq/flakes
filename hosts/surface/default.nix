@@ -87,7 +87,7 @@ in
   boot.kernelPackages = lib.mkOverride 30 dailyBoot.kernelPackages;
   # The explicit native-touch module may replace only this DTB, not the kernel.
   hardware.deviceTree.package = lib.mkOverride 60 dailyBoot.dtbs;
-  # Use the shared desktop Plymouth/FIDO2 path, as on secret-lab.
+  # Use the shared desktop Plymouth/FIDO2 path.
   boot.kernelParams = [ "nohibernate" ];
   boot.loader.timeout = 5;
   boot.loader.systemd-boot.configurationLimit = 8;

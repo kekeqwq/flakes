@@ -161,6 +161,7 @@ in
       set -g menu-style 'bg=themeblack,fg=themewhite'
       set -g menu-border-style 'bg=themeblack,fg=themelightgrey'
       set -g menu-selected-style 'bg=themeblue,fg=themeblack'
+      # A popup is its own surface; tmux's stock grey clashes with both palettes.
       set -g popup-style 'bg=themeblack,fg=themewhite'
       set -g popup-border-style 'bg=themeblack,fg=themeblue'
     '';

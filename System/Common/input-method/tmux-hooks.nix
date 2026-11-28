@@ -18,7 +18,8 @@ map
     "window-pane-changed"
   ]
 ++ [
-  # Overlays can take keyboard focus without changing the active pane.
+  # tmux hands keyboard focus to overlays without changing the active pane.
+  # Save focus on the pane (not the session) before taking a new snapshot.
   ''
     set-hook -g 'pane-focus-out[90]' {
       set -p @ime-pane-unfocused 1

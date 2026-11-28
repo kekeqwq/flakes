@@ -71,4 +71,4 @@ for the night. Niri's environment-import warning has a code/test fix but no
 updated-session acceptance; it is not a demonstrated Sunshine fix. No stream
 stability patch was deployed. Public repos are to be synchronized and guest/host
 normally powered off; shutdown outcome must be reported separately, not assumed.
-See [`HANDOFF-2026-11-16.md`](HANDOFF-2026-11-16.md).
+See the [2026-11-17 follow-up](desktop-stream-lock-2026-11-17.md).

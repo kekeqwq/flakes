@@ -55,8 +55,10 @@ local ghterm = { title = 'tmux:/private/tmp/tmux-501/default:/dev/ttys001' }
 assert(P.isTerminal(P.GHOSTTY) and P.isTerminal(P.WEZTERM))
 assert(P.managed(P.GHOSTTY))
 assert(want(P.GHOSTTY, ghterm, {titled}, {tmuxPi}, nil, false) == P.RIME)
+-- A popup leaves the Pi pane active, but takes away keyboard focus.
 titled.pane_unfocused = '1'
 assert(want(P.GHOSTTY, ghterm, {titled}, {tmuxPi}) == P.ABC)
+assert(want(P.WEZTERM, terminal, {titled}, {tmuxPi}) == P.ABC)
 titled.pane_unfocused = ''
 assert(want(P.GHOSTTY, ghterm, {titled}, {tmuxPi}) == P.RIME)
 assert(want(P.GHOSTTY, { title = 'keke@deck ~' }, {titled}, {tmuxPi}, nil, false) == nil,

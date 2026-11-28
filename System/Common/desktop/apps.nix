@@ -19,6 +19,11 @@
       mpv
       scrcpy
     ]
+    ++ lib.optionals (builtins.elem stdenv.hostPlatform.system [
+      "aarch64-darwin"
+      "aarch64-linux"
+      "x86_64-linux"
+    ]) [ jetbrains.pycharm ]
     # Match SpotX-Nix's supported platforms exactly. In particular, ARM Linux
     # must not evaluate the Spotify package or pull it into the system closure.
     ++

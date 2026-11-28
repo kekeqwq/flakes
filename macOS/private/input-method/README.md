@@ -39,6 +39,10 @@ synchronous root-key binding blocks normal tmux shortcuts.
 
 Home Manager reloads an existing default tmux server when its config changes.
 A custom server may need `tmux -S <socket> source-file ~/.config/tmux/tmux.conf`.
+A tmux popup takes keyboard focus without changing the active pane. The focus
+hooks make the covered Pi yield to ABC, then restore Chinese when its editor
+regains focus. To exercise the focus handoff and automatic theme redraw on an
+isolated client, run `python3 tests/tmux-popup.py ~/.config/tmux/tmux.conf`.
 Allow Hammerspoon in macOS Privacy & Security > Accessibility. Pi extension
 changes can use `/reload`; application-package changes require restarting Pi.
 
