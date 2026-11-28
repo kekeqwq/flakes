@@ -17,3 +17,16 @@ map
     "pane-died"
     "window-pane-changed"
   ]
+++ [
+  # Overlays can take keyboard focus without changing the active pane.
+  ''
+    set-hook -g 'pane-focus-out[90]' {
+      set -p @ime-pane-unfocused 1
+      run-shell -b "${reporter}/bin/input-method-tmux-update #{q:socket_path}"
+    }
+    set-hook -g 'pane-focus-in[90]' {
+      set -pu @ime-pane-unfocused
+      run-shell -b "${reporter}/bin/input-method-tmux-update #{q:socket_path}"
+    }
+  ''
+]

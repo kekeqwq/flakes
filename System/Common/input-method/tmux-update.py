@@ -78,7 +78,8 @@ def main():
     root = state / 'tmux'
     root.mkdir(parents=True, exist_ok=True, mode=0o700)
     fields = ['client_tty', 'pane_id', 'pane_pid', 'pane_tty', 'pane_in_mode', 'client_key_table', 'client_prefix']
-    fmt = '\t'.join('#{' + field + '}' for field in fields)
+    fmt = '\t'.join(['#{' + field + '}' for field in fields] + ['#{@ime-pane-unfocused}'])
+    fields.append('pane_unfocused')
     clients = []
     try:
         output = subprocess.run(['@TMUX@', '-S', socket, 'list-clients', '-F', fmt],

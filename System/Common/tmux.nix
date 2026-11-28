@@ -161,6 +161,8 @@ in
       set -g menu-style 'bg=themeblack,fg=themewhite'
       set -g menu-border-style 'bg=themeblack,fg=themelightgrey'
       set -g menu-selected-style 'bg=themeblue,fg=themeblack'
+      set -g popup-style 'bg=themeblack,fg=themewhite'
+      set -g popup-border-style 'bg=themeblack,fg=themeblue'
     '';
   };
 }

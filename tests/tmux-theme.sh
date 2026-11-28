@@ -30,6 +30,10 @@ for _ in 1 2; do tmux -L "$name" source-file "$config"; done
 [ "$(tmux -L "$name" show -gv menu-style)" = 'bg=themeblack,fg=themewhite' ]
 [ "$(tmux -L "$name" show -gv menu-border-style)" = 'bg=themeblack,fg=themelightgrey' ]
 [ "$(tmux -L "$name" show -gv menu-selected-style)" = 'bg=themeblue,fg=themeblack' ]
+[ "$(tmux -L "$name" show -gv popup-style)" = 'bg=themeblack,fg=themewhite' ]
+[ "$(tmux -L "$name" show -gv popup-border-style)" = 'bg=themeblack,fg=themeblue' ]
+tmux -L "$name" show-hooks -g 'pane-focus-out' | grep -q '@ime-pane-unfocused 1'
+tmux -L "$name" show-hooks -g 'pane-focus-in' | grep -q '@ime-pane-unfocused'
 [[ $(tmux -L "$name" show -gv status-left) != *'bg=themeblue'* ]]
 [ "$(tmux -L "$name" show -gv status)" = 2 ]
 separator=$(tmux -L "$name" show -gv 'status-format[1]')

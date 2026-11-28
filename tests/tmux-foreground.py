@@ -91,7 +91,7 @@ class Foreground(unittest.TestCase):
             state = root / '.local/state/input-method'
             (state / 'pi').mkdir(parents=True)
             (state / 'pi/37341.json').write_text(json.dumps(self.context))
-            rows = '/dev/ttys000\t%2\t37335\t/dev/ttys003\t1\tprefix\t1\n'
+            rows = '/dev/ttys000\t%2\t37335\t/dev/ttys003\t1\tprefix\t1\t1\n'
             results = [SimpleNamespace(stdout=rows), SimpleNamespace(stdout=(
                 '37335 37335 37335 ttys003\n37341 37335 37335 ttys003\n'))]
             with patch.object(reporter.Path, 'home', return_value=root), \
@@ -106,6 +106,7 @@ class Foreground(unittest.TestCase):
             self.assertEqual(record['pane_in_mode'], '1')
             self.assertEqual(record['client_key_table'], 'prefix')
             self.assertEqual(record['client_prefix'], '1')
+            self.assertEqual(record['pane_unfocused'], '1')
             self.assertEqual(record['updated'], 1000)
             self.assertEqual(files[0].stat().st_mode & 0o777, 0o600)
 

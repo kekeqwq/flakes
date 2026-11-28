@@ -55,6 +55,10 @@ local ghterm = { title = 'tmux:/private/tmp/tmux-501/default:/dev/ttys001' }
 assert(P.isTerminal(P.GHOSTTY) and P.isTerminal(P.WEZTERM))
 assert(P.managed(P.GHOSTTY))
 assert(want(P.GHOSTTY, ghterm, {titled}, {tmuxPi}, nil, false) == P.RIME)
+titled.pane_unfocused = '1'
+assert(want(P.GHOSTTY, ghterm, {titled}, {tmuxPi}) == P.ABC)
+titled.pane_unfocused = ''
+assert(want(P.GHOSTTY, ghterm, {titled}, {tmuxPi}) == P.RIME)
 assert(want(P.GHOSTTY, { title = 'keke@deck ~' }, {titled}, {tmuxPi}, nil, false) == nil,
   'unidentified Ghostty window must allow manual Chinese selection')
 local held = { client_tty = '/dev/ttys001', pane_id = '%3', pane_tty = '/dev/ttys004',

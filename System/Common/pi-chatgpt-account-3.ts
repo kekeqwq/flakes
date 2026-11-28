@@ -2,8 +2,7 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { builtinProviders } from "@earendil-works/pi-ai/providers/all";
 
 const nativeId = "openai-codex";
-const id = "openai-codex-account-3";
-const name = "OpenAI Codex (ChatGPT · account 3)";
+const slots = [3, 4];
 const api = "openai-codex-responses";
 const baseUrl = "https://chatgpt.com/backend-api";
 
@@ -14,6 +13,20 @@ export default function (pi: ExtensionAPI) {
     throw new Error("This Pi build does not support native Codex OAuth");
   }
 
+  for (const slot of slots) {
+    const id = `openai-codex-account-${slot}`;
+    const name = `OpenAI Codex (ChatGPT · account ${slot})`;
+    registerSlot(pi, native, oauth, id, name);
+  }
+}
+
+function registerSlot(
+  pi: ExtensionAPI,
+  native: ReturnType<typeof builtinProviders>[number],
+  oauth: NonNullable<NonNullable<typeof native.auth>["oauth"]>,
+  id: string,
+  name: string,
+) {
   const models = native.getModels()
     .filter((model) => model.api === api && (!model.type || model.type === "chat"))
     .map((model) => ({ ...model, provider: id, baseUrl }));

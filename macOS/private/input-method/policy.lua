@@ -16,7 +16,7 @@ local function socketName(path)
   return (path or ''):gsub('^/private/tmp/', '/tmp/')
 end
 local function blocked(client)
-  return client.pane_in_mode == '1' or client.client_prefix == '1'
+  return client.pane_unfocused == '1' or client.pane_in_mode == '1' or client.client_prefix == '1'
     or (client.client_key_table ~= 'root' and client.client_key_table ~= '')
 end
 -- The terminal title pushed by tmux identifies its socket and client tty.

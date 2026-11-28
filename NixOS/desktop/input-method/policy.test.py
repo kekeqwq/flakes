@@ -85,6 +85,10 @@ assert want("org.wezfurlong.wezterm", clients=[client, nested], contexts=[tmux_p
 titled = {**client, "session_name": "0", "window_name": "pi"}
 gh = {"title": "tmux:/private/tmp/tmux-501/default:/dev/pts/1"}
 assert want("com.mitchellh.ghostty", term=gh, clients=[titled], contexts=[tmux_pi]) == "rime"
+assert (
+    want("com.mitchellh.ghostty", term=gh, clients=[{**titled, "pane_unfocused": "1"}], contexts=[tmux_pi])
+    == "ascii"
+)
 # An unidentified window permits manual Chinese instead of forcing ASCII.
 assert (
     want("com.mitchellh.ghostty", term={"title": "keke@deck ~"}, clients=[titled], contexts=[tmux_pi])

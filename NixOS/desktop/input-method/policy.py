@@ -21,7 +21,8 @@ def _fresh(client, now):
 
 def _blocked(client):
     return (
-        client.get("pane_in_mode") == "1"
+        client.get("pane_unfocused") == "1"
+        or client.get("pane_in_mode") == "1"
         or client.get("client_prefix") == "1"
         or client.get("client_key_table") not in ("root", "", None)
     )
