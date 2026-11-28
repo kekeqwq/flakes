@@ -220,6 +220,7 @@ in
       }
     ];
     casks = [
+      "pycharm"
       "workbuddy-ai"
       "ghostty"
       "dingtalk"
