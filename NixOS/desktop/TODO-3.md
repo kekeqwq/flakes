@@ -26,7 +26,7 @@
 
 - `~/.local/bin/keke-appearance auto|light|dark` 切换；`status` 查询，`reconcile` 重试刷新。持久模式与当前资源位于 `$XDG_STATE_HOME/keke-appearance/`（默认 `~/.local/state`）。状态串行更新，核心切换失败恢复旧主题；非核心组件刷新失败后，控制中心显示 `Reload incomplete`，可以重选当前模式。
 - `desktop-appearance.service` 在 Niri 图形会话启动时补算。用户级 timer 监听当地 07:00 / 18:00、系统时间和时区变化；挂起中跨过时点则唤醒后补触发。这里没有额外的轮询进程。
-- GTK4/libadwaita 和 Qt/Kvantum 的现有窗口不保证重新载入样式；新进程会读取当前配色，不为换色重启应用。Fcitx5 Classic UI 通过 portal 的 `color-scheme` 信号选 Latte Sky / Mocha Mauve。应用主题时只通知在运行的 Classic UI 重新读取候选框配置，不重启 Fcitx5 或重新部署 Rime，保留词库和输入状态。已锁定的屏幕不会实时换色；下次正常锁屏取当时的配色。亮暗均使用淡紫色调的半透明圆底来保护时钟对比度，认证和壁纸仍分离。
+- GTK4/libadwaita 和 Qt/Kvantum 的现有窗口不保证重新载入样式；新进程会读取当前配色，不为换色重启应用。Fcitx5 Classic UI 与桌面使用同一个有效配色链接，直接指定 Latte Sky / Mocha Mauve。Surface 实测 portal 报暗色时 Classic UI 仍留在浅色，因此不依赖其独立暗色判定。切换时通知 Classic UI 重读并检查其运行中配置，不重启 Fcitx5 或重新部署 Rime，保留词库和输入状态。已锁定的屏幕不会实时换色；下次正常锁屏取当时的配色。亮暗均使用淡紫色调的半透明圆底来保护时钟对比度，认证和壁纸仍分离。
 - Waybar 的托盘与其他模块共用胶囊底色，不覆盖 Telegram 和输入法的动态图标。GTK、Rofi 和托盘按配色使用 Latte 的 `Papirus-Light` 或 Mocha 的 `Papirus-Dark`；品牌应用图标允许保留原色。Niri 焦点环、Rofi 选中项和 Waybar 当前工作区使用 Latte 天蓝 / Mocha 淡紫；Waybar 的浅色时钟和控制中心图标用对比度更高的深蓝。控制中心独立显示持久模式（高亮）与有效主题（文字），Emacs 刷新会核对现有 GUI frame 的实际背景色，不再仅以调用成功为准。用户 Emacs 配置中新建 frame 的主题钩子同样需尊重 `flakes-appearance-apply`，不能在 Linux 上无条件重设 Mocha；独立 dotfiles 试验提交 `3c70d9d` 实现了这个衔接。
 
 ### Surface 已验证（未切换系统代）

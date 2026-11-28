@@ -7,6 +7,14 @@
 }:
 let
   shared = ../../System/Common/input-method;
+  hm = config.home-manager.users.${config.myuser.name};
+  classicUI =
+    mode:
+    pkgs.writeText "fcitx5-classicui-${mode}.conf" ''
+      Theme=${if mode == "light" then "catppuccin-latte-sky" else "catppuccin-mocha-mauve"}
+      UseDarkTheme=False
+      UseAccentColor=False
+    '';
   rimeData = import ./input-method/rime-data.nix { inherit pkgs; };
   # Reuse the shared reporter so tmux/pane identity matches macOS.
   tmuxReporter = import (shared + "/reporter.nix") { inherit pkgs; };
@@ -63,6 +71,12 @@ in
     };
   };
 
+  # Use the same palette symlink as Waybar and GTK. Fcitx5's portal
+  # subscriber has selected Latte even when this session reports prefer-dark.
+  my.desktop.appearance.files = lib.genAttrs [ "light" "dark" ] (mode: {
+    "fcitx5-classicui.conf" = classicUI mode;
+  });
+
   # Manage individual static files, not the whole Rime directory. userdb,
   # installation.yaml, user.yaml and build caches remain local to the instance.
   myuser.hm = {
@@ -101,12 +115,7 @@ in
       };
       "fcitx5/conf/classicui.conf" = {
         force = true;
-        text = ''
-          Theme=catppuccin-latte-sky
-          DarkTheme=catppuccin-mocha-mauve
-          UseDarkTheme=True
-          UseAccentColor=False
-        '';
+        source = hm.lib.file.mkOutOfStoreSymlink "${config.my.desktop.appearance.root}/current/fcitx5-classicui.conf";
       };
     };
     # The wrapper's data dir is not always searched before Qt falls back to

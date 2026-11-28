@@ -49,15 +49,22 @@ def active(unit):
     return subprocess.run(["systemctl", "--user", "is-active", "--quiet", unit], timeout=5).returncode == 0
 
 
-def refresh_fcitx():
-    """Reload only the candidate UI; let its portal monitor choose the palette."""
+def refresh_fcitx(mode):
+    """Apply and verify the matching Classic UI config, without touching Rime."""
     name = "org.fcitx.Fcitx5"
-    bus = ("busctl", "--user", "--auto-start=no", "call")
-    owner = command(*bus, "org.freedesktop.DBus", "/org/freedesktop/DBus",
+    bus = ("busctl", "--user", "--auto-start=no")
+    controller = (name, "/controller", "org.fcitx.Fcitx.Controller1")
+    owner = command(*bus, "call", "org.freedesktop.DBus", "/org/freedesktop/DBus",
                     "org.freedesktop.DBus", "NameHasOwner", "s", name)
-    if owner == "b true":
-        command(*bus, name, "/controller", "org.fcitx.Fcitx.Controller1",
-                "ReloadAddonConfig", "s", "classicui")
+    if owner != "b true":
+        return
+    command(*bus, "call", *controller, "ReloadAddonConfig", "s", "classicui")
+    response = command(*bus, "--json=short", "call", *controller,
+                       "GetConfig", "s", "fcitx://config/addon/classicui")
+    config = json.loads(response)["data"][0]["data"]
+    expected = "catppuccin-latte-sky" if mode == "light" else "catppuccin-mocha-mauve"
+    if config["Theme"]["data"] != expected or config["UseDarkTheme"]["data"] != "False":
+        raise RuntimeError("Fcitx5 did not select the requested candidate theme")
 
 
 def interface(mode):
@@ -132,8 +139,8 @@ def refresh(root, assets, mode, operation, emacs_init):
             except (OSError, subprocess.SubprocessError):
                 failures.append(unit)
         try:
-            refresh_fcitx()
-        except (OSError, subprocess.SubprocessError):
+            refresh_fcitx(mode)
+        except (OSError, subprocess.SubprocessError, RuntimeError, KeyError, IndexError, TypeError, ValueError):
             failures.append("Fcitx5 Classic UI")
         try:
             if active("emacs.service"):

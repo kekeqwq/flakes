@@ -45,6 +45,11 @@ class AppearanceTest(unittest.TestCase):
                 return "'previous'"
             if "NameHasOwner" in args:
                 return "b true"
+            if "GetConfig" in args:
+                light = (self.root / "current").resolve().name == "light"
+                theme = "catppuccin-latte-sky" if light else "catppuccin-mocha-mauve"
+                return json.dumps({"data": [{"data": {"Theme": {"data": theme},
+                                                       "UseDarkTheme": {"data": "False"}}}]})
             if args[0] == "emacsclient":
                 return "latte" if (self.root / "current").resolve().name == "light" else "mocha"
             return ""
@@ -95,10 +100,13 @@ class AppearanceTest(unittest.TestCase):
     def test_fcitx_refresh_only_reloads_classic_ui(self):
         self.switch("light", 12, 0, "light")
         bus_calls = [command for command in self.commands if command[0] == "busctl"]
-        self.assertEqual(len(bus_calls), 2)
+        self.assertEqual(len(bus_calls), 3)
         self.assertEqual(bus_calls[0][-3:], ("NameHasOwner", "s", "org.fcitx.Fcitx5"))
         self.assertEqual(bus_calls[1][-3:], ("ReloadAddonConfig", "s", "classicui"))
+        self.assertEqual(bus_calls[2][-3:], ("GetConfig", "s", "fcitx://config/addon/classicui"))
         self.assertTrue(all("--auto-start=no" in call for call in bus_calls))
+        self.deny = lambda c: "GetConfig" in c
+        self.assertEqual(self.switch("dark", 12, 0, "dark"), ["Fcitx5 Classic UI"])
 
     def test_emacs_non_confirmation_is_visible(self):
         original = appearance.command
