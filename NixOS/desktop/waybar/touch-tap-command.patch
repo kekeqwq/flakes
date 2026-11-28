@@ -31,13 +31,14 @@
  
    bool hasReleaseEvent =
        std::find_if(eventMap_.cbegin(), eventMap_.cend(), [&config](const auto& eventEntry) {
-@@ -200,6 +219,33 @@
-   }
- 
+@@ -202,6 +221,36 @@
    return false;
-+}
-+
+ }
+ 
 +bool AModule::handleTouchTap(GdkEventTouch* e) {
++  // Finger lift can shift by more than GTK's mouse drag threshold, especially
++  // at a screen edge. Use the press target and tolerate that small movement.
++  constexpr double tap_slop = 24.0;
 +  if (e->type == GDK_TOUCH_BEGIN) {
 +    if (tap_sequence_ != nullptr) {
 +      tap_valid_ = false;
@@ -48,12 +49,12 @@
 +      tap_valid_ = true;
 +    }
 +  } else if (e->sequence == tap_sequence_ && tap_sequence_ != nullptr) {
-+    if (gtk_drag_check_threshold(GTK_WIDGET(event_box_.gobj()), tap_x_, tap_y_, e->x, e->y))
++    const double dx = e->x - tap_x_;
++    const double dy = e->y - tap_y_;
++    if (dx * dx + dy * dy > tap_slop * tap_slop)
 +      tap_valid_ = false;
 +    if (e->type == GDK_TOUCH_END || e->type == GDK_TOUCH_CANCEL) {
-+      const bool activate = e->type == GDK_TOUCH_END && tap_valid_ && e->x >= 0 && e->y >= 0 &&
-+                            e->x < event_box_.get_allocated_width() &&
-+                            e->y < event_box_.get_allocated_height();
++      const bool activate = e->type == GDK_TOUCH_END && tap_valid_;
 +      tap_sequence_ = nullptr;
 +      tap_valid_ = false;
 +      if (activate) {
@@ -62,9 +63,11 @@
 +    }
 +  }
 +  return true;
- }
- 
++}
++
  bool AModule::handleToggle(GdkEventButton* const& e) { return handleUserEvent(e); }
+ 
+ bool AModule::handleRelease(GdkEventButton* const& e) { return handleUserEvent(e); }
 --- a/include/AModule.hpp
 +++ b/include/AModule.hpp
 @@ -108,6 +108,11 @@
