@@ -2,7 +2,7 @@
 
 - 实例 `flakes#surface`、主机名 `surface`、原生 AArch64。硬件来自锁定的 `surface.nix`，保留 Denali HHKB、触屏、OLED 和已验收的 0 dB FullIO。
 - 从公共桌面和 server 配置继承用户 `keke`、SSH、sudo 和 PAM；不保留测试机的无凭据登录、专用 SSH 授权文件与 `NOPASSWD`。新装的 `keke` 登录密码或授权公钥须按公共约定私下配置，不能把 Live 的 root 免密带进目标系统。
-- Niri 保留内置 `eDP-1`（2880×1920、120 Hz、缩放 2）的原配置。Sunshine 指定实际连接的外接 `DP-1`（当前 1920×1080、60 Hz），不创建虚拟输出、不设 nginx 代理或路由器转发，UPnP 关闭。拔掉外接屏后如需串流内屏，将目标改回 `eDP-1`。
+- Niri 保留内置 `eDP-1`（2880×1920、120 Hz、缩放 2）的原配置。Sunshine 启动时按 Niri 报告的厂商、型号和序列号选择上口的 Ugreen / SAMZHE / `0x20200210` 外屏（1920×1080、60 Hz），不固定 DP 编号；短暂等待后找不到唯一匹配就用内屏。若在服务启动后插拔外屏，可用 `systemctl --user restart sunshine` 重新选屏。不创建虚拟输出、不设 nginx 代理或路由器转发，UPnP 关闭。FIDO 钥匙仍用下口。
 - 正式首装用 NixOS **27.05**。下列空白盘验收实际锁定 `nixos-unstable-small` 的 `5e50e88b70dff025f88e08f2b56de55137a13fe3`，系统版本为 `27.05.20261127.5e50e88`。该实例采用 `system.stateVersion = "27.05"`，安装后不随升级改变。
 
 ## 磁盘布局

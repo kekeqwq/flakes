@@ -107,7 +107,10 @@ assert lib.all (opt: builtins.elem opt cfg.boot.initrd.luks.devices.cryptroot.cr
   "tries=0"
 ];
 assert cfg.services.sunshine.enable && !cfg.my.sunshine.proxy;
-assert cfg.services.sunshine.settings.output_name == "DP-1";
+assert !(cfg.services.sunshine.settings ? output_name);
+assert lib.hasInfix "sunshine-output.py" cfg.systemd.user.services.sunshine.serviceConfig.ExecStart;
+assert builtins.elem "xdg-desktop-portal.service" cfg.systemd.user.services.sunshine.after;
+assert nativeTouch;
 assert cfg.services.sunshine.settings.upnp == "disabled";
 assert !(cfg.services.nginx.virtualHosts ? sunshine-proxy);
 assert !cfg.services.qemuGuest.enable;
@@ -130,6 +133,7 @@ assert builtins.all (name: !(builtins.elem name names)) excluded;
 assert builtins.all (p: lib.meta.availableOn surface.pkgs.stdenv.hostPlatform p) packages;
 assert builtins.isString cfg.system.build.toplevel.drvPath;
 assert builtins.isString cfg.system.build.uki.drvPath;
-pkgs.runCommand "surface-formal-desktop-boundaries" { } ''
+pkgs.runCommand "surface-formal-desktop-boundaries" { nativeBuildInputs = [ pkgs.python3 ]; } ''
+  python3 ${./sunshine-output.py} ${../hosts/surface/sunshine-output.py}
   touch "$out"
 ''

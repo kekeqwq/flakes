@@ -19,6 +19,7 @@ in
 {
   imports = [
     ../../NixOS/desktop/baseline.nix
+    ./sunshine-output.nix
     inputs.surface.nixosModules.default
     inputs.surface.nixosModules.denali-native-touch
     inputs.surface.nixosModules.fullio-reference-render
@@ -38,7 +39,7 @@ in
       earlyBrightnessPercent = 100;
     };
     keyboard.hhkb.enable = true;
-    # Isolated native-touch trial with the Next24 GENI transport adaptation.
+    # Native finger touch, accepted on the Next24 transport and response timing.
     touchscreen.native.enable = true;
     privateFirmwareDirectory = "/var/lib/surface-firmware";
     # This device lacks an accessible factory Bluetooth address.
@@ -50,7 +51,6 @@ in
   # Stream the physical external display without creating a virtual output.
   my.sunshine = {
     enable = true;
-    capture = "DP-1";
     proxy = false;
     settings.sunshine_name = "surface";
   };
