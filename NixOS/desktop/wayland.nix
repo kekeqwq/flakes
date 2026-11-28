@@ -386,7 +386,10 @@ in
   myuser.hm.programs.waybar = {
     enable = true;
     package = pkgs.waybar.overrideAttrs (old: {
-      patches = (old.patches or [ ]) ++ [ ./waybar/tray-refresh-icons-on-style.patch ];
+      patches = (old.patches or [ ]) ++ [
+        ./waybar/tray-refresh-icons-on-style.patch
+        ./waybar/touch-tap-command.patch
+      ];
     });
     systemd.enable = true;
     settings = {
@@ -425,6 +428,7 @@ in
           format = "";
           tooltip-format = "Control Center";
           on-click = "${panel}/bin/keke-waybar-panel control";
+          on-touch-tap = "${panel}/bin/keke-waybar-panel control";
         };
 
         "custom/clock" = {

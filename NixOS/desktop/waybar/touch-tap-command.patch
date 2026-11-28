@@ -1,0 +1,81 @@
+--- a/src/AModule.cpp
++++ b/src/AModule.cpp
+@@ -62,10 +62,29 @@
+   if (enable_click || hasUserEvents) {
+     hasUserEvents_ = true;
+     event_box_.add_events(Gdk::BUTTON_PRESS_MASK);
+-    event_box_.signal_button_press_event().connect(sigc::mem_fun(*this, &AModule::handleToggle));
++    event_box_.signal_button_press_event().connect([this](GdkEventButton* event) {
++      // An explicit touch handler owns the tap; don't also dispatch GTK's
++      // emulated click if the backend generates one.
++      if (config_["on-touch-tap"].isString()) {
++        auto* generic = reinterpret_cast<GdkEvent*>(event);
++        auto* source = gdk_event_get_source_device(generic);
++        if (gdk_event_get_pointer_emulated(generic) ||
++            (source && gdk_device_get_source(source) == GDK_SOURCE_TOUCHSCREEN))
++          return true;
++      }
++      return handleToggle(event);
++    });
+   } else {
+     hasUserEvents_ = false;
+   }
++  if (config_["on-touch-tap"].isString()) {
++    event_box_.add_events(Gdk::TOUCH_MASK);
++    g_signal_connect(event_box_.gobj(), "touch-event",
++                     G_CALLBACK(+[](GtkWidget*, GdkEventTouch* event, gpointer data) -> gboolean {
++                       return static_cast<AModule*>(data)->handleTouchTap(event);
++                     }),
++                     this);
++  }
+ 
+   bool hasReleaseEvent =
+       std::find_if(eventMap_.cbegin(), eventMap_.cend(), [&config](const auto& eventEntry) {
+@@ -200,6 +219,33 @@
+   }
+ 
+   return false;
++}
++
++bool AModule::handleTouchTap(GdkEventTouch* e) {
++  if (e->type == GDK_TOUCH_BEGIN) {
++    if (tap_sequence_ != nullptr) {
++      tap_valid_ = false;
++    } else {
++      tap_sequence_ = e->sequence;
++      tap_x_ = e->x;
++      tap_y_ = e->y;
++      tap_valid_ = true;
++    }
++  } else if (e->sequence == tap_sequence_ && tap_sequence_ != nullptr) {
++    if (gtk_drag_check_threshold(GTK_WIDGET(event_box_.gobj()), tap_x_, tap_y_, e->x, e->y))
++      tap_valid_ = false;
++    if (e->type == GDK_TOUCH_END || e->type == GDK_TOUCH_CANCEL) {
++      const bool activate = e->type == GDK_TOUCH_END && tap_valid_ && e->x >= 0 && e->y >= 0 &&
++                            e->x < event_box_.get_allocated_width() &&
++                            e->y < event_box_.get_allocated_height();
++      tap_sequence_ = nullptr;
++      tap_valid_ = false;
++      if (activate) {
++        pid_children_.push_back(util::command::forkExec(config_["on-touch-tap"].asString()));
++      }
++    }
++  }
++  return true;
+ }
+ 
+ bool AModule::handleToggle(GdkEventButton* const& e) { return handleUserEvent(e); }
+--- a/include/AModule.hpp
++++ b/include/AModule.hpp
+@@ -108,6 +108,11 @@
+ 
+  private:
+   bool handleUserEvent(GdkEventButton* const& ev);
++  bool handleTouchTap(GdkEventTouch* event);
++  GdkEventSequence* tap_sequence_ = nullptr;
++  gdouble tap_x_ = 0;
++  gdouble tap_y_ = 0;
++  bool tap_valid_ = false;
+   const bool isTooltip;
+   const bool isExpand;
+   bool hasUserEvents_;
