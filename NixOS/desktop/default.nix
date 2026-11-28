@@ -1,6 +1,20 @@
 { config, lib, ... }:
 {
   options.my.desktop = {
+    appearance = {
+      root = lib.mkOption {
+        type = lib.types.str;
+        internal = true;
+      };
+      command = lib.mkOption {
+        type = lib.types.str;
+        internal = true;
+      };
+      files = lib.mkOption {
+        type = lib.types.attrsOf (lib.types.attrsOf lib.types.path);
+        internal = true;
+      };
+    };
     niri.outputs = lib.mkOption {
       type = lib.types.lines;
       default = "";
@@ -41,6 +55,7 @@
         ./boot-splash.nix
         ./fonts.nix
         ./theme.nix
+        ./appearance.nix
         ./pkgs.nix
         ./input-method.nix
         ./mimeapps.nix

@@ -6,6 +6,10 @@
 }:
 let
   wallpaper = import ./wallpaper-runtime.nix { inherit config pkgs lib; };
+  appearance = config.my.desktop.appearance;
+  hm = config.home-manager.users.${config.myuser.name};
+  paint = import ./appearance-palette.nix;
+  selected = name: hm.lib.file.mkOutOfStoreSymlink "${appearance.root}/current/${name}";
   displayWallpaper = pkgs.writeShellScript "display-wallpaper" ''
     ${wallpaper.resolve}
     exec ${pkgs.swaybg}/bin/swaybg -i "$image" -m fill
@@ -27,28 +31,34 @@ let
     ];
     text = builtins.readFile ./media-notify.sh;
   };
-  niriConfig = pkgs.writeText "niri-unchecked.kdl" (
-    config.my.desktop.niri.outputs
-    + config.my.desktop.niri.extraConfig
-    +
-      builtins.replaceStrings
-        [ "    // SNIPASTE_BINDINGS" "@WAYBAR_RADIUS@" "@MEDIA_NOTIFY@" ]
-        [
-          (lib.optionalString pkgs.stdenv.hostPlatform.isx86_64 ''
-            F3 hotkey-overlay-title="Pin clipboard with Snipaste" {
-                spawn "${lib.getExe (import ./pin-clipboard.nix { inherit pkgs; })}"
-            }
-          '')
-          waybarRadius
-          (lib.getExe mediaNotify)
-        ]
-        (builtins.readFile ./niri/config.kdl)
-  );
-  # Validate the exact complete configuration installed by Home Manager.
-  checkedNiriConfig = pkgs.runCommand "niri-config.kdl" { nativeBuildInputs = [ pkgs.niri ]; } ''
-    niri validate -c ${niriConfig}
-    cp ${niriConfig} "$out"
-  '';
+  niriConfig =
+    mode:
+    pkgs.writeText "niri-${mode}-unchecked.kdl" (
+      paint mode (
+        config.my.desktop.niri.outputs
+        + config.my.desktop.niri.extraConfig
+        +
+          builtins.replaceStrings
+            [ "    // SNIPASTE_BINDINGS" "@WAYBAR_RADIUS@" "@MEDIA_NOTIFY@" ]
+            [
+              (lib.optionalString pkgs.stdenv.hostPlatform.isx86_64 ''
+                F3 hotkey-overlay-title="Pin clipboard with Snipaste" {
+                    spawn "${lib.getExe (import ./pin-clipboard.nix { inherit pkgs; })}"
+                }
+              '')
+              waybarRadius
+              (lib.getExe mediaNotify)
+            ]
+            (builtins.readFile ./niri/config.kdl)
+      )
+    );
+  # Both complete variants include the host's existing output layout and binds.
+  checkedNiriConfig =
+    mode:
+    pkgs.runCommand "niri-${mode}-config.kdl" { nativeBuildInputs = [ pkgs.niri ]; } ''
+      niri validate -c ${niriConfig mode}
+      cp ${niriConfig mode} "$out"
+    '';
   panel = pkgs.keke-waybar-panel;
   clockStatus = pkgs.writeShellScript "waybar-clock" ''
     exec ${pkgs.coreutils}/bin/date '+%I:%M %p' | ${pkgs.gnused}/bin/sed 's/^0//'
@@ -60,8 +70,180 @@ let
       (builtins.readFile ./waybar/network-status.sh)
   );
 
+  waybarCSS = ''
+    * {
+        font-size: 14px;
+        min-height: 0;
+    }
+
+    window#waybar {
+        background: rgba(30, 30, 46, 0.96);
+        color: #cdd6f4;
+        border: 1px solid #45475a;
+        border-radius: ${waybarRadius}px;
+    }
+
+    .modules-left,
+    .modules-right,
+    .modules-center {
+        padding: 4px 6px;
+    }
+
+    #workspaces {
+        margin-left: 4px;
+    }
+
+    #workspaces button {
+        padding: 0;
+        min-width: 28px;
+        min-height: 28px;
+        margin: 0 2px;
+        border: none;
+        box-shadow: none;
+        border-radius: 6px;
+        color: #a6adc8;
+        background: transparent;
+    }
+
+    #workspaces button label {
+        padding: 0;
+        margin: 0;
+        /* Waybar packs labels without expansion: the label itself must
+           occupy the full square, otherwise its glyph stays left-aligned. */
+        min-width: 28px;
+        min-height: 28px;
+    }
+
+    #workspaces button:hover {
+        background-color: #313244;
+        color: #cdd6f4;
+    }
+
+    #workspaces button.active {
+        background: #cba6f7;
+        color: #1e1e2e;
+    }
+
+    #workspaces button.urgent {
+        background-color: #f38ba8;
+        color: #1e1e2e;
+    }
+
+    #window {
+        color: #a6adc8;
+        margin-left: 6px;
+    }
+
+    #clock,
+    #tray,
+    #backlight,
+    #wireplumber,
+    #custom-network,
+    #bluetooth,
+    #battery,
+    #custom-control-center {
+        background: #313244;
+        color: #cdd6f4;
+        border-radius: 8px;
+        padding: 4px 10px;
+        margin-left: 6px;
+    }
+
+    #custom-clock {
+        background: #313244;
+        color: #cba6f7;
+        font-weight: 600;
+        border-radius: 8px;
+        padding: 4px 12px;
+    }
+
+    #custom-control-center {
+        color: #cba6f7;
+        padding: 4px 12px;
+    }
+
+    #backlight {
+        color: #f9e2af;
+    }
+
+    #wireplumber {
+        color: #89b4fa;
+    }
+
+    #custom-network {
+        color: #94e2d5;
+    }
+
+    #bluetooth {
+        color: #b4befe;
+    }
+
+    #battery {
+        color: #a6e3a1;
+    }
+
+    #battery.charging {
+        color: #f9e2af;
+        animation: battery-charge 2s ease-in-out infinite alternate;
+    }
+
+    #battery.low {
+        color: #f38ba8;
+    }
+
+    @keyframes battery-charge {
+        from { color: #f9e2af; }
+        to { color: #a6e3a1; }
+    }
+
+    #tray {
+        padding: 4px 8px;
+    }
+
+    tooltip {
+        background: #1e1e2e;
+        border: 1px solid #45475a;
+        border-radius: 10px;
+        color: #cdd6f4;
+    }
+  '';
+
+  makoConfig = ''
+    anchor=top-right
+    layer=overlay
+    outer-margin=12,12,0,0
+    margin=0,0,8,0
+    padding=10,14
+    width=320
+    border-radius=12
+    border-size=1
+    background-color=#1e1e2ef5
+    text-color=#cdd6f4
+    border-color=#45475a
+    default-timeout=5000
+    max-visible=4
+
+    [urgency=critical]
+    border-color=#f38ba8
+
+    [app-name=keke-media]
+    format=<b>%s</b>
+    progress-color=over #cba6f755
+    border-color=#cba6f7
+    max-icon-size=22
+    actions=0
+    history=0
+    default-timeout=1350
+  '';
+
 in
 {
+  my.desktop.appearance.files = lib.genAttrs [ "light" "dark" ] (mode: {
+    "niri.kdl" = checkedNiriConfig mode;
+    "rofi.rasi" = pkgs.writeText "rofi-${mode}.rasi" (paint mode (builtins.readFile ./rofi-mocha.rasi));
+    "mako.conf" = pkgs.writeText "mako-${mode}.conf" (paint mode makoConfig);
+    "waybar.css" = pkgs.writeText "waybar-${mode}.css" (paint mode waybarCSS);
+  });
   myuser.hm.programs.rofi = {
     enable = true;
     package = pkgs.rofi;
@@ -78,7 +260,7 @@ in
       display-run = "Run";
       display-window = "Windows";
     };
-    theme = ./rofi-mocha.rasi;
+    theme = "keke-appearance";
   };
 
   security.polkit.enable = true;
@@ -95,12 +277,13 @@ in
       "writeBoundary"
     ];
     data = ''
-      ${pkgs.niri}/bin/niri validate -c ${niriConfig}
+      ${pkgs.niri}/bin/niri validate -c ${niriConfig "dark"}
     '';
   };
+  myuser.hm.xdg.dataFile."rofi/themes/keke-appearance.rasi".source = selected "rofi.rasi";
   myuser.hm.xdg.configFile = {
     "niri/config.kdl" = {
-      source = checkedNiriConfig;
+      source = checkedNiriConfig "dark";
       force = true; # Replace the old hand-edited file with the Nix-managed symlink.
     };
   };
@@ -150,34 +333,7 @@ in
     alsa.enable = lib.mkDefault true;
   };
 
-  myuser.hm.services.mako = {
-    enable = true;
-    settings = {
-      anchor = "top-right";
-      layer = "overlay";
-      outer-margin = "12,12,0,0";
-      margin = "0,0,8,0";
-      padding = "10,14";
-      width = 320;
-      border-radius = 12;
-      border-size = 1;
-      background-color = "#1e1e2ef5";
-      text-color = "#cdd6f4";
-      border-color = "#45475a";
-      default-timeout = 5000;
-      max-visible = 4;
-      "urgency=critical".border-color = "#f38ba8";
-      "app-name=keke-media" = {
-        format = "<b>%s</b>";
-        progress-color = "over #cba6f755";
-        border-color = "#cba6f7";
-        max-icon-size = 22;
-        actions = 0;
-        history = 0;
-        default-timeout = 1350;
-      };
-    };
-  };
+  myuser.hm.xdg.configFile."mako/config".source = selected "mako.conf";
   # Use the same bus name for ordinary application notices and the media OSD.
   systemd.user.services.mako = {
     description = "Wayland desktop notifications";
@@ -315,142 +471,6 @@ in
         };
       };
     };
-    style = ''
-      * {
-          font-size: 14px;
-          min-height: 0;
-      }
-
-      window#waybar {
-          background: rgba(30, 30, 46, 0.96);
-          color: #cdd6f4;
-          border: 1px solid #45475a;
-          border-radius: ${waybarRadius}px;
-      }
-
-      .modules-left,
-      .modules-right,
-      .modules-center {
-          padding: 4px 6px;
-      }
-
-      #workspaces {
-          margin-left: 4px;
-      }
-
-      #workspaces button {
-          padding: 0;
-          min-width: 28px;
-          min-height: 28px;
-          margin: 0 2px;
-          border: none;
-          box-shadow: none;
-          border-radius: 6px;
-          color: #a6adc8;
-          background: transparent;
-      }
-
-      #workspaces button label {
-          padding: 0;
-          margin: 0;
-          /* Waybar packs labels without expansion: the label itself must
-             occupy the full square, otherwise its glyph stays left-aligned. */
-          min-width: 28px;
-          min-height: 28px;
-      }
-
-      #workspaces button:hover {
-          background-color: #313244;
-          color: #cdd6f4;
-      }
-
-      #workspaces button.active {
-          background: #cba6f7;
-          color: #1e1e2e;
-      }
-
-      #workspaces button.urgent {
-          background-color: #f38ba8;
-          color: #1e1e2e;
-      }
-
-      #window {
-          color: #a6adc8;
-          margin-left: 6px;
-      }
-
-      #clock,
-      #tray,
-      #backlight,
-      #wireplumber,
-      #custom-network,
-      #bluetooth,
-      #battery,
-      #custom-control-center {
-          background: #313244;
-          color: #cdd6f4;
-          border-radius: 8px;
-          padding: 4px 10px;
-          margin-left: 6px;
-      }
-
-      #custom-clock {
-          background: #313244;
-          color: #cba6f7;
-          font-weight: 600;
-          border-radius: 8px;
-          padding: 4px 12px;
-      }
-
-      #custom-control-center {
-          color: #cba6f7;
-          padding: 4px 12px;
-      }
-
-      #backlight {
-          color: #f9e2af;
-      }
-
-      #wireplumber {
-          color: #89b4fa;
-      }
-
-      #custom-network {
-          color: #94e2d5;
-      }
-
-      #bluetooth {
-          color: #b4befe;
-      }
-
-      #battery {
-          color: #a6e3a1;
-      }
-
-      #battery.charging {
-          color: #f9e2af;
-          animation: battery-charge 2s ease-in-out infinite alternate;
-      }
-
-      #battery.low {
-          color: #f38ba8;
-      }
-
-      @keyframes battery-charge {
-          from { color: #f9e2af; }
-          to { color: #a6e3a1; }
-      }
-
-      #tray {
-          padding: 4px 8px;
-      }
-
-      tooltip {
-          background: #1e1e2e;
-          border: 1px solid #45475a;
-          border-radius: 10px;
-          color: #cdd6f4;
-      }
-    '';
+    style = ''@import url("${appearance.root}/current/waybar.css");'';
   };
 }

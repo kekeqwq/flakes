@@ -178,6 +178,15 @@ assert
   == toString disabled.pkgs.emacs-head-nox;
 assert !off.home-manager.users.keke.programs.swaylock.enable;
 assert !off.home-manager.users.keke.services.swayidle.enable;
+assert !(off.home-manager.users.keke.systemd.user.timers ? desktop-appearance);
+assert
+  c.home-manager.users.keke.systemd.user.timers.desktop-appearance.Timer.OnCalendar == [
+    "*-*-* 07:00:00"
+    "*-*-* 18:00:00"
+  ];
+assert
+  c.home-manager.users.keke.systemd.user.services.desktop-appearance.Unit.ConditionEnvironment
+  == "XDG_CURRENT_DESKTOP=niri";
 assert !(off.home-manager.users.keke.systemd.user.services ? snipaste);
 assert c.home-manager.users.keke.services.swayidle.enable;
 assert
@@ -291,7 +300,11 @@ pkgs.runCommand "desktop-module-boundaries"
     headlessSystem = builtins.unsafeDiscardStringContext off.system.build.toplevel.drvPath;
     niriConfig = c.home-manager.users.keke.xdg.configFile."niri/config.kdl".source;
     lockWallpaper = c.home-manager.users.keke.programs.swaylock.settings.image;
-    nativeBuildInputs = [ pkgs.librime ];
+    nativeBuildInputs = [
+      pkgs.librime
+      pkgs.python3
+    ];
+    appearance = c.system.build.desktopAppearance;
     rimeData = builtins.head (
       builtins.filter (p: (p.pname or "") == "fcitx5-rime") c.i18n.inputMethod.fcitx5.addons
     );
@@ -303,6 +316,8 @@ pkgs.runCommand "desktop-module-boundaries"
     test -n "$genericSystem"
     test -n "$headlessSystem"
     test -s "$niriConfig"
+    test -x "$appearance/bin/keke-appearance"
+    python3 ${./desktop-appearance.py} ${../NixOS/desktop/appearance.py}
     # Realize and retain the PNG itself, not a discarded source-tree string.
     test -s "$lockWallpaper"
     # Prove a new instance can build the selected schema without copying any

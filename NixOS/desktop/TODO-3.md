@@ -1,6 +1,6 @@
 # TODO-#3：Linux 桌面亮暗热切换
 
-状态：待实现。先在 Surface 验证；功能属于共享 `NixOS/desktop/`，不按主机名分支，不修改硬件 flake、内核或 macOS 的外观策略。启用和回退不需要重启电脑或注销桌面。
+状态：`todo-3` 已实现首版，Surface 已通过可回退的会话测试，尚未永久启用。功能属于共享 `NixOS/desktop/`，不按主机名分支，不修改硬件 flake、内核或 macOS 的外观策略。启用和回退不需要重启电脑或注销桌面。
 
 ## 控制中心行为
 
@@ -21,6 +21,19 @@
 - [ ] GTK3/GTK4、Qt/Kvantum 及 portal：发布一致的系统外观偏好和可用配色。记录只能在启动时读样式的第三方应用；不为换色强行结束应用。
 - [ ] Ghostty：保留原生 Latte/Mocha 双主题，验证同一个已打开的终端窗口响应 Linux 外观信号，不断开会话。Emacs：让正在运行的进程或 daemon 的既有与新 frame 跟随，不重启，不丢缓冲区。
 - [ ] 锁屏：新锁会话取当前配色；已经锁定时跨过时间边界，若支持实时刷新，必须在原锁会话内重绘，绝不终止锁屏或绕过密码/Key 认证。Plymouth 开关机动画保持原样、不读时间或会话外观。壁纸选择独立。
+
+## 实现与试用
+
+- `~/.local/bin/keke-appearance auto|light|dark` 切换；`status` 查询，`reconcile` 重试刷新。持久模式与当前资源位于 `$XDG_STATE_HOME/keke-appearance/`（默认 `~/.local/state`）。状态串行更新，核心切换失败恢复旧主题；非核心组件刷新失败后，控制中心显示 `Reload incomplete`，可以重选当前模式。
+- `desktop-appearance.service` 在 Niri 图形会话启动时补算。用户级 timer 监听当地 07:00 / 18:00、系统时间和时区变化；挂起中跨过时点则唤醒后补触发。这里没有额外的轮询进程。
+- GTK4/libadwaita 和 Qt/Kvantum 的现有窗口不保证重新载入样式；新进程会读取当前配色，不为换色重启应用。Fcitx5 Classic UI 通过 portal 的 `color-scheme` 信号选 Latte/Mocha，保留 Rime 数据及输入状态。已锁定的屏幕不会实时换色；下次正常锁屏取当时的配色，认证和壁纸分离。
+
+### Surface 已验证（未切换系统代）
+
+- 原生 AArch64 构建：两套 Niri 配置都通过 `niri validate`，外观资源、面板及 Home Manager 生成物构建成功；`systemd-analyze --user verify` 通过生成的 timer/service。桌面边界检查已通过 Nix 求值（不是实机验收）。
+- 自动测试覆盖四个时间边界、手动保持、切回自动、并发点击串行化，以及刷新失败后回退和重试。运行 `python3 tests/desktop-appearance.py NixOS/desktop/appearance.py`。
+- 原会话中可回退测试了 Light → Dark → Auto：Niri 接受配置，Waybar/Mako 重载，Rofi 两套主题可解析，portal 依次返回 `2 → 1 → 2`。原配置、Niri PID、锁屏 PID 和 boot ID 核对不变。用临时 GTK 组件验证了两套面板 CSS 可解析，按钮更新同一个控件；独立 Emacs daemon 的 PID 和缓冲区内容在两次换色间保持不变。没有重启、注销、终止现有锁屏或替换用户的 Emacs 进程。
+- 仍待正常启用后目视验收：已打开的控制中心和 Ghostty、用户 Emacs 的 GUI frame、GTK/Qt 新旧窗口、Fcitx 候选框、通知、锁屏对比度以及密码/Key。实际登录和跨边界唤醒仍未试，不为测试主动挂起或改机器时钟。
 
 ## 验收
 

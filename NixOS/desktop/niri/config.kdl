@@ -46,6 +46,9 @@ layout {
         color "#f9e2af80"
     }
 }
+overview {
+    backdrop-color "#1e1e2e"
+}
 // Niri still owns image/png on the clipboard, but never writes a PNG file.
 screenshot-path null
 hotkey-overlay {

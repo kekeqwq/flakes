@@ -41,6 +41,7 @@ let
     builtins.toJSON {
       inherit common;
       private = cfg.extraActions;
+      appearance = config.my.desktop.appearance.command;
     }
   );
 in

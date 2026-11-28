@@ -14,6 +14,7 @@ import sys
 import threading
 import time
 from datetime import datetime
+from pathlib import Path
 
 if os.environ.get("KEKE_PANEL_DEBUG"):
     import faulthandler
@@ -24,7 +25,7 @@ import gi
 
 gi.require_version("Gtk", "3.0")
 gi.require_version("Gdk", "3.0")
-from gi.repository import Gdk, GLib, Gtk  # noqa: E402
+from gi.repository import Gdk, Gio, GLib, Gtk  # noqa: E402
 
 try:
     gi.require_version("GtkLayerShell", "0.1")
@@ -41,6 +42,24 @@ MARGIN = 16
 BAR_TOP = 12
 BAR_HEIGHT = 40
 GAP = 14
+APPEARANCE = Path(os.environ.get("XDG_STATE_HOME", Path.home() / ".local/state")) / "keke-appearance"
+
+
+def appearance_state():
+    try:
+        return json.loads((APPEARANCE / "status.json").read_text())
+    except (OSError, ValueError):
+        return {"mode": "dark", "effective": "dark", "errors": []}
+
+
+def watch_appearance(callback):
+    try:
+        monitor = Gio.File.new_for_path(str(APPEARANCE)).monitor_directory(Gio.FileMonitorFlags.WATCH_MOVES, None)
+    except GLib.Error:
+        return None
+    monitor.connect("changed", lambda _m, path, other, _event: callback()
+                    if "status.json" in (path.get_basename(), other.get_basename() if other else None) else None)
+    return monitor
 
 
 def run(*cmd, timeout=3):
@@ -508,6 +527,23 @@ class Control(Gtk.Box):
         self.stateful = []
         self.wallpaper_modes = {}
         self.wallpaper_ctl = None
+        self.appearance_ctl = spec.get("appearance")
+        self.appearance_buttons = {}
+        self.appearance_monitor = None
+        if isinstance(self.appearance_ctl, str) and os.path.isabs(self.appearance_ctl):
+            self.appearance_label = Gtk.Label(xalign=0, wrap=True)
+            menu.pack_start(self.appearance_label, False, False, 0)
+            row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6, homogeneous=True)
+            for mode, label in (("light", "Light"), ("dark", "Dark"), ("auto", "Auto")):
+                button = Gtk.Button(label=label)
+                button.get_style_context().add_class("keke-action")
+                button.connect("clicked", lambda _button, value=mode: self.set_appearance(value))
+                row.pack_start(button, True, True, 0)
+                self.appearance_buttons[mode] = button
+            menu.pack_start(row, False, False, 0)
+            self.refresh_appearance()
+            self.appearance_monitor = watch_appearance(self.refresh_appearance)
+            self.connect("destroy", lambda *_: self.appearance_monitor.cancel() if self.appearance_monitor else None)
         for section in ("common", "private"):
             if section == "private" and spec[section]:
                 menu.pack_start(Gtk.Separator(), False, False, 6)
@@ -574,6 +610,42 @@ class Control(Gtk.Box):
         self.refresh_state()
         self.stack.connect("notify::visible-child", self.refresh_state)
         self.stack.connect("notify::visible-child", lambda *_: self.reflow())
+
+    def refresh_appearance(self):
+        state = appearance_state()
+        names = {"auto": "Auto", "light": "Light", "dark": "Dark"}
+        mode = state.get("mode")
+        current = state.get("effective")
+        label = f"Appearance · {names.get(mode, '?')} ({names.get(current, '?')})"
+        if state.get("errors"):
+            label += " · Reload incomplete"
+        self.appearance_label.set_text(label)
+        for name, button in self.appearance_buttons.items():
+            style = button.get_style_context()
+            (style.add_class if mode == name else style.remove_class)("suggested")
+        self.reflow()
+
+    def set_appearance(self, mode):
+        try:
+            process = Gio.Subprocess.new([self.appearance_ctl, mode],
+                Gio.SubprocessFlags.STDOUT_SILENCE | Gio.SubprocessFlags.STDERR_PIPE)
+        except GLib.Error as exc:
+            self.appearance_label.set_text(str(exc))
+            return
+
+        def done(proc, result):
+            if self.in_destruction() or not self.get_parent():
+                return
+            try:
+                _, _, error = proc.communicate_utf8_finish(result)
+                if proc.get_successful():
+                    self.refresh_appearance()
+                else:
+                    self.appearance_label.set_text(error.strip() or "Appearance switch failed")
+            except GLib.Error as exc:
+                self.appearance_label.set_text(str(exc))
+
+        process.communicate_utf8_async(None, None, done)
 
     @staticmethod
     def state_ready(path):
@@ -918,11 +990,25 @@ def main():
     with open(PIDFILE, "w") as handle:
         handle.write(str(os.getpid()))
 
-    provider = Gtk.CssProvider()
-    provider.load_from_path(os.environ["KEKE_PANEL_CSS"])
-    Gtk.StyleContext.add_provider_for_screen(
-        Gdk.Screen.get_default(), provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
-    )
+    screen = Gdk.Screen.get_default()
+    provider = None
+
+    def reload_style():
+        nonlocal provider
+        theme = APPEARANCE / "current/panel.css"
+        next_provider = Gtk.CssProvider()
+        try:
+            next_provider.load_from_path(str(theme) if theme.is_file() else os.environ["KEKE_PANEL_CSS"])
+        except GLib.Error as exc:
+            print(f"panel appearance: {exc}", file=sys.stderr)
+            return
+        Gtk.StyleContext.add_provider_for_screen(screen, next_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+        if provider is not None:
+            Gtk.StyleContext.remove_provider_for_screen(screen, provider)
+        provider = next_provider
+
+    reload_style()
+    appearance_monitor = watch_appearance(reload_style)
 
     def bye(*_args):
         try:
@@ -943,6 +1029,8 @@ def main():
     signal.signal(signal.SIGINT, terminate)
     panels = PanelGroup(section)
     Gtk.main()
+    if appearance_monitor:
+        appearance_monitor.cancel()
     panels.close()
     bye()
 

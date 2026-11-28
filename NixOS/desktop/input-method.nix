@@ -102,7 +102,7 @@ in
       "fcitx5/conf/classicui.conf" = {
         force = true;
         text = ''
-          Theme=catppuccin-mocha-mauve
+          Theme=catppuccin-latte-mauve
           DarkTheme=catppuccin-mocha-mauve
           UseDarkTheme=True
         '';
@@ -112,6 +112,8 @@ in
     # its own palette, so link the theme into the user data dir explicitly.
     # Inherit Fontconfig's language/emoji policy through the stock theme; do
     # not override per-app fonts here.
+    xdg.dataFile."fcitx5/themes/catppuccin-latte-mauve".source =
+      "${pkgs.catppuccin-fcitx5}/share/fcitx5/themes/catppuccin-latte-mauve";
     xdg.dataFile."fcitx5/themes/catppuccin-mocha-mauve".source =
       "${pkgs.catppuccin-fcitx5}/share/fcitx5/themes/catppuccin-mocha-mauve";
     xdg.dataFile."fcitx5/rime/default.custom.yaml" = {

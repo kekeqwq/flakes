@@ -1,26 +1,48 @@
-{ pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 let
-  gtkTheme = pkgs.catppuccin-gtk.override {
-    variant = "mocha";
-    accents = [ "mauve" ];
-    size = "standard";
-    tweaks = [ "rimless" ];
-  };
+  flavors = [
+    "latte"
+    "mocha"
+  ];
+  theme =
+    variant:
+    pkgs.catppuccin-gtk.override {
+      inherit variant;
+      accents = [ "mauve" ];
+      size = "standard";
+      tweaks = [ "rimless" ];
+    };
+  hm = config.home-manager.users.${config.myuser.name};
+  selected =
+    file: hm.lib.file.mkOutOfStoreSymlink "${config.my.desktop.appearance.root}/current/${file}";
+  gtk4 =
+    mode:
+    let
+      flavor = if mode == "light" then "latte" else "mocha";
+    in
+    "${theme flavor}/share/themes/catppuccin-${flavor}-mauve-standard+rimless/gtk-4.0";
 in
 {
   programs.dconf.enable = true;
+  my.desktop.appearance.files = lib.genAttrs [ "light" "dark" ] (mode: {
+    "gtk4.css" = "${gtk4 mode}/gtk.css";
+    "gtk4-assets" = "${gtk4 mode}/assets";
+  });
   myuser.hm = {
+    home.packages = map theme flavors;
     gtk = {
       enable = true;
-      # Generic families deliberately resolve through the system Fontconfig
-      # policy (MonoLisa/JinKai05), not a GTK/CSS hardcoded UI font.
+      # Generic families deliberately resolve through Fontconfig, not a CSS
+      # override. Appearance comes from the session's GSettings, not a forced
+      # GTK_THEME variable or a permanently dark GTK4 stylesheet.
       font = {
         name = "sans-serif";
         size = 11;
-      };
-      theme = {
-        name = "catppuccin-mocha-mauve-standard+rimless";
-        package = gtkTheme;
       };
       iconTheme = {
         name = "Papirus-Dark";
@@ -29,19 +51,10 @@ in
           accent = "mauve";
         };
       };
-      gtk3.extraConfig.gtk-application-prefer-dark-theme = true;
-      gtk4.theme = null;
     };
-    # Libadwaita ignores GTK3 themes; install the matching GTK4 palette explicitly.
-    xdg.configFile."gtk-4.0/gtk.css".source =
-      "${gtkTheme}/share/themes/catppuccin-mocha-mauve-standard+rimless/gtk-4.0/gtk.css";
-    xdg.configFile."gtk-4.0/assets".source =
-      "${gtkTheme}/share/themes/catppuccin-mocha-mauve-standard+rimless/gtk-4.0/assets";
     dconf.settings."org/gnome/desktop/interface" = {
-      color-scheme = "prefer-dark";
       font-name = "sans-serif 11";
       monospace-font-name = "monospace 11";
-      gtk-theme = "catppuccin-mocha-mauve-standard+rimless";
       icon-theme = "Papirus-Dark";
       cursor-theme = "Bibata-Modern-Ice";
     };
@@ -51,14 +64,21 @@ in
       style.name = "kvantum";
       kvantum = {
         enable = true;
-        settings.General.theme = "catppuccin-mocha-mauve";
-        themes = [
-          (pkgs.catppuccin-kvantum.override {
-            variant = "mocha";
+        themes = map (
+          variant:
+          pkgs.catppuccin-kvantum.override {
+            inherit variant;
             accent = "mauve";
-          })
-        ];
+          }
+        ) flavors;
       };
+    };
+    # libadwaita cannot reliably re-read a user stylesheet in an open process.
+    # Future GTK4 launches keep the matching Catppuccin stylesheet and assets.
+    xdg.configFile = {
+      "gtk-4.0/gtk.css".source = selected "gtk4.css";
+      "gtk-4.0/assets".source = selected "gtk4-assets";
+      "Kvantum/kvantum.kvconfig".source = lib.mkForce (selected "kvantum.kvconfig");
     };
     home.pointerCursor = {
       enable = true;

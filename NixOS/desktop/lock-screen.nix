@@ -26,7 +26,21 @@ let
       trap 'rm -f -- "$snapshot"' EXIT
       cp -- "$image" "$snapshot"
       ${wallpaper.slideEnv}
-      swaylock --image "$snapshot" --daemonize
+      appearance=$(readlink ${lib.escapeShellArg "${config.my.desktop.appearance.root}/current"} || :)
+      colors=()
+      if [[ ''${appearance##*/} == light ]]; then
+        # Contrast against any wallpaper without altering the secure lock or
+        # the selected wallpaper itself. An existing lock is never restarted.
+        colors=(
+          --color eff1f5 --inside-color eff1f5ee --inside-clear-color eff1f5ee
+          --inside-ver-color eff1f5ee --inside-wrong-color eff1f5ee
+          --text-color 4c4f69 --text-clear-color 4c4f69
+          --text-ver-color 8839ef --text-wrong-color d20f39
+          --ring-ver-color 8839ef --ring-wrong-color d20f39
+          --key-hl-color df8e1d --bs-hl-color d20f39
+        )
+      fi
+      swaylock "''${colors[@]}" --image "$snapshot" --daemonize
       ready="$XDG_RUNTIME_DIR/screen-lock.ready"
       printf '%s\n' "$$" > "$ready.$$"
       mv -f "$ready.$$" "$ready"
