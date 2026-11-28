@@ -35,6 +35,7 @@
 - 自动测试覆盖四个时间边界、手动保持、切回自动、并发点击串行化，以及刷新失败后回退和重试。运行 `python3 tests/desktop-appearance.py NixOS/desktop/appearance.py`。
 - 原会话中可回退测试了 Light → Dark → Auto：Niri 接受配置，Waybar/Mako 重载，Rofi 两套主题可解析，portal 依次返回 `2 → 1 → 2`。原配置、Niri PID、锁屏 PID 和 boot ID 核对不变。用临时 GTK 组件验证了两套面板 CSS 可解析，按钮更新同一个控件；独立 Emacs daemon 的 PID 和缓冲区内容在两次换色间保持不变。没有重启、注销、终止现有锁屏或替换用户的 Emacs 进程。
 - Fcitx5 AArch64 隔离 X11 渲染回归：同一候选框保持打开且不再敲键，未打补丁时 Dark → Light 仍渲染 Mocha，Light → Dark 仍渲染 Latte；打补丁后实测像素在背景 `#313244` ↔ `#ccd0da`、选中 `#cba6f7` ↔ `#04a5e5` 间立即改变。隔离 Wayland 服务端候选框也通过双向像素验证。另在同一 AArch64 GLib/GIO 上复现了 GTK 客户端配置监听差异：替换上级链接无事件，原子替换 `classicui.conf` 发出客户端接受的 `created` 事件。Ghostty 实际候选框仍单独目视验收。
+- Ghostty 重载提示和尺寸浮层使用独立的 Latte/Mocha CSS，随原生配色信号软重载，不走 Mako，也不依赖 GTK4 启动时读入的主题。Surface AArch64 的隔离 Wayland 实测：固定 GTK4 用户样式为 Latte，在同一 Ghostty 进程注入 portal Light → Dark → Light 事件，两个浮层背景均为 `#e6e9ef` → `#313244` → `#e6e9ef`。每轮先截图尺寸浮层，随后手动触发重载提示以截图；尺寸浮层不依赖这次手动重载。真实桌面验收另计。
 - 仍待正常启用后目视验收：已打开的控制中心和 Ghostty、用户 Emacs 的 GUI frame、GTK/Qt 新旧窗口、Fcitx 候选框、通知、锁屏对比度以及密码/Key。实际登录和跨边界唤醒仍未试，不为测试主动挂起或改机器时钟。
 
 ## 验收

@@ -13,6 +13,9 @@ let
     "panel.css" = pkgs.writeText "panel-${mode}.css" (
       paint mode (builtins.readFile ../../pkgs/keke-waybar-panel/panel.css)
     );
+    "ghostty-overlays.css" = pkgs.writeText "ghostty-overlays-${mode}.css" (
+      paint mode (builtins.readFile ./ghostty-overlays.css)
+    );
     "kvantum.kvconfig" = pkgs.writeText "kvantum-${mode}.kvconfig" ''
       [General]
       theme=catppuccin-${if mode == "light" then "latte" else "mocha"}-mauve
@@ -71,6 +74,26 @@ in
   system.build.desktopAppearance = cli;
   myuser.hm = {
     home.file.".local/bin/keke-appearance".source = lib.getExe cli;
+    programs.ghostty.settings.gtk-custom-css = [ "${root}/current/ghostty-overlays.css" ];
+    # Reload just the config of an existing GTK app when a generation changes
+    # it. Normal palette changes are handled by Ghostty's GTK color-scheme
+    # signal and don't need a reload (or an extra toast).
+    home.activation.reloadGhosttyAppearance = inputs.home-manager.lib.hm.dag.entryAfter [ "linkGeneration" ] ''
+      if ! ${lib.getExe' pkgs.diffutils "cmp"} -s \
+        "''${oldGenPath:-/nonexistent}/home-files/.config/ghostty/config" \
+        "$newGenPath/home-files/.config/ghostty/config"; then
+        run ${pkgs.writeShellScript "reload-ghostty-config-if-running" ''
+          busctl=${lib.getExe' pkgs.systemd "busctl"}
+          app=com.mitchellh.ghostty
+          owner=$("$busctl" --user call org.freedesktop.DBus /org/freedesktop/DBus \
+            org.freedesktop.DBus NameHasOwner s "$app" 2>/dev/null) || exit 0
+          [[ "$owner" == 'b true' ]] || exit 0
+          "$busctl" --user --auto-start=no --timeout=4s call "$app" /com/mitchellh/ghostty \
+            org.gtk.Actions Activate 'sava{sv}' reload-config 0 0 \
+            || echo 'Ghostty config installed; the running window has not reloaded it yet.' >&2
+        ''}
+      fi
+    '';
     home.activation.seedAppearance =
       inputs.home-manager.lib.hm.dag.entryBetween [ "linkGeneration" ] [ "writeBoundary" ]
         ''

@@ -1,0 +1,15 @@
+/* Ghostty's in-window overlays, not freedesktop/Mako notifications.
+ * Ghostty soft-reloads this stylesheet after the portal's scheme changes. */
+toast,
+label.background.resize-overlay {
+  background: #313244;
+  color: #cdd6f4;
+}
+
+toast {
+  border: 1px solid #585b70;
+}
+
+label.background.resize-overlay {
+  outline-color: #585b70;
+}
