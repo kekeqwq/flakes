@@ -20,6 +20,7 @@ in
   imports = [
     ../../NixOS/desktop/baseline.nix
     inputs.surface.nixosModules.default
+    inputs.surface.nixosModules.denali-native-touch
     inputs.surface.nixosModules.fullio-reference-render
     inputs.surface.nixosModules.fullio-reference-clock-audit
   ];
@@ -37,6 +38,7 @@ in
       earlyBrightnessPercent = 100;
     };
     keyboard.hhkb.enable = true;
+    touchscreen.native.enable = true;
     privateFirmwareDirectory = "/var/lib/surface-firmware";
     # This device lacks an accessible factory Bluetooth address.
     bluetoothAddress = "02:11:5A:AD:00:01";
@@ -83,7 +85,8 @@ in
   # device-mapper udev rules and dmsetup even for LUKS directly over Btrfs.
   # The hardware flake owns the single validated internal-boot payload.
   boot.kernelPackages = lib.mkOverride 30 dailyBoot.kernelPackages;
-  hardware.deviceTree.package = lib.mkForce dailyBoot.dtbs;
+  # The explicit native-touch module may replace only this DTB, not the kernel.
+  hardware.deviceTree.package = lib.mkOverride 60 dailyBoot.dtbs;
   # Use the shared desktop Plymouth/FIDO2 path, as on secret-lab.
   boot.kernelParams = [ "nohibernate" ];
   boot.loader.timeout = 5;

@@ -17,9 +17,11 @@ let
 in
 assert surface.pkgs.stdenv.hostPlatform.system == "aarch64-linux";
 assert cfg.my.desktop.enable && cfg.programs.niri.enable;
-assert cfg.services.iptsd.enable;
 assert cfg.surface.devices.denali.enable;
-assert lib.hasSuffix "-surface-fullio-checked-capture" cfg.boot.kernelPackages.kernel.modDirVersion;
+assert cfg.surface.devices.denali.touchscreen.native.enable;
+assert !cfg.services.iptsd.enable && !(cfg.systemd.services ? denali-iptsd);
+assert lib.any (p: lib.hasPrefix "mshw0485_touch-candidate-" p.name) cfg.boot.extraModulePackages;
+assert cfg.boot.kernelPackages.kernel.modDirVersion == "7.4.0-rc4-surface-next-20261124";
 assert builtins.elem "default.target" holder.wantedBy;
 assert builtins.elem "default.target" keeper.wantedBy;
 assert lib.hasSuffix " 0" keeper.serviceConfig.ExecStart;
