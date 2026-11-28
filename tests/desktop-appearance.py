@@ -43,6 +43,8 @@ class AppearanceTest(unittest.TestCase):
                 raise subprocess.CalledProcessError(1, args)
             if args[1:2] == ("get",):
                 return "'previous'"
+            if args[0] == "emacsclient":
+                return "latte" if (self.root / "current").resolve().name == "light" else "mocha"
             return ""
 
         for mock in (patch.object(appearance, "command", fake_command),
@@ -85,6 +87,15 @@ class AppearanceTest(unittest.TestCase):
         self.assertEqual(self.switch("light", 12, 0, "light"), ["waybar.service"])
         self.deny = None
         self.assertEqual(self.switch("reconcile", 12, 0, "light", stored="light"), [])
+
+    def test_emacs_non_confirmation_is_visible(self):
+        original = appearance.command
+
+        def stale(*args):
+            return "mocha" if args[0] == "emacsclient" else original(*args)
+
+        with patch.object(appearance, "command", stale):
+            self.assertEqual(self.switch("light", 12, 0, "light"), ["Emacs"])
 
     def test_rapid_manual_switches_serialize(self):
         original_refresh = appearance.refresh

@@ -37,11 +37,16 @@ let
     };
   };
   common = import ./control-center-actions.nix { inherit pkgs wallpaper; };
+  # Use the graphical user manager's environment, not GTK's app wrapper env.
+  appearanceFromPanel = pkgs.writeShellScript "keke-appearance-from-panel" ''
+    exec ${lib.getExe' pkgs.systemd "systemd-run"} --user --wait --pipe --collect --quiet -- \
+      ${lib.escapeShellArg config.my.desktop.appearance.command} "$@"
+  '';
   actions = pkgs.writeText "control-center-actions.json" (
     builtins.toJSON {
       inherit common;
       private = cfg.extraActions;
-      appearance = config.my.desktop.appearance.command;
+      appearance = appearanceFromPanel;
     }
   );
 in

@@ -530,6 +530,7 @@ class Control(Gtk.Box):
         self.appearance_ctl = spec.get("appearance")
         self.appearance_buttons = {}
         self.appearance_monitor = None
+        self.appearance_pending = False
         if isinstance(self.appearance_ctl, str) and os.path.isabs(self.appearance_ctl):
             self.appearance_label = Gtk.Label(xalign=0, wrap=True)
             menu.pack_start(self.appearance_label, False, False, 0)
@@ -537,6 +538,7 @@ class Control(Gtk.Box):
             for mode, label in (("light", "Light"), ("dark", "Dark"), ("auto", "Auto")):
                 button = Gtk.Button(label=label)
                 button.get_style_context().add_class("keke-action")
+                button.get_style_context().add_class("appearance-choice")
                 button.connect("clicked", lambda _button, value=mode: self.set_appearance(value))
                 row.pack_start(button, True, True, 0)
                 self.appearance_buttons[mode] = button
@@ -618,30 +620,41 @@ class Control(Gtk.Box):
         current = state.get("effective")
         label = f"Appearance · {names.get(mode, '?')} ({names.get(current, '?')})"
         if state.get("errors"):
-            label += " · Reload incomplete"
+            label += " · Reload incomplete: " + ", ".join(state["errors"])
         self.appearance_label.set_text(label)
         for name, button in self.appearance_buttons.items():
             style = button.get_style_context()
-            (style.add_class if mode == name else style.remove_class)("suggested")
+            (style.add_class if mode == name else style.remove_class)("appearance-selected")
         self.reflow()
 
     def set_appearance(self, mode):
+        if self.appearance_pending:
+            return
         try:
             process = Gio.Subprocess.new([self.appearance_ctl, mode],
-                Gio.SubprocessFlags.STDOUT_SILENCE | Gio.SubprocessFlags.STDERR_PIPE)
+                Gio.SubprocessFlags.STDOUT_PIPE | Gio.SubprocessFlags.STDERR_PIPE)
         except GLib.Error as exc:
             self.appearance_label.set_text(str(exc))
             return
 
+        self.appearance_pending = True
+        self.appearance_label.set_text("Appearance · Applying…")
+        for button in self.appearance_buttons.values():
+            button.set_sensitive(False)
+
         def done(proc, result):
             if self.in_destruction() or not self.get_parent():
                 return
+            self.appearance_pending = False
+            for button in self.appearance_buttons.values():
+                button.set_sensitive(True)
             try:
-                _, _, error = proc.communicate_utf8_finish(result)
-                if proc.get_successful():
-                    self.refresh_appearance()
-                else:
+                _, output, error = proc.communicate_utf8_finish(result)
+                self.refresh_appearance()
+                if not proc.get_successful():
                     self.appearance_label.set_text(error.strip() or "Appearance switch failed")
+                elif not output.strip():
+                    self.appearance_label.set_text("Appearance · No status returned")
             except GLib.Error as exc:
                 self.appearance_label.set_text(str(exc))
 

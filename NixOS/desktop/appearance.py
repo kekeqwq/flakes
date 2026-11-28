@@ -123,8 +123,9 @@ def refresh(root, assets, mode, operation, emacs_init):
         try:
             if active("emacs.service"):
                 load = f"(load {json.dumps(str(emacs_init), ensure_ascii=False)} nil 'nomessage)"
-                command("emacsclient", "--eval",
-                        f"(progn (unless (fboundp 'flakes-appearance-apply) {load}) (flakes-appearance-apply))")
+                result = command("emacsclient", "--eval", f"(progn {load} (flakes-appearance-apply))")
+                if result != ("latte" if mode == "light" else "mocha"):
+                    failures.append("Emacs")
         except (OSError, subprocess.SubprocessError):
             failures.append("Emacs")
     return failures

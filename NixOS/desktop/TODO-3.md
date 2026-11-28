@@ -26,7 +26,8 @@
 
 - `~/.local/bin/keke-appearance auto|light|dark` 切换；`status` 查询，`reconcile` 重试刷新。持久模式与当前资源位于 `$XDG_STATE_HOME/keke-appearance/`（默认 `~/.local/state`）。状态串行更新，核心切换失败恢复旧主题；非核心组件刷新失败后，控制中心显示 `Reload incomplete`，可以重选当前模式。
 - `desktop-appearance.service` 在 Niri 图形会话启动时补算。用户级 timer 监听当地 07:00 / 18:00、系统时间和时区变化；挂起中跨过时点则唤醒后补触发。这里没有额外的轮询进程。
-- GTK4/libadwaita 和 Qt/Kvantum 的现有窗口不保证重新载入样式；新进程会读取当前配色，不为换色重启应用。Fcitx5 Classic UI 通过 portal 的 `color-scheme` 信号选 Latte/Mocha，保留 Rime 数据及输入状态。已锁定的屏幕不会实时换色；下次正常锁屏取当时的配色，认证和壁纸分离。
+- GTK4/libadwaita 和 Qt/Kvantum 的现有窗口不保证重新载入样式；新进程会读取当前配色，不为换色重启应用。Fcitx5 Classic UI 通过 portal 的 `color-scheme` 信号选 Latte/Mocha，保留 Rime 数据及输入状态。已锁定的屏幕不会实时换色；下次正常锁屏取当时的配色。亮暗均使用淡紫色调的半透明圆底来保护时钟对比度，认证和壁纸仍分离。
+- Waybar 两套都使用同样的胶囊轮廓；托盘保留对浅色状态图标友好的深色底，不覆盖 Telegram 和输入法的动态图标。控制中心独立显示持久模式（高亮）与有效主题（文字），Emacs 刷新会核对现有 GUI frame 的实际背景色，不再仅以调用成功为准。
 
 ### Surface 已验证（未切换系统代）
 

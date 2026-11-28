@@ -77,7 +77,7 @@ let
     }
 
     window#waybar {
-        background: rgba(30, 30, 46, 0.96);
+        background: rgba(30, 30, 46, 0.94);
         color: #cdd6f4;
         border: 1px solid #45475a;
         border-radius: ${waybarRadius}px;
@@ -144,8 +144,9 @@ let
     #custom-control-center {
         background: #313244;
         color: #cdd6f4;
+        border: 1px solid #45475a;
         border-radius: 8px;
-        padding: 4px 10px;
+        padding: 3px 9px;
         margin-left: 6px;
     }
 
@@ -153,13 +154,14 @@ let
         background: #313244;
         color: #cba6f7;
         font-weight: 600;
+        border: 1px solid #45475a;
         border-radius: 8px;
-        padding: 4px 12px;
+        padding: 3px 11px;
     }
 
     #custom-control-center {
         color: #cba6f7;
-        padding: 4px 12px;
+        padding: 3px 11px;
     }
 
     #backlight {
@@ -197,7 +199,16 @@ let
     }
 
     #tray {
-        padding: 4px 8px;
+        /* SNI pixmaps have their own color and ignore GTK text foreground.
+           Keep one dark contrast surface with the same pill shape in both
+           palettes. That preserves dynamic Telegram and input method icons. */
+        background: @tray_plate@;
+        border-color: @tray_border@;
+        padding: 3px 8px;
+    }
+
+    #tray image {
+        -gtk-icon-shadow: 0 1px 1px rgba(0, 0, 0, 0.55);
     }
 
     tooltip {
@@ -242,7 +253,20 @@ in
     "niri.kdl" = checkedNiriConfig mode;
     "rofi.rasi" = pkgs.writeText "rofi-${mode}.rasi" (paint mode (builtins.readFile ./rofi-mocha.rasi));
     "mako.conf" = pkgs.writeText "mako-${mode}.conf" (paint mode makoConfig);
-    "waybar.css" = pkgs.writeText "waybar-${mode}.css" (paint mode waybarCSS);
+    "waybar.css" = pkgs.writeText "waybar-${mode}.css" (
+      builtins.replaceStrings [ "@tray_plate@" "@tray_border@" ] (
+        if mode == "light" then
+          [
+            "#50536c"
+            "#41435c"
+          ]
+        else
+          [
+            "#313244"
+            "#45475a"
+          ]
+      ) (paint mode waybarCSS)
+    );
   });
   myuser.hm.programs.rofi = {
     enable = true;
@@ -460,8 +484,8 @@ in
         };
 
         tray = {
-          icon-size = 20;
-          spacing = 10;
+          icon-size = 17;
+          spacing = 8;
           # These apps publish pixmaps instead of themed icon names. Override by
           # their actual StatusNotifierItem IDs; keep Telegram's dynamic states.
           icons = {

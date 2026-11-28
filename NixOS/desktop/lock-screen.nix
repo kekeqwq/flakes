@@ -32,10 +32,11 @@ let
         # Contrast against any wallpaper without altering the secure lock or
         # the selected wallpaper itself. An existing lock is never restarted.
         colors=(
-          --color eff1f5 --inside-color eff1f5ee --inside-clear-color eff1f5ee
-          --inside-ver-color eff1f5ee --inside-wrong-color eff1f5ee
+          --color eff1f5 --inside-color ece5f5d9 --inside-clear-color ece5f5d9
+          --inside-ver-color ece5f5d9 --inside-wrong-color ece5f5d9
           --text-color 4c4f69 --text-clear-color 4c4f69
           --text-ver-color 8839ef --text-wrong-color d20f39
+          --ring-color 8839ef44 --ring-clear-color 8839ef44
           --ring-ver-color 8839ef --ring-wrong-color d20f39
           --key-hl-color df8e1d --bs-hl-color d20f39
         )
@@ -89,12 +90,14 @@ in
         indicator-thickness = 4;
         ignore-empty-password = true;
         show-failed-attempts = true;
-        inside-color = "00000000";
-        inside-clear-color = "00000000";
-        inside-ver-color = "00000000";
-        inside-wrong-color = "00000000";
-        ring-color = "00000000";
-        ring-clear-color = "00000000";
+        # Both palettes use the same tinted circular surface and opacity so
+        # clock, date and status stay legible against detailed wallpapers.
+        inside-color = "31263fd9";
+        inside-clear-color = "31263fd9";
+        inside-ver-color = "31263fd9";
+        inside-wrong-color = "31263fd9";
+        ring-color = "cba6f744";
+        ring-clear-color = "cba6f744";
         ring-ver-color = "cba6f7ff";
         ring-wrong-color = "f38ba8ff";
         line-color = "00000000";
