@@ -38,7 +38,8 @@ in
       earlyBrightnessPercent = 100;
     };
     keyboard.hhkb.enable = true;
-    touchscreen.native.enable = true;
+    # Gen 17 bound the native driver, but controller reset-response failed.
+    touchscreen.native.enable = false;
     privateFirmwareDirectory = "/var/lib/surface-firmware";
     # This device lacks an accessible factory Bluetooth address.
     bluetoothAddress = "02:11:5A:AD:00:01";
