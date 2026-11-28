@@ -856,6 +856,7 @@ class Panel(Gtk.Window):
         self.scroller.set_max_content_height(560)
         self.scroller.add(content)
         card.add(self.scroller)
+        card.connect_after("size-allocate", self.extend_card_clip)
         card.connect("draw", self.paint_card)
         # Clicks inside the card must not dismiss it.
         card.connect("button-press-event", lambda *_: True)
@@ -910,6 +911,18 @@ class Panel(Gtk.Window):
         cr.paint()
         cr.set_operator(cairo.OPERATOR_OVER)
         return False
+
+    def extend_card_clip(self, widget, allocation):
+        # GTK clips this windowless widget to its rectangular allocation by
+        # default. Give the CSS shadow room to fade past the 12px card corners
+        # without expanding the card's layout or its clickable area.
+        padding = 48  # Includes the blur and vertical offset in panel.css.
+        clip = Gdk.Rectangle()
+        clip.x = allocation.x - padding
+        clip.y = allocation.y - padding
+        clip.width = allocation.width + 2 * padding
+        clip.height = allocation.height + 2 * padding
+        widget.set_clip(clip)
 
     def paint_card(self, widget, cr):
         allocation = widget.get_allocation()
