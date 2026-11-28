@@ -73,6 +73,8 @@ class AppearanceTest(unittest.TestCase):
         self.switch("dark", 8, 0, "dark")
         self.switch("auto", 8, 0, "light")
         self.assertIn(("gsettings", "set", "org.gnome.desktop.interface", "color-scheme", "prefer-light"), self.commands)
+        for theme in ("Papirus-Light", "Papirus-Dark"):
+            self.assertIn(("gsettings", "set", "org.gnome.desktop.interface", "icon-theme", theme), self.commands)
         self.assertIn(("systemctl", "--user", "reload", "mako.service"), self.commands)
         self.assertTrue(any(c[:2] == ("emacsclient", "--eval") for c in self.commands))
 

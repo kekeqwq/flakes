@@ -14,9 +14,9 @@ let
     ${wallpaper.resolve}
     exec ${pkgs.swaybg}/bin/swaybg -i "$image" -m fill
   '';
-  trayIcons = "${
-    config.home-manager.users.${config.myuser.name}.gtk.iconTheme.package
-  }/share/icons/Papirus-Dark/22x22/panel";
+  iconTheme = mode: if mode == "light" then "Papirus-Light" else "Papirus-Dark";
+  trayIcons = mode: "${hm.gtk.iconTheme.package}/share/icons/${iconTheme mode}/22x22/panel";
+  lightAccent = "#04a5e5";
   # The CSS border and Niri shadow cutout must share a radius.
   waybarRadius = "12";
   mediaNotify = pkgs.writeShellApplication {
@@ -39,7 +39,7 @@ let
         + config.my.desktop.niri.extraConfig
         +
           builtins.replaceStrings
-            [ "    // SNIPASTE_BINDINGS" "@WAYBAR_RADIUS@" "@MEDIA_NOTIFY@" ]
+            [ "    // SNIPASTE_BINDINGS" "@WAYBAR_RADIUS@" "@MEDIA_NOTIFY@" ''active-color "#cba6f7"'' ]
             [
               (lib.optionalString pkgs.stdenv.hostPlatform.isx86_64 ''
                 F3 hotkey-overlay-title="Pin clipboard with Snipaste" {
@@ -48,6 +48,7 @@ let
               '')
               waybarRadius
               (lib.getExe mediaNotify)
+              ''active-color "${if mode == "light" then lightAccent else "#cba6f7"}"''
             ]
             (builtins.readFile ./niri/config.kdl)
       )
@@ -199,16 +200,13 @@ let
     }
 
     #tray {
-        /* SNI pixmaps have their own color and ignore GTK text foreground.
-           Keep one dark contrast surface with the same pill shape in both
-           palettes. That preserves dynamic Telegram and input method icons. */
-        background: @tray_plate@;
-        border-color: @tray_border@;
         padding: 3px 8px;
     }
 
-    #tray image {
-        -gtk-icon-shadow: 0 1px 1px rgba(0, 0, 0, 0.55);
+    /* Waybar renders named SNI symbolic icons with the item's CSS foreground.
+       Don't substitute fixed icons for Telegram or the input method. */
+    #tray > * {
+        color: #cdd6f4;
     }
 
     tooltip {
@@ -251,22 +249,28 @@ in
 {
   my.desktop.appearance.files = lib.genAttrs [ "light" "dark" ] (mode: {
     "niri.kdl" = checkedNiriConfig mode;
-    "rofi.rasi" = pkgs.writeText "rofi-${mode}.rasi" (paint mode (builtins.readFile ./rofi-mocha.rasi));
-    "mako.conf" = pkgs.writeText "mako-${mode}.conf" (paint mode makoConfig);
-    "waybar.css" = pkgs.writeText "waybar-${mode}.css" (
-      builtins.replaceStrings [ "@tray_plate@" "@tray_border@" ] (
-        if mode == "light" then
-          [
-            "#50536c"
-            "#41435c"
-          ]
-        else
-          [
-            "#313244"
-            "#45475a"
-          ]
-      ) (paint mode waybarCSS)
+    "rofi.rasi" = pkgs.writeText "rofi-${mode}.rasi" (
+      ''configuration { icon-theme: "${iconTheme mode}"; }''
+      + "\n"
+      + paint mode (
+        builtins.replaceStrings [ "#cba6f7" "text-color: @bg;" ] (
+          if mode == "light" then
+            [
+              lightAccent
+              "text-color: #17203b;"
+            ]
+          else
+            [
+              "#cba6f7"
+              "text-color: @bg;"
+            ]
+        ) (builtins.readFile ./rofi-mocha.rasi)
+      )
     );
+    "mako.conf" = pkgs.writeText "mako-${mode}.conf" (paint mode makoConfig);
+    "waybar.css" = pkgs.writeText "waybar-${mode}.css" (paint mode waybarCSS);
+    "tray-qbittorrent.svg" = "${trayIcons mode}/qbittorrent-tray.svg";
+    "tray-sunshine.svg" = "${trayIcons mode}/simplescreenrecorder-panel.svg";
   });
   myuser.hm.programs.rofi = {
     enable = true;
@@ -274,7 +278,6 @@ in
     settings = {
       modi = "drun";
       show-icons = true;
-      icon-theme = "Papirus-Dark";
       matching = "fuzzy";
       sort = true;
       drun-display-format = "{name}";
@@ -489,8 +492,8 @@ in
           # These apps publish pixmaps instead of themed icon names. Override by
           # their actual StatusNotifierItem IDs; keep Telegram's dynamic states.
           icons = {
-            qBittorrent = "${trayIcons}/qbittorrent-tray.svg";
-            Sunshine = "${trayIcons}/simplescreenrecorder-panel.svg";
+            qBittorrent = "${appearance.root}/current/tray-qbittorrent.svg";
+            Sunshine = "${appearance.root}/current/tray-sunshine.svg";
           };
         };
       };

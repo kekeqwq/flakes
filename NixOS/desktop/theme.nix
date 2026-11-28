@@ -17,6 +17,28 @@ let
       size = "standard";
       tweaks = [ "rimless" ];
     };
+  iconVariant =
+    flavor:
+    pkgs.catppuccin-papirus-folders.override {
+      inherit flavor;
+      accent = "mauve";
+    };
+  # Install exactly one provider for each theme name. Both full upstream
+  # outputs also ship a directory called Papirus, so don't add both directly.
+  icons = pkgs.linkFarm "catppuccin-papirus-light-and-dark" [
+    {
+      name = "share/icons/Papirus";
+      path = "${iconVariant "mocha"}/share/icons/Papirus";
+    }
+    {
+      name = "share/icons/Papirus-Dark";
+      path = "${iconVariant "mocha"}/share/icons/Papirus-Dark";
+    }
+    {
+      name = "share/icons/Papirus-Light";
+      path = "${iconVariant "latte"}/share/icons/Papirus-Light";
+    }
+  ];
   hm = config.home-manager.users.${config.myuser.name};
   selected =
     file: hm.lib.file.mkOutOfStoreSymlink "${config.my.desktop.appearance.root}/current/${file}";
@@ -46,16 +68,12 @@ in
       };
       iconTheme = {
         name = "Papirus-Dark";
-        package = pkgs.catppuccin-papirus-folders.override {
-          flavor = "mocha";
-          accent = "mauve";
-        };
+        package = icons;
       };
     };
     dconf.settings."org/gnome/desktop/interface" = {
       font-name = "sans-serif 11";
       monospace-font-name = "monospace 11";
-      icon-theme = "Papirus-Dark";
       cursor-theme = "Bibata-Modern-Ice";
     };
     qt = {

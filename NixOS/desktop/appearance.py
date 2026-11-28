@@ -49,14 +49,13 @@ def active(unit):
     return subprocess.run(["systemctl", "--user", "is-active", "--quiet", unit], timeout=5).returncode == 0
 
 
-def set_interface(scheme, theme):
-    schema = "org.gnome.desktop.interface"
-    command("gsettings", "set", schema, "gtk-theme", theme)
-    command("gsettings", "set", schema, "color-scheme", scheme)
-
-
-def gtk_theme(mode):
-    return f"catppuccin-{'latte' if mode == 'light' else 'mocha'}-mauve-standard+rimless"
+def interface(mode):
+    light = mode == "light"
+    return {
+        "gtk-theme": f"catppuccin-{'latte' if light else 'mocha'}-mauve-standard+rimless",
+        "icon-theme": "Papirus-Light" if light else "Papirus-Dark",
+        "color-scheme": "prefer-light" if light else "prefer-dark",
+    }
 
 
 def refresh(root, assets, mode, operation, emacs_init):
@@ -77,14 +76,15 @@ def refresh(root, assets, mode, operation, emacs_init):
     if graphical:
         command("niri", "validate", "-c", str(target / "niri.kdl"))
     schema = "org.gnome.desktop.interface"
-    old_scheme = command("gsettings", "get", schema, "color-scheme")
-    old_theme = command("gsettings", "get", schema, "gtk-theme")
+    desired = interface(mode)
+    old_interface = {key: command("gsettings", "get", schema, key) for key in desired}
     try:
         if changed:
             publish(root, target)
         if graphical:
             command("niri", "msg", "action", "load-config-file", "--path", str(target / "niri.kdl"))
-        set_interface("prefer-light" if mode == "light" else "prefer-dark", gtk_theme(mode))
+        for key, value in desired.items():
+            command("gsettings", "set", schema, key, value)
     except (OSError, subprocess.SubprocessError) as failure:
         rollback = []
         if changed:
@@ -103,7 +103,7 @@ def refresh(root, assets, mode, operation, emacs_init):
                 command("niri", "msg", "action", "load-config-file", "--path", str(old_config))
             except (OSError, subprocess.SubprocessError):
                 rollback.append("Niri")
-        for key, value in (("gtk-theme", old_theme), ("color-scheme", old_scheme)):
+        for key, value in old_interface.items():
             try:
                 command("gsettings", "set", schema, key, value)
             except (OSError, subprocess.SubprocessError):
