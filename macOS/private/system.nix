@@ -220,6 +220,7 @@ in
       }
     ];
     casks = [
+      "workbuddy-ai"
       "ghostty"
       "dingtalk"
       "anki"
