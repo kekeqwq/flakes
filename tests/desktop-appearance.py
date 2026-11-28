@@ -30,10 +30,12 @@ class AppearanceTest(unittest.TestCase):
         self.app = Path(self.tmp.name).resolve()
         self.root = self.app / "state"
         self.assets = self.app / "assets"
+        self.fcitx_config = self.app / "config/fcitx5/conf/classicui.conf"
         for mode in ("light", "dark"):
             directory = self.assets / mode
             directory.mkdir(parents=True)
             (directory / "niri.kdl").write_text(mode)
+            (directory / "fcitx5-classicui.conf").write_text(f"Theme={mode}\n")
         self.commands = []
         self.deny = None
 
@@ -64,10 +66,13 @@ class AppearanceTest(unittest.TestCase):
     def switch(self, mode, hour, minute, expected, *, stored=None):
         Frozen.clock = datetime(2026, 11, 28, hour, minute)
         appearance.main(["--root", str(self.root), "--assets", str(self.assets),
-                         "--emacs-init", str(self.app / "emacs.el"), mode])
+                         "--emacs-init", str(self.app / "emacs.el"),
+                         "--fcitx-config", str(self.fcitx_config), mode])
         self.assertEqual((self.root / "current").resolve(), self.assets / expected)
         status = json.loads((self.root / "status.json").read_text())
         self.assertEqual((status["mode"], status["effective"]), (stored or mode, expected))
+        self.assertFalse(self.fcitx_config.is_symlink())
+        self.assertEqual(self.fcitx_config.read_text(), f"Theme={expected}\n")
         return status["errors"]
 
     def test_mode_transitions(self):
@@ -107,6 +112,16 @@ class AppearanceTest(unittest.TestCase):
         self.assertTrue(all("--auto-start=no" in call for call in bus_calls))
         self.deny = lambda c: "GetConfig" in c
         self.assertEqual(self.switch("dark", 12, 0, "dark"), ["Fcitx5 Classic UI"])
+
+    def test_fcitx_config_migrates_from_symlink_and_replaces_the_file(self):
+        self.fcitx_config.parent.mkdir(parents=True)
+        src = self.assets / "dark/fcitx5-classicui.conf"
+        self.fcitx_config.symlink_to(src)
+        self.switch("prepare", 12, 0, "dark", stored="dark")
+        with self.fcitx_config.open() as previous:
+            self.switch("light", 12, 0, "light")
+            self.assertEqual(previous.read(), "Theme=dark\n")
+        self.assertEqual(src.read_text(), "Theme=dark\n")
 
     def test_emacs_non_confirmation_is_visible(self):
         original = appearance.command

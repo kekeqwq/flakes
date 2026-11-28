@@ -49,6 +49,19 @@ def active(unit):
     return subprocess.run(["systemctl", "--user", "is-active", "--quiet", unit], timeout=5).returncode == 0
 
 
+def materialize_fcitx(target, config):
+    if config is None:
+        return
+    content = (target / "fcitx5-classicui.conf").read_text()
+    # The GTK input method draws its own candidate popup and monitors this
+    # file, not the indirect palette link. Replace the file atomically so GIO
+    # sees CREATED even when GTK has remained open across theme changes.
+    if not config.is_symlink() and config.is_file() and config.read_text() == content:
+        return
+    config.parent.mkdir(parents=True, exist_ok=True)
+    atomic_text(config, content)
+
+
 def refresh_fcitx(mode):
     """Apply and verify the matching Classic UI config, without touching Rime."""
     name = "org.fcitx.Fcitx5"
@@ -76,7 +89,7 @@ def interface(mode):
     }
 
 
-def refresh(root, assets, mode, operation, emacs_init):
+def refresh(root, assets, mode, operation, emacs_init, fcitx_config):
     current = root / "current"
     target = assets / mode
     if not (target / "niri.kdl").is_file():
@@ -86,6 +99,7 @@ def refresh(root, assets, mode, operation, emacs_init):
     if operation == "prepare":
         if changed:
             publish(root, target)
+        materialize_fcitx(target, fcitx_config)
         return []
 
     graphical = os.environ.get("XDG_CURRENT_DESKTOP", "").lower() == "niri"
@@ -131,6 +145,12 @@ def refresh(root, assets, mode, operation, emacs_init):
         raise
 
     failures = []
+    try:
+        materialize_fcitx(target, fcitx_config)
+        if graphical:
+            refresh_fcitx(mode)
+    except (OSError, subprocess.SubprocessError, RuntimeError, KeyError, IndexError, TypeError, ValueError):
+        failures.append("Fcitx5 Classic UI")
     if graphical:
         for unit in ("waybar.service", "mako.service"):
             try:
@@ -138,10 +158,6 @@ def refresh(root, assets, mode, operation, emacs_init):
                     command("systemctl", "--user", "reload", unit)
             except (OSError, subprocess.SubprocessError):
                 failures.append(unit)
-        try:
-            refresh_fcitx(mode)
-        except (OSError, subprocess.SubprocessError, RuntimeError, KeyError, IndexError, TypeError, ValueError):
-            failures.append("Fcitx5 Classic UI")
         try:
             if active("emacs.service"):
                 load = f"(load {json.dumps(str(emacs_init), ensure_ascii=False)} nil 'nomessage)"
@@ -158,6 +174,7 @@ def main(argv=None):
     parser.add_argument("--root", type=Path, required=True)
     parser.add_argument("--assets", type=Path, required=True)
     parser.add_argument("--emacs-init", type=Path, required=True)
+    parser.add_argument("--fcitx-config", type=Path)
     parser.add_argument("action", choices=("prepare", "status", "reconcile", *MODES))
     args = parser.parse_args(argv)
     root = args.root
@@ -172,7 +189,7 @@ def main(argv=None):
                 result = {"mode": selection, "effective": effective(selection, datetime.now()), "errors": []}
         else:
             theme = effective(selection, datetime.now())
-            failures = refresh(root, args.assets, theme, args.action, args.emacs_init)
+            failures = refresh(root, args.assets, theme, args.action, args.emacs_init, args.fcitx_config)
             if args.action in MODES:
                 atomic_text(root / "mode", selection + "\n")
             result = {"mode": selection, "effective": theme, "errors": failures}

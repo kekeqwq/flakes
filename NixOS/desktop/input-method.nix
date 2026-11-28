@@ -7,7 +7,6 @@
 }:
 let
   shared = ../../System/Common/input-method;
-  hm = config.home-manager.users.${config.myuser.name};
   # Remove this once the pinned Fcitx redraws a shown panel after theme reload.
   desktopFcitx = pkgs.qt6Packages.fcitx5-with-addons.override {
     inherit (config.i18n.inputMethod.fcitx5) addons;
@@ -80,8 +79,8 @@ in
     };
   };
 
-  # Use the same palette symlink as Waybar and GTK. Fcitx5's portal
-  # subscriber has selected Latte even when this session reports prefer-dark.
+  # The switcher materializes the selected config into a regular file so
+  # fcitx5-gtk's GFileMonitor sees an event at the configured path.
   my.desktop.appearance.files = lib.genAttrs [ "light" "dark" ] (mode: {
     "fcitx5-classicui.conf" = classicUI mode;
   });
@@ -128,10 +127,6 @@ in
           ShareInputState=No
           PreeditEnabledByDefault=True
         '';
-      };
-      "fcitx5/conf/classicui.conf" = {
-        force = true;
-        source = hm.lib.file.mkOutOfStoreSymlink "${config.my.desktop.appearance.root}/current/fcitx5-classicui.conf";
       };
     };
     home.activation.replaceFcitxBinary =

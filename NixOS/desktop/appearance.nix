@@ -58,7 +58,8 @@ let
     ];
     text = ''
       export XDG_DATA_DIRS="${pkgs.gsettings-desktop-schemas}/share/gsettings-schemas/${pkgs.gsettings-desktop-schemas.name}:''${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
-      exec ${pkgs.python3}/bin/python3 ${./appearance.py} --root ${lib.escapeShellArg root} --assets ${assets} --emacs-init ${emacsIntegration} "$@"
+      exec ${pkgs.python3}/bin/python3 ${./appearance.py} --root ${lib.escapeShellArg root} --assets ${assets} \
+        --emacs-init ${emacsIntegration} --fcitx-config ${lib.escapeShellArg "${hm.xdg.configHome}/fcitx5/conf/classicui.conf"} "$@"
     '';
   };
 in
