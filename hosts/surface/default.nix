@@ -21,7 +21,7 @@ in
     ../../NixOS/desktop/baseline.nix
     ./sunshine-output.nix
     inputs.surface.nixosModules.default
-    inputs.surface.nixosModules.denali-native-touch
+    inputs.surface.nixosModules.denali-qce-experiment
     inputs.surface.nixosModules.fullio-reference-render
     inputs.surface.nixosModules.fullio-reference-clock-audit
   ];
@@ -41,6 +41,8 @@ in
     keyboard.hhkb.enable = true;
     # Native finger touch, accepted on the Next24 transport and response timing.
     touchscreen.native.enable = true;
+    # Isolated ICC sync_state trial; do not change touch or lid behavior.
+    power.disableUnusedQce = true;
     privateFirmwareDirectory = "/var/lib/surface-firmware";
     # This device lacks an accessible factory Bluetooth address.
     bluetoothAddress = "02:11:5A:AD:00:01";
