@@ -15,6 +15,7 @@ let
       patches = (old.patches or [ ]) ++ [ ./input-method/fcitx5-repaint-classicui.patch ];
     });
   };
+  fcitxAutostart = "app-org.fcitx.Fcitx5@autostart.service";
   classicUI =
     mode:
     pkgs.writeText "fcitx5-classicui-${mode}.conf" ''
@@ -89,6 +90,13 @@ in
   # installation.yaml, user.yaml and build caches remain local to the instance.
   myuser.hm = {
     xdg.configFile = {
+      # XDG autostart remains the owner. Override just its package reference so
+      # an already-running session can migrate to the patched executable.
+      "systemd/user/${fcitxAutostart}.d/10-keke-package.conf".text = ''
+        [Service]
+        ExecStart=
+        ExecStart=${desktopFcitx}/bin/fcitx5
+      '';
       "fcitx5/profile" = {
         force = true;
         text = ''
@@ -126,6 +134,23 @@ in
         source = hm.lib.file.mkOutOfStoreSymlink "${config.my.desktop.appearance.root}/current/fcitx5-classicui.conf";
       };
     };
+    home.activation.replaceFcitxBinary =
+      inputs.home-manager.lib.hm.dag.entryAfter [ "reloadSystemd" ]
+        ''
+          run ${pkgs.writeShellScript "replace-fcitx-binary-on-activation" ''
+            set -eu
+            systemctl=${lib.getExe' pkgs.systemd "systemctl"}
+            unit=${lib.escapeShellArg fcitxAutostart}
+            pid=$("$systemctl" --user show "$unit" -p MainPID --value 2>/dev/null) || exit 0
+            [[ "$pid" =~ ^[1-9][0-9]*$ ]] || exit 0
+            running=$(${pkgs.coreutils}/bin/readlink -f "/proc/$pid/exe") || exit 0
+            target=$(${pkgs.coreutils}/bin/readlink -f ${desktopFcitx}/bin/.fcitx5-wrapped)
+            if [[ "$running" != "$target" ]]; then
+              "$systemctl" --user daemon-reload
+              "$systemctl" --user try-restart "$unit"
+            fi
+          ''}
+        '';
     # The wrapper's data dir is not always searched before Qt falls back to
     # its own palette, so link the theme into the user data dir explicitly.
     # Inherit Fontconfig's language/emoji policy through the stock theme; do

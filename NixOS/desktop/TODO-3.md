@@ -26,7 +26,7 @@
 
 - `~/.local/bin/keke-appearance auto|light|dark` 切换；`status` 查询，`reconcile` 重试刷新。持久模式与当前资源位于 `$XDG_STATE_HOME/keke-appearance/`（默认 `~/.local/state`）。状态串行更新，核心切换失败恢复旧主题；非核心组件刷新失败后，控制中心显示 `Reload incomplete`，可以重选当前模式。
 - `desktop-appearance.service` 在 Niri 图形会话启动时补算。用户级 timer 监听当地 07:00 / 18:00、系统时间和时区变化；挂起中跨过时点则唤醒后补触发。这里没有额外的轮询进程。
-- GTK4/libadwaita 和 Qt/Kvantum 的现有窗口不保证重新载入样式；新进程会读取当前配色，不为换色重启应用。Fcitx5 Classic UI 与桌面使用同一个有效配色链接，直接指定 Latte Sky / Mocha Mauve。Surface 实测 portal 报暗色时 Classic UI 仍留在浅色，因此不依赖其独立暗色判定。切换时通知 Classic UI 重读并检查其运行中配置，不重启 Fcitx5 或重新部署 Rime，保留词库和输入状态。已锁定的屏幕不会实时换色；下次正常锁屏取当时的配色。亮暗均使用淡紫色调的半透明圆底来保护时钟对比度，认证和壁纸仍分离。
+- GTK4/libadwaita 和 Qt/Kvantum 的现有窗口不保证重新载入样式；新进程会读取当前配色，不为换色重启应用。Fcitx5 Classic UI 与桌面使用同一个有效配色链接，直接指定 Latte Sky / Mocha Mauve。Surface 实测 portal 报暗色时 Classic UI 仍留在浅色，因此不依赖其独立暗色判定。切换时通知 Classic UI 重读并检查其运行中配置。Fcitx5 5.1.23 的本地补丁会在重载主题时重绘已打开的候选框，不重置正在输入的内容。更新到补丁版本的正式部署会替换一次 Fcitx5 进程；日常换色不重启进程、不重新部署 Rime 或修改词库。已锁定的屏幕不会实时换色；下次正常锁屏取当时的配色。亮暗均使用淡紫色调的半透明圆底来保护时钟对比度，认证和壁纸仍分离。
 - Waybar 的托盘与其他模块共用胶囊底色，不覆盖 Telegram 和输入法的动态图标。GTK、Rofi 和托盘按配色使用 Latte 的 `Papirus-Light` 或 Mocha 的 `Papirus-Dark`；品牌应用图标允许保留原色。Niri 焦点环、Rofi 选中项和 Waybar 当前工作区使用 Latte 天蓝 / Mocha 淡紫；Waybar 的浅色时钟和控制中心图标用对比度更高的深蓝。控制中心独立显示持久模式（高亮）与有效主题（文字），Emacs 刷新会核对现有 GUI frame 的实际背景色，不再仅以调用成功为准。用户 Emacs 配置中新建 frame 的主题钩子同样需尊重 `flakes-appearance-apply`，不能在 Linux 上无条件重设 Mocha；独立 dotfiles 试验提交 `3c70d9d` 实现了这个衔接。
 
 ### Surface 已验证（未切换系统代）
@@ -34,6 +34,7 @@
 - 原生 AArch64 构建：两套 Niri 配置都通过 `niri validate`，外观资源、面板及 Home Manager 生成物构建成功；`systemd-analyze --user verify` 通过生成的 timer/service。桌面边界检查已通过 Nix 求值（不是实机验收）。
 - 自动测试覆盖四个时间边界、手动保持、切回自动、并发点击串行化，以及刷新失败后回退和重试。运行 `python3 tests/desktop-appearance.py NixOS/desktop/appearance.py`。
 - 原会话中可回退测试了 Light → Dark → Auto：Niri 接受配置，Waybar/Mako 重载，Rofi 两套主题可解析，portal 依次返回 `2 → 1 → 2`。原配置、Niri PID、锁屏 PID 和 boot ID 核对不变。用临时 GTK 组件验证了两套面板 CSS 可解析，按钮更新同一个控件；独立 Emacs daemon 的 PID 和缓冲区内容在两次换色间保持不变。没有重启、注销、终止现有锁屏或替换用户的 Emacs 进程。
+- Fcitx5 AArch64 隔离 X11 渲染回归：同一候选框保持打开且不再敲键，未打补丁时 Dark → Light 仍渲染 Mocha，Light → Dark 仍渲染 Latte；打补丁后实测像素在背景 `#313244` ↔ `#ccd0da`、选中 `#cba6f7` ↔ `#04a5e5` 间立即改变。此项不代替 Ghostty 的原生 Wayland 实机验收。
 - 仍待正常启用后目视验收：已打开的控制中心和 Ghostty、用户 Emacs 的 GUI frame、GTK/Qt 新旧窗口、Fcitx 候选框、通知、锁屏对比度以及密码/Key。实际登录和跨边界唤醒仍未试，不为测试主动挂起或改机器时钟。
 
 ## 验收
