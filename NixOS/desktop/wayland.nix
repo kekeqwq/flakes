@@ -385,6 +385,9 @@ in
 
   myuser.hm.programs.waybar = {
     enable = true;
+    package = pkgs.waybar.overrideAttrs (old: {
+      patches = (old.patches or [ ]) ++ [ ./waybar/tray-refresh-icons-on-style.patch ];
+    });
     systemd.enable = true;
     settings = {
       mainBar = {

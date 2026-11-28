@@ -1,0 +1,63 @@
+--- a/include/modules/sni/item.hpp
++++ b/include/modules/sni/item.hpp
+@@ -87,6 +87,8 @@
+                 const Glib::VariantContainerBase& arguments);
+ 
+   void updateImage();
++  void queueIconRefresh();
++  bool refreshIcon();
+   Glib::RefPtr<Gdk::Pixbuf> extractPixBuf(GVariant* variant);
+   Glib::RefPtr<Gdk::Pixbuf> getIconPixbuf();
+   Glib::RefPtr<Gdk::Pixbuf> getAttentionIconPixbuf();
+@@ -114,6 +116,7 @@
+   // hidden via config
+   bool is_hidden_ = false;
+   bool ready_ = false;
++  sigc::connection icon_refresh_;
+   // Not Glib::ustring: its comparisons collate, which costs time linear in the item's string.
+   std::string status_ = "active";
+ 
+--- a/src/modules/sni/item.cpp
++++ b/src/modules/sni/item.cpp
+@@ -94,6 +94,9 @@
+   event_box.signal_scroll_event().connect(sigc::mem_fun(*this, &Item::handleScroll));
+   event_box.signal_enter_notify_event().connect(sigc::mem_fun(*this, &Item::handleMouseEnter));
+   event_box.signal_leave_notify_event().connect(sigc::mem_fun(*this, &Item::handleMouseLeave));
++  event_box.signal_style_updated().connect(sigc::mem_fun(*this, &Item::queueIconRefresh));
++  Gtk::IconTheme::get_default()->signal_changed().connect(
++      sigc::mem_fun(*this, &Item::queueIconRefresh));
+   // initial visibility
+   event_box.show_all();
+   event_box.set_visible(show_passive_);
+@@ -109,6 +112,7 @@
+ }
+ 
+ Item::~Item() {
++  icon_refresh_.disconnect();
+   if (this->gtk_menu != nullptr) {
+     this->gtk_menu->popdown();
+     this->gtk_menu->detach();
+@@ -145,6 +149,23 @@
+ 
+ void Item::onConfigure(GdkEventConfigure* ev) { this->updateImage(); }
+ 
++void Item::queueIconRefresh() {
++  if (!ready_ || icon_refresh_.connected() ||
++      (icon_name.empty() && attention_icon_name.empty() && overlay_icon_name.empty() &&
++       attention_movie_name.empty())) {
++    return;
++  }
++  // GtkImage contains a rasterized Cairo surface, not the icon name. Wait
++  // for GTK's style update, then resolve named icons again without making the
++  // client re-register its tray item or waiting for a configure event.
++  icon_refresh_ = Glib::signal_idle().connect(sigc::mem_fun(*this, &Item::refreshIcon));
++}
++
++bool Item::refreshIcon() {
++  updateImage();
++  return false;
++}
++
+ // The proxy caches whatever the item announces, of any name and size, and nothing reads it. A raw
+ // handler: glibmm's signal_properties_changed() unpacks the names into a collating std::map.
+ static void dropChangedProperties(GDBusProxy* proxy, GVariant* changed, GStrv /*invalidated*/,
