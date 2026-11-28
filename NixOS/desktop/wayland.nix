@@ -17,6 +17,9 @@ let
   iconTheme = mode: if mode == "light" then "Papirus-Light" else "Papirus-Dark";
   trayIcons = mode: "${hm.gtk.iconTheme.package}/share/icons/${iconTheme mode}/22x22/panel";
   lightAccent = "#04a5e5";
+  lightOnAccent = "#17203b";
+  # Small glyphs and clock text need a darker shade on the light pill.
+  lightAccentText = "#006887";
   # The CSS border and Niri shadow cutout must share a radius.
   waybarRadius = "12";
   mediaNotify = pkgs.writeShellApplication {
@@ -121,8 +124,8 @@ let
     }
 
     #workspaces button.active {
-        background: #cba6f7;
-        color: #1e1e2e;
+        background: @appearance_accent;
+        color: @appearance_on_accent;
     }
 
     #workspaces button.urgent {
@@ -153,7 +156,7 @@ let
 
     #custom-clock {
         background: #313244;
-        color: #cba6f7;
+        color: @appearance_accent_text;
         font-weight: 600;
         border: 1px solid #45475a;
         border-radius: 8px;
@@ -161,7 +164,7 @@ let
     }
 
     #custom-control-center {
-        color: #cba6f7;
+        color: @appearance_accent_text;
         padding: 3px 11px;
     }
 
@@ -257,7 +260,7 @@ in
           if mode == "light" then
             [
               lightAccent
-              "text-color: #17203b;"
+              "text-color: ${lightOnAccent};"
             ]
           else
             [
@@ -268,7 +271,12 @@ in
       )
     );
     "mako.conf" = pkgs.writeText "mako-${mode}.conf" (paint mode makoConfig);
-    "waybar.css" = pkgs.writeText "waybar-${mode}.css" (paint mode waybarCSS);
+    "waybar.css" = pkgs.writeText "waybar-${mode}.css" ''
+      @define-color appearance_accent ${if mode == "light" then lightAccent else "#cba6f7"};
+      @define-color appearance_on_accent ${if mode == "light" then lightOnAccent else "#1e1e2e"};
+      @define-color appearance_accent_text ${if mode == "light" then lightAccentText else "#cba6f7"};
+      ${paint mode waybarCSS}
+    '';
     "tray-qbittorrent.svg" = "${trayIcons mode}/qbittorrent-tray.svg";
     "tray-sunshine.svg" = "${trayIcons mode}/simplescreenrecorder-panel.svg";
   });
