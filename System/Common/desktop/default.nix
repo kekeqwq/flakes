@@ -25,6 +25,7 @@
         ./emacs-fonts.nix
         ./emacs-rime.nix
         ./ghostty.nix
+        ./playwright.nix
         ./snipaste.nix
       ];
 }

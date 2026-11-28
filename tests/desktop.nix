@@ -225,6 +225,18 @@ assert !c.home-manager.users.keke.programs.wezterm.enable;
 assert !(c.home-manager.users.keke.programs.ghostty.settings ? background-blur);
 assert lib.hasInfix ''spawn "ghostty"'' (builtins.readFile ../NixOS/desktop/niri/config.kdl);
 assert !off.home-manager.users.keke.programs.obsidian.enable;
+assert builtins.elem enabled.pkgs.python3Packages.playwright c.my.pythonExtraPackages;
+assert lib.any (p: p.pname or "" == "cloakbrowser") c.my.pythonExtraPackages;
+assert off.my.pythonExtraPackages == [ ];
+assert !(off.environment.variables ? CLOAKBROWSER_AUTO_UPDATE);
+assert !(off.environment.variables ? PLAYWRIGHT_BROWSERS_PATH);
+assert
+  c.environment.variables.PLAYWRIGHT_BROWSERS_PATH
+  == "${enabled.pkgs.python3Packages.playwright.driver.selectBrowsers {
+    withFirefox = false;
+    withWebkit = false;
+    withChromiumHeadlessShell = true;
+  }}";
 assert !(off.home-manager.users.keke.home.file ? ".local/share/emacs-rime-native");
 assert c.my.desktop.niri.extraConfig == "" && c.my.desktop.niri.outputs == "";
 assert lib.all (font: builtins.elem (toString font) (map toString c.fonts.packages)) [

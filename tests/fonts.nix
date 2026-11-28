@@ -5,7 +5,11 @@ let
   latin = pkgs.callPackage ../pkgs/monolisa-nasy { };
   emoji = pkgs.noto-fonts-color-emoji;
   rules = (import ../System/Common/desktop/fontconfig-policy.nix { inherit (pkgs) lib; }).rules;
-  moduleConf = (import ../NixOS/desktop/fonts.nix { inherit pkgs; inherit (pkgs) lib; }).fonts.fontconfig.localConf;
+  moduleConf =
+    (import ../NixOS/desktop/fonts.nix {
+      inherit pkgs;
+      inherit (pkgs) lib;
+    }).fonts.fontconfig.localConf;
   conf = pkgs.writeText "desktop-font-regression.conf" ''
     <?xml version="1.0"?><!DOCTYPE fontconfig SYSTEM "fonts.dtd"><fontconfig>
     <dir>${latin}/share/fonts/truetype</dir>

@@ -36,11 +36,11 @@ separator=$(tmux -L "$name" show -gv 'status-format[1]')
 [[ $separator == *'#{client_width}'* && $separator == *'fg=themeblue,bg=default'* ]]
 # Detached tests substitute only client width; expansion uses tmux's real R op.
 for width in 20 80 137; do
-  format=${separator//'#{client_width}'/$width}
-  expanded=$(tmux -L "$name" display-message -p "$format")
-  expected='#[fg=themeblue,bg=default]'
-  for ((i = 0; i < width; i++)); do expected+='─'; done
-  [ "$expanded" = "$expected" ]
+	format=${separator//'#{client_width}'/$width}
+	expanded=$(tmux -L "$name" display-message -p "$format")
+	expected='#[fg=themeblue,bg=default]'
+	for ((i = 0; i < width; i++)); do expected+='─'; done
+	[ "$expanded" = "$expected" ]
 done
 [[ $(tmux -L "$name" show -gv window-status-style) == *bold* ]]
 [[ $(tmux -L "$name" show -gv window-status-current-style) == *bold*underscore* ]]
@@ -50,27 +50,27 @@ tmux -L "$name" set -g default-shell /bin/sh
 tmux -L "$name" set -g default-command ''
 tmux -L "$name" move-window -r -t probe
 for index in $(seq 2 11); do
-  tmux -L "$name" new-window -d -t "probe:$index" -n "window$index" 'exec /bin/sleep 300'
+	tmux -L "$name" new-window -d -t "probe:$index" -n "window$index" 'exec /bin/sleep 300'
 done
 for index in 1 2 3 9 10 11; do
-  expanded=$(tmux -L "$name" display-message -p -t "probe:$index" '#{E:window-status-current-format}')
-  [[ $expanded == *"$index."* ]]
-  [[ $expanded != *'️⃣'* && $expanded != *'🔟'* ]]
+	expanded=$(tmux -L "$name" display-message -p -t "probe:$index" '#{E:window-status-current-format}')
+	[[ $expanded == *"$index."* ]]
+	[[ $expanded != *'️⃣'* && $expanded != *'🔟'* ]]
 done
 for spec in '0:0️⃣' '1:1️⃣' '2:2️⃣' '9:9️⃣' '10:🔟' '11:11' 'work:work'; do
-  session=${spec%%:*}
-  expected=${spec#*:}
-  tmux -L "$name" new-session -d -s "$session" -n sample 'exec /bin/sleep 300'
-  expanded=$(tmux -L "$name" display-message -p -t "$session:" '#{E:status-left}')
-  [[ $expanded == *" $expected "* ]]
+	session=${spec%%:*}
+	expected=${spec#*:}
+	tmux -L "$name" new-session -d -s "$session" -n sample 'exec /bin/sleep 300'
+	expanded=$(tmux -L "$name" display-message -p -t "$session:" '#{E:status-left}')
+	[[ $expanded == *" $expected "* ]]
 done
 tmux -L "$name" new-window -d -t 0:2 -n second 'exec /bin/sleep 300'
 first=$(tmux -L "$name" display-message -p -t 0:1 '#{E:status-left}')
 second=$(tmux -L "$name" display-message -p -t 0:2 '#{E:status-left}')
 [[ $first == "$second" && $first == *'0️⃣'* ]]
 for mode in light dark; do
-  tmux -L "$name" set -g theme "$mode"
-  [[ $(tmux -L "$name" show -gv window-status-format) == *themelightgrey* ]]
-  [[ $(tmux -L "$name" show -gv window-status-current-format) == *themeblue* ]]
+	tmux -L "$name" set -g theme "$mode"
+	[[ $(tmux -L "$name" show -gv window-status-format) == *themelightgrey* ]]
+	[[ $(tmux -L "$name" show -gv window-status-current-format) == *themeblue* ]]
 done
 printf '%s\n' 'tmux reload, identity token, session emoji, plain windows, adaptive separator, context menus and per-client palettes: PASS'

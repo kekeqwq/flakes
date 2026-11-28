@@ -83,9 +83,10 @@ in
       # Karabiner 17 requires a writable regular file. Migrate before Home
       # Manager removes its old symlink; leave subsequent GUI edits alone.
       home.activation.seedKarabinerConfig =
-        inputs.home-manager.lib.hm.dag.entryBetween [ "linkGeneration" ] [ "writeBoundary" ] ''
-          run ${seedKarabiner} "$HOME/.config/karabiner"
-        '';
+        inputs.home-manager.lib.hm.dag.entryBetween [ "linkGeneration" ] [ "writeBoundary" ]
+          ''
+            run ${seedKarabiner} "$HOME/.config/karabiner"
+          '';
     })
   ];
 }

@@ -1,4 +1,9 @@
-{ config, pkgs, lib, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 let
   # Only the client is used here, so this does not recursively depend on
   # finalPackage (whose Applications directory we replace below).
@@ -40,10 +45,15 @@ in
   # Keep an untouched, package-aware native App as the daemon entry.
   # Changes to the client launcher must not change/restart the daemon service.
   myuser.hm.programs.emacs.overrides = _final: prev: {
-    emacsWithPackages = packages:
-      let original = prev.emacsWithPackages packages;
-      in original.overrideAttrs (old: {
-        passthru = (old.passthru or { }) // { daemonPackage = original; };
+    emacsWithPackages =
+      packages:
+      let
+        original = prev.emacsWithPackages packages;
+      in
+      original.overrideAttrs (old: {
+        passthru = (old.passthru or { }) // {
+          daemonPackage = original;
+        };
         # emacsWithPackages uses buildCommand directly, not phase hooks.
         buildCommand = old.buildCommand + ''
           chmod -R u+w "$out/Applications"
@@ -62,14 +72,21 @@ in
 
   # User LaunchAgent: starts at login without a window and stays available.
   myuser.hm.launchd.agents.emacs.config = {
-    ProgramArguments = lib.mkForce ([
-      "${config.home-manager.users.${config.myuser.name}.services.emacs.package}/Applications/Emacs.app/Contents/MacOS/Emacs"
-      "--fg-daemon"
-    ] ++ config.home-manager.users.${config.myuser.name}.services.emacs.extraOptions);
+    ProgramArguments = lib.mkForce (
+      [
+        "${
+          config.home-manager.users.${config.myuser.name}.services.emacs.package
+        }/Applications/Emacs.app/Contents/MacOS/Emacs"
+        "--fg-daemon"
+      ]
+      ++ config.home-manager.users.${config.myuser.name}.services.emacs.extraOptions
+    );
     KeepAlive = lib.mkForce true;
     ProcessType = "Interactive";
     ThrottleInterval = 10;
     StandardOutPath = "${config.users.users.${config.myuser.name}.home}/Library/Logs/emacs-daemon.log";
-    StandardErrorPath = "${config.users.users.${config.myuser.name}.home}/Library/Logs/emacs-daemon.log";
+    StandardErrorPath = "${
+      config.users.users.${config.myuser.name}.home
+    }/Library/Logs/emacs-daemon.log";
   };
 }

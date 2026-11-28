@@ -5,8 +5,8 @@ set +x
 set -euo pipefail
 umask 077
 if [[ $# != 4 || $1 != --fido2-device || ! $2 =~ ^/dev/hidraw[0-9]+$ || $3 != --label || ! $4 =~ ^[a-zA-Z0-9_-]+$ ]]; then
-  echo 'Usage: enroll-key.sh --fido2-device /dev/hidrawN --label primary|secondary' >&2
-  exit 2
+	echo 'Usage: enroll-key.sh --fido2-device /dev/hidrawN --label primary|secondary' >&2
+	exit 2
 fi
 hidraw=$2
 label=$4
@@ -20,11 +20,11 @@ cryptsetup isLuks --type luks2 "$device"
 # Test it independently before any token changes. Never accept insertion as proof.
 cryptsetup open --test-passphrase --key-slot 0 "$device"
 if mountpoint -q /mnt; then
-  [[ $(findmnt -nro FSTYPE /mnt) == btrfs ]]
-  backup_root=/mnt/var/backups/flakes-luks
+	[[ $(findmnt -nro FSTYPE /mnt) == btrfs ]]
+	backup_root=/mnt/var/backups/flakes-luks
 else
-  [[ $(findmnt -nro FSTYPE /) == btrfs ]]
-  backup_root=/var/backups/flakes-luks
+	[[ $(findmnt -nro FSTYPE /) == btrfs ]]
+	backup_root=/var/backups/flakes-luks
 fi
 mkdir -p "$backup_root"
 chmod 0700 "$backup_root"
@@ -43,8 +43,8 @@ printf '%s\n' "Ready to enroll the owner-designated $label Key. Touch ONLY when 
 # No PIN reset/guess, OTP/PIV/OpenPGP change, or removal of existing slots.
 # Native local password input is not logged, placed in argv or put in the store.
 systemd-cryptenroll "$device" --fido2-device="$hidraw" \
-  --fido2-with-client-pin=no --fido2-with-user-presence=yes \
-  --fido2-with-user-verification=no
+	--fido2-with-client-pin=no --fido2-with-user-presence=yes \
+	--fido2-with-user-verification=no
 cryptsetup luksDump --dump-json-metadata "$device" | python3 -c '
 import json,sys
 from pathlib import Path

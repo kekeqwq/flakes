@@ -1,17 +1,17 @@
-# Surface 正式安装（Gen 13 已启动，待空白盘复现）
+# Surface 正式安装（空白盘 Gen 1 已复现）
 
 - 实例 `flakes#surface`、主机名 `surface`、原生 AArch64。硬件来自锁定的 `surface.nix`，保留 Denali HHKB、触屏、OLED 和已验收的 0 dB FullIO。
 - 从公共桌面和 server 配置继承用户 `keke`、SSH、sudo 和 PAM；不保留测试机的无凭据登录、专用 SSH 授权文件与 `NOPASSWD`。新装的 `keke` 登录密码或授权公钥须按公共约定私下配置，不能把 Live 的 root 免密带进目标系统。
 - Niri 保留内置 `eDP-1`（2880×1920、120 Hz、缩放 2）的原配置。Sunshine 指定实际连接的外接 `DP-1`（当前 1920×1080、60 Hz），不创建虚拟输出、不设 nginx 代理或路由器转发，UPnP 关闭。拔掉外接屏后如需串流内屏，将目标改回 `eDP-1`。
-- 正式首装用 NixOS **27.05**。安装锁定 `nixos-unstable-small` 的 `aa156634ecca12217a808ff1d8fc2793115923bb`，求值得到 `config.system.nixos.release = "27.05"`；新实例采用 `system.stateVersion = "27.05"`，安装后不随升级改变。
+- 正式首装用 NixOS **27.05**。下列空白盘验收实际锁定 `nixos-unstable-small` 的 `5e50e88b70dff025f88e08f2b56de55137a13fe3`，系统版本为 `27.05.20261127.5e50e88`。该实例采用 `system.stateVersion = "27.05"`，安装后不随升级改变。
 
 ## 磁盘布局
 
 使用 `fdisk` 在明确确认的内置 NVMe 上建立 GPT（Live USB 不是目标）。仅下表第一项是 UEFI 规定的明文启动区，其他所有系统和用户数据放进一个 LUKS2 容器。**没有 LVM，首装不启用 swap 或休眠，不预留独立 swap 分区。**
 
-| GPT 分区名 | 用途 | 挂载 |
-| --- | --- | --- |
-| `surface-efi` | FAT32 ESP，889 MiB（约 0.87 GiB），`umask=0077` | `/boot` |
+| GPT 分区名          | 用途                                             | 挂载                                              |
+| ------------------- | ------------------------------------------------ | ------------------------------------------------- |
+| `surface-efi`       | FAT32 ESP，889 MiB（约 0.87 GiB），`umask=0077`  | `/boot`                                           |
 | `surface-cryptroot` | 953 GiB，LUKS2 → `/dev/mapper/cryptroot` → Btrfs | `@root` → `/`，`@nix` → `/nix`，`@home` → `/home` |
 
 上述大小适用于这块 953.87 GiB NVMe；另留 GPT 和对齐所需的少量扇区。systemd-boot 最多保留八个启动代，实际容量取决于完整 UKI 的大小。
@@ -35,4 +35,10 @@
 
 冷启动验收时，只插已登记的 Key，优先使用已实测可预插解锁的 USB‑C 口（`a600000.usb`，不依赖动态的 USB 总线编号）。另一口 `a800000.usb` 有冷启动时 USB 地址分配失败（`error -71`）的实机记录，拔插后可重新枚举。更换 USB 枚举顺序没有解决，不带入正式配置；这不是 LUKS 登记问题，尚不能判定接口硬件损坏。
 
-以上均不是空白盘首次启动验收。重装时从当时最新的正式仓库分支取源码并保持其配套 `flake.lock` 不变，记录实际用的版本；首次内置盘启动不允许再打补丁或补装新一代。独立验证预插 Key 启动和不插 Key 的恢复密码两条路径。
+## 空白盘首启验收（2026-11-27）
+
+- 从新 GPT、新 LUKS2 和空白 Btrfs 开始，直连 GitHub 克隆当时的 `flakes/master` `5875f0ee29608388f7942a87fe98b6403b64a6c7`，保持原始 `flake.lock`（SHA-256 `4f817c08b96abd4a068a228baf75700dbf93f824dfe6bf2002e7288f1789622e`）；硬件输入为 `812fedca35d72adf604dcb51284acaa3db5044d1`。原生 AArch64 构建和安装一次完成，没有复用失败轮的 store，也没有补装新代。
+- 在 15 GiB RAM、无 swap 的 Live 中，把安装 U 盘插到下方稳定的 `a600000.usb`，从一开始使用 `nix build -L -v --max-jobs 1 --cores 4 --store /mnt` 构建当前 checkout 的 `nixosConfigurations.surface.config.system.build.toplevel`，再用 `nixos-install --root /mnt --system <构建所得闭包>` 安装。限制只作用于安装构建：此前一轮 U 盘断开后 SquashFS 读失败，另一轮全并发时可用内存降至约 1 GiB 后失联，不能据此诊断 RAM 硬件故障。
+- 核验 Gen 1 和 45,054,976 字节的 ARM64 UKI 后正常关机，再拔 Live USB。第一次从内置盘开机，Key 预插下方口：约 1.20 s 枚举、1.77 s 提示触摸、4.45 s 解锁，第一次 USB 断开晚于解锁。机主确认 OLED 解锁画面可读，触摸后直接进桌面。SSH 只读核对运行系统即安装的 Gen 1，`/`、`/nix` 和 `/home` 全部为加密 Btrfs `compress=zstd:5,noatime`。
+
+本轮通过的是**空白盘首次启动与预插 Key**。无 Key 的恢复密码启动要另测；服务在线不等于已经完成手势、录音或 Moonlight 串流验收。下次仍从当时最新的正式分支取源码，使用该 checkout 的锁，记录实际版本，不回退到本次提交。

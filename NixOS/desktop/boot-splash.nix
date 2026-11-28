@@ -12,7 +12,11 @@ let
   initrdSystemd = config.boot.initrd.systemd.package;
   keyWait = pkgs.writeShellApplication {
     name = "plymouth-fido2-wait";
-    runtimeInputs = [ config.boot.plymouth.package initrdSystemd pkgs.coreutils ];
+    runtimeInputs = [
+      config.boot.plymouth.package
+      initrdSystemd
+      pkgs.coreutils
+    ];
     text = builtins.readFile ./fido2-wait-splash.sh;
   };
 in
@@ -37,7 +41,10 @@ in
     services.plymouth-fido2-wait = {
       description = "Show the native FIDO2 discovery countdown in Plymouth";
       wantedBy = [ "sysinit.target" ];
-      after = [ "plymouth-start.service" "systemd-journald.socket" ];
+      after = [
+        "plymouth-start.service"
+        "systemd-journald.socket"
+      ];
       before = [ "initrd-switch-root.target" ];
       conflicts = [ "initrd-switch-root.target" ];
       unitConfig.DefaultDependencies = false;
@@ -73,29 +80,31 @@ in
   # Space at power-on still opens systemd-boot's recovery/generation menu.
   boot.loader.timeout = lib.mkDefault 0;
 
-  systemd.services = lib.mkIf config.boot.plymouth.enable ({
-    plymouth-quit.serviceConfig.ExecStart = [
-      ""
-      "-${plymouth} quit --retain-splash"
-    ];
+  systemd.services = lib.mkIf config.boot.plymouth.enable (
+    {
+      plymouth-quit.serviceConfig.ExecStart = [
+        ""
+        "-${plymouth} quit --retain-splash"
+      ];
 
-    # Keep the retained splash while greetd hands DRM to the desktop.
-    greetd = lib.mkIf config.services.greetd.enable {
-      serviceConfig = {
-        Type = lib.mkForce "simple";
-        StandardOutput = lib.mkForce "journal";
-        StandardError = lib.mkForce "journal";
-        TTYReset = lib.mkForce false;
-        TTYVTDisallocate = lib.mkForce false;
+      # Keep the retained splash while greetd hands DRM to the desktop.
+      greetd = lib.mkIf config.services.greetd.enable {
+        serviceConfig = {
+          Type = lib.mkForce "simple";
+          StandardOutput = lib.mkForce "journal";
+          StandardError = lib.mkForce "journal";
+          TTYReset = lib.mkForce false;
+          TTYVTDisallocate = lib.mkForce false;
+        };
       };
-    };
-  }
-  // lib.genAttrs [ "plymouth-halt" "plymouth-poweroff" "plymouth-reboot" ] (_: {
-    # Stopping the display manager alone does not stop the user's compositor.
-    after = [ "systemd-logind.service" ];
-    # Keep late printk (including after systemd-shutdown raises its log level)
-    # off the splash. Logs still go to kmsg; /dev/console and watchdog policy
-    # are unchanged. A system without VTs can still shut down normally.
-    serviceConfig.ExecStartPre = "-${setlogcons} --console=/dev/tty63 63";
-  }));
+    }
+    // lib.genAttrs [ "plymouth-halt" "plymouth-poweroff" "plymouth-reboot" ] (_: {
+      # Stopping the display manager alone does not stop the user's compositor.
+      after = [ "systemd-logind.service" ];
+      # Keep late printk (including after systemd-shutdown raises its log level)
+      # off the splash. Logs still go to kmsg; /dev/console and watchdog policy
+      # are unchanged. A system without VTs can still shut down normally.
+      serviceConfig.ExecStartPre = "-${setlogcons} --console=/dev/tty63 63";
+    })
+  );
 }

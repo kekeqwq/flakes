@@ -161,10 +161,12 @@ resolved separately:
    - 严格签名校验和注册成功不等同于锁屏已识别智能卡，仍需单独验收。
 
 2. **手动写入 PIV 密钥**（一次性，需 YubiKey）：
+
    ```sh
    # 确认 9A/9D 为空槽
    ykman piv keys info 9a && ykman piv keys info 9d
    ```
+
    如果已写入（如迁移场景），跳过此步。否则需生成密钥+证书：
    - 9A：RSA2048，PIN Never + Touch Always（认证）
    - 9D：RSA2048，PIN Never + Touch Always（钥匙串解包）
@@ -172,10 +174,12 @@ resolved separately:
    - **私钥不可导出，管理密钥状态需确认**
 
 3. **手动配对账户**（一次性，需 sudo + 触摸）：
+
    ```sh
    sc_auth identities   # 获取 9A 公钥哈希
    sudo sc_auth pair -v -u keke -h <9A_HASH>
    ```
+
    Key 亮灯时触摸。成功输出不应包含 `Failed to store Login keychain unlock key`。
 
 4. **验证**：Ctrl-Cmd-Q 锁屏 → 空 PIN 框按 Enter → Key 亮灯 → 触摸 → 解锁。

@@ -15,8 +15,7 @@ _: {
     ./yazi.nix
   ];
   # MarginNote is a macOS workflow; keep the shared Pi setup platform-neutral.
-  myuser.hm.home.file.".pi/agent/skills/mn-bridge/SKILL.md".source =
-    ./pi-skills/mn-bridge/SKILL.md;
+  myuser.hm.home.file.".pi/agent/skills/mn-bridge/SKILL.md".source = ./pi-skills/mn-bridge/SKILL.md;
 
   my.desktop.enable = true;
   my.opensctoken.enable = true;

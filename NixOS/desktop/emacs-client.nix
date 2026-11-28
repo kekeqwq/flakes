@@ -1,6 +1,8 @@
 { config, pkgs, ... }:
 let
-  client = "${config.home-manager.users.${config.myuser.name}.programs.emacs.finalPackage}/bin/emacsclient";
+  client = "${
+    config.home-manager.users.${config.myuser.name}.programs.emacs.finalPackage
+  }/bin/emacsclient";
 in
 {
   # Shadow the upstream standalone launcher at the standard desktop ID so
@@ -11,8 +13,15 @@ in
     exec = "${client} --create-frame --no-wait --alternate-editor=false %F";
     icon = "emacs";
     terminal = false;
-    categories = [ "Development" "TextEditor" ];
-    mimeType = [ "text/plain" "text/x-python" "text/x-shellscript" ];
+    categories = [
+      "Development"
+      "TextEditor"
+    ];
+    mimeType = [
+      "text/plain"
+      "text/x-python"
+      "text/x-shellscript"
+    ];
     settings.StartupWMClass = "Emacsd";
   };
   myuser.hm.systemd.user.services.emacs.Service = {

@@ -92,10 +92,10 @@ in
     p7zip
     nodejs # JavaScript runtime for PyExecJS.
     (python3.withPackages (
-      ps: with ps; [
+      ps:
+      (with ps; [
         idna
         tldextract
-        playwright
         pytest
         httpx
         jsonpath
@@ -110,7 +110,8 @@ in
         pyexecjs
         lxml
         pyquery
-      ]
+      ])
+      ++ config.my.pythonExtraPackages
     ))
     basedpyright
     fd

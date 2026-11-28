@@ -1,9 +1,17 @@
 # OpenSCToken with PIN-Never patch for YubiKey PIV login.
 # Builds OpenSC (CTK backend) + OpenSCToken extension bundle.
 # PIN Never + Touch Always keys skip CTK PIN auth and OpenSC internal VERIFY PIN.
-{ lib, stdenv, fetchurl, fetchFromGitHub
-, openssl, zlib, libiconv, openpace
-, autoreconfHook, pkg-config
+{
+  lib,
+  stdenv,
+  fetchurl,
+  fetchFromGitHub,
+  openssl,
+  zlib,
+  libiconv,
+  openpace,
+  autoreconfHook,
+  pkg-config,
 }:
 
 let
@@ -16,12 +24,26 @@ let
       name = "opensc-1b2dfc85.tar.gz";
       hash = "sha256-NfFYCqJEnffVPbRDsD1tgYFGeU7tXytlQepgslHRutk=";
     };
-    nativeBuildInputs = [ autoreconfHook pkg-config ];
-    buildInputs = [ openssl zlib libiconv ];
+    nativeBuildInputs = [
+      autoreconfHook
+      pkg-config
+    ];
+    buildInputs = [
+      openssl
+      zlib
+      libiconv
+    ];
     configureFlags = [
-      "--disable-shared" "--enable-static" "--disable-pcsc"
-      "--enable-cryptotokenkit" "--disable-sm" "--disable-readline"
-      "--disable-man" "--disable-doc" "--enable-openssl" "--enable-zlib"
+      "--disable-shared"
+      "--enable-static"
+      "--disable-pcsc"
+      "--enable-cryptotokenkit"
+      "--disable-sm"
+      "--disable-readline"
+      "--disable-man"
+      "--disable-doc"
+      "--enable-openssl"
+      "--enable-zlib"
     ];
     env.NIX_CFLAGS_COMPILE = "-Wno-error=unused-function";
     enableParallelBuilding = true;
@@ -57,7 +79,13 @@ stdenv.mkDerivation {
   patches = [ ./pin-never.patch ];
 
   nativeBuildInputs = [ pkg-config ];
-  buildInputs = [ openssl zlib libiconv openpace opensc-ctk ];
+  buildInputs = [
+    openssl
+    zlib
+    libiconv
+    openpace
+    opensc-ctk
+  ];
 
   buildPhase = ''
     runHook preBuild
@@ -119,58 +147,58 @@ stdenv.mkDerivation {
   '';
 
   installPhase = ''
-    runHook preInstall
-    APP=$out/OpenSCToken.appex
+        runHook preInstall
+        APP=$out/OpenSCToken.appex
 
-    # Generate Info.plist
-    cat > $APP/Contents/Info.plist << 'PLIST'
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-  <key>CFBundleDevelopmentRegion</key><string>en</string>
-  <key>CFBundleDisplayName</key><string>OpenSC token driver</string>
-  <key>CFBundleExecutable</key><string>OpenSCToken</string>
-  <key>CFBundleIdentifier</key><string>com.keke.flakes.opensctoken-app.OpenSCToken</string>
-  <key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
-  <key>CFBundleName</key><string>OpenSCToken</string>
-  <key>CFBundlePackageType</key><string>XPC!</string>
-  <key>CFBundleShortVersionString</key><string>1.1.1</string>
-  <key>CFBundleVersion</key><string>1.1.1</string>
-  <key>LSMinimumSystemVersion</key><string>14.0</string>
-  <key>NSExtension</key>
-  <dict>
-    <key>NSExtensionAttributes</key>
+        # Generate Info.plist
+        cat > $APP/Contents/Info.plist << 'PLIST'
+    <?xml version="1.0" encoding="UTF-8"?>
+    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+    <plist version="1.0">
     <dict>
-      <key>com.apple.ctk.class-id</key>
-      <string>com.keke.flakes.opensctoken-app.OpenSCToken</string>
-      <key>com.apple.ctk.driver-class</key>
-      <string>OpenSCTokenDriver</string>
-      <key>com.apple.ctk.token-type</key>
-      <string>smartcard</string>
+      <key>CFBundleDevelopmentRegion</key><string>en</string>
+      <key>CFBundleDisplayName</key><string>OpenSC token driver</string>
+      <key>CFBundleExecutable</key><string>OpenSCToken</string>
+      <key>CFBundleIdentifier</key><string>com.keke.flakes.opensctoken-app.OpenSCToken</string>
+      <key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
+      <key>CFBundleName</key><string>OpenSCToken</string>
+      <key>CFBundlePackageType</key><string>XPC!</string>
+      <key>CFBundleShortVersionString</key><string>1.1.1</string>
+      <key>CFBundleVersion</key><string>1.1.1</string>
+      <key>LSMinimumSystemVersion</key><string>14.0</string>
+      <key>NSExtension</key>
+      <dict>
+        <key>NSExtensionAttributes</key>
+        <dict>
+          <key>com.apple.ctk.class-id</key>
+          <string>com.keke.flakes.opensctoken-app.OpenSCToken</string>
+          <key>com.apple.ctk.driver-class</key>
+          <string>OpenSCTokenDriver</string>
+          <key>com.apple.ctk.token-type</key>
+          <string>smartcard</string>
+        </dict>
+        <key>NSExtensionPointIdentifier</key>
+        <string>com.apple.ctk-tokens</string>
+      </dict>
     </dict>
-    <key>NSExtensionPointIdentifier</key>
-    <string>com.apple.ctk-tokens</string>
-  </dict>
-</dict>
-</plist>
-PLIST
+    </plist>
+    PLIST
 
-    # Entitlements
-    cat > $APP/Contents/entitlements.plist << 'ENT'
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-  <key>com.apple.security.app-sandbox</key><true/>
-  <key>com.apple.security.smartcard</key><true/>
-</dict>
-</plist>
-ENT
+        # Entitlements
+        cat > $APP/Contents/entitlements.plist << 'ENT'
+    <?xml version="1.0" encoding="UTF-8"?>
+    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+    <plist version="1.0">
+    <dict>
+      <key>com.apple.security.app-sandbox</key><true/>
+      <key>com.apple.security.smartcard</key><true/>
+    </dict>
+    </plist>
+    ENT
 
-    # Sign in Darwin activation (codesign not in Nix sandbox)
+        # Sign in Darwin activation (codesign not in Nix sandbox)
 
-    runHook postInstall
+        runHook postInstall
   '';
 
   meta = {

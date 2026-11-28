@@ -1,4 +1,9 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 let
   peer = "100.75.211.82";
   subnet = "192.168.2.0/24";
@@ -41,13 +46,20 @@ let
     ${tailscale} debug prefs | ${jq} -e '.RouteAll == true' >/dev/null || exit 0
     echo "Refreshing missing Tailscale route for ${subnet} on $tunnel"
     ${tailscale} set --accept-routes=false
+    /bin/sleep 1
     ${tailscale} set --accept-routes=true || ${tailscale} set --accept-routes=true
   '';
 in
 {
   launchd.daemons.tailscale-subnet-route-check = lib.mkIf config.services.tailscale.enable {
     serviceConfig = {
-      ProgramArguments = [ "${repair}" ];
+      # Launch Apple's interpreter directly instead of asking launchd to
+      # spawn the Nix-store script as an executable.
+      Program = "/bin/bash";
+      ProgramArguments = [
+        "/bin/bash"
+        "${repair}"
+      ];
       RunAtLoad = true;
       StartInterval = 60;
       StandardOutPath = "/var/log/tailscale-subnet-route-check.log";

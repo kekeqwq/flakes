@@ -70,7 +70,13 @@ in
   # This volume uses LUKS2 AES-XTS; cryptsetup handles key derivation
   # through OpenSSL/libargon2, not the optional kernel AF_ALG interface.
   # Do not request the generic initrd list's unbuilt legacy ciphers.
-  boot.initrd.luks.cryptoModules = [ "aes" "xts" "sha256" "sha512" "input_leds" ];
+  boot.initrd.luks.cryptoModules = [
+    "aes"
+    "xts"
+    "sha256"
+    "sha512"
+    "input_leds"
+  ];
   # Keep the defaults set by luksroot.nix: its lvm2 package supplies the
   # device-mapper udev rules and dmsetup even for LUKS directly over Btrfs.
   # The hardware flake owns the single validated internal-boot payload.
@@ -87,7 +93,9 @@ in
       options = [ "umask=0077" ];
     };
     "/" = btrfsSubvolume "@root";
-    "/nix" = (btrfsSubvolume "@nix") // { neededForBoot = true; };
+    "/nix" = (btrfsSubvolume "@nix") // {
+      neededForBoot = true;
+    };
     "/home" = btrfsSubvolume "@home";
   };
   # A Btrfs swapfile can be added inside cryptroot later without repartitioning.

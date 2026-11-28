@@ -6,7 +6,10 @@
 }:
 swaylock-effects.overrideAttrs (old: {
   pname = "swaylock-effects-security-key";
-  patches = (old.patches or [ ]) ++ [ ./parallel-key-auth.patch ./wallpaper-slide.patch ];
+  patches = (old.patches or [ ]) ++ [
+    ./parallel-key-auth.patch
+    ./wallpaper-slide.patch
+  ];
   postPatch = (old.postPatch or "") + ''
     cp ${./key-auth-client.c} key-auth-client.c
     cp ${./key-auth-client.h} key-auth-client.h

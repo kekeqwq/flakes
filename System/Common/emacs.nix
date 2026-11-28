@@ -1,4 +1,9 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 {
   # Headless systems get terminal Emacs. The shared desktop layer selects the
   # graphical backend without duplicating the editor's configuration per OS.
@@ -9,7 +14,11 @@
     startWithUserSession = true;
     client = {
       enable = config.my.desktop.enable;
-      arguments = [ "--create-frame" "--no-wait" "--alternate-editor=false" ];
+      arguments = [
+        "--create-frame"
+        "--no-wait"
+        "--alternate-editor=false"
+      ];
     };
   };
 

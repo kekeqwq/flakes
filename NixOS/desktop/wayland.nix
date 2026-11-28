@@ -17,7 +17,14 @@ let
   waybarRadius = "12";
   mediaNotify = pkgs.writeShellApplication {
     name = "keke-media-notify";
-    runtimeInputs = with pkgs; [ wireplumber brightnessctl libnotify util-linux systemd gawk ];
+    runtimeInputs = with pkgs; [
+      wireplumber
+      brightnessctl
+      libnotify
+      util-linux
+      systemd
+      gawk
+    ];
     text = builtins.readFile ./media-notify.sh;
   };
   niriConfig = pkgs.writeText "niri-unchecked.kdl" (
@@ -239,7 +246,11 @@ in
 
         backlight = {
           format = "{icon}";
-          format-icons = [ "󰃞" "󰃟" "󰃠" ];
+          format-icons = [
+            "󰃞"
+            "󰃟"
+            "󰃠"
+          ];
           tooltip-format = "Brightness";
           on-click = "${panel}/bin/keke-waybar-panel brightness";
           on-scroll-up = "${pkgs.brightnessctl}/bin/brightnessctl -c backlight set +5%";
@@ -249,7 +260,11 @@ in
         wireplumber = {
           format = "{icon}";
           format-muted = "󰝟";
-          format-icons = [ "󰕿" "󰖀" "󰕾" ];
+          format-icons = [
+            "󰕿"
+            "󰖀"
+            "󰕾"
+          ];
           tooltip-format = "{node_name}";
           scroll-step = 5;
           on-click = "${panel}/bin/keke-waybar-panel audio";
@@ -276,7 +291,11 @@ in
         battery = {
           interval = 5;
           format = "{icon} {capacity}%";
-          format-icons = [ "󱊡" "󱊢" "󱊣" ];
+          format-icons = [
+            "󱊡"
+            "󱊢"
+            "󱊣"
+          ];
           format-charging = "󰂄 {capacity}%";
           format-full = "󰁹 {capacity}%";
           format-discharging-low = "󰂎 {capacity}%";

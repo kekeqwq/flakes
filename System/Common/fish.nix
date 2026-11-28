@@ -38,7 +38,9 @@
         description = "Connect to the managed Emacs server in this terminal";
         wraps = "emacsclient";
         body = ''
-          command ${config.home-manager.users.${config.myuser.name}.programs.emacs.finalPackage}/bin/emacsclient --tty --alternate-editor=false $argv
+          command ${
+            config.home-manager.users.${config.myuser.name}.programs.emacs.finalPackage
+          }/bin/emacsclient --tty --alternate-editor=false $argv
         '';
       };
 

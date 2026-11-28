@@ -38,10 +38,21 @@ assert cfg.system.stateVersion == "27.05";
 assert cfg.surface.devices.denali.keyboard.hhkb.enable;
 assert cfg.fileSystems."/boot".device == "/dev/disk/by-partlabel/surface-efi";
 assert cfg.fileSystems."/boot".fsType == "vfat";
-assert lib.all (path: let fs = cfg.fileSystems.${path}; in
-  fs.fsType == "btrfs" && fs.device == "/dev/mapper/cryptroot"
-  && builtins.elem "compress=zstd:5" fs.options
-) [ "/" "/nix" "/home" ];
+assert lib.all
+  (
+    path:
+    let
+      fs = cfg.fileSystems.${path};
+    in
+    fs.fsType == "btrfs"
+    && fs.device == "/dev/mapper/cryptroot"
+    && builtins.elem "compress=zstd:5" fs.options
+  )
+  [
+    "/"
+    "/nix"
+    "/home"
+  ];
 assert cfg.fileSystems."/nix".neededForBoot;
 assert cfg.swapDevices == [ ];
 assert builtins.elem "nohibernate" cfg.boot.kernelParams;
@@ -53,23 +64,41 @@ assert cfg.my.luks.fido2.deviceTimeoutSeconds == 10;
 assert cfg.boot.initrd.systemd.services.plymouth-fido2-wait.wantedBy == [ "sysinit.target" ];
 assert !(cfg.boot.initrd.systemd.services ? denali-fido-cold-trace);
 assert lib.all (m: builtins.elem m cfg.boot.initrd.kernelModules) [
-  "phy-qcom-eusb2-repeater" "phy-qcom-qmp-combo" "phy-snps-eusb2"
+  "phy-qcom-eusb2-repeater"
+  "phy-qcom-qmp-combo"
+  "phy-snps-eusb2"
 ];
 assert cfg.surface.devices.denali.boot.earlyDisplay;
 assert cfg.surface.devices.denali.boot.earlyBrightnessPercent == 100;
 assert lib.hasInfix ''ATTR{brightness}="4095"'' cfg.boot.initrd.services.udev.rules;
 assert lib.all (m: builtins.elem m cfg.boot.initrd.kernelModules) [
-  "dispcc-x1e80100" "gpucc-x1e80100" "qcom_glink_smem" "qrtr"
-  "pmic_glink" "pmic_glink_altmode" "ps883x"
+  "dispcc-x1e80100"
+  "gpucc-x1e80100"
+  "qcom_glink_smem"
+  "qrtr"
+  "pmic_glink"
+  "pmic_glink_altmode"
+  "ps883x"
 ];
 assert lib.hasInfix "softdep pmic_glink pre: qrtr"
   cfg.boot.initrd.systemd.contents."/etc/modprobe.d/denali-display.conf".text;
 assert !lib.any (p: p == "keep_bootcon" || lib.hasPrefix "earlycon=" p) cfg.boot.kernelParams;
 assert !(cfg.boot.initrd.systemd.services ? denali-preunlock-display);
 assert cfg.boot.initrd.luks.devices.cryptroot.device == "/dev/disk/by-partlabel/surface-cryptroot";
-assert cfg.boot.initrd.luks.cryptoModules == [ "aes" "xts" "sha256" "sha512" "input_leds" ];
-assert lib.all (opt: builtins.elem opt cfg.boot.initrd.luks.devices.cryptroot.crypttabExtraOpts)
-  [ "fido2-device=auto" "fido2-pin=no" "fido2-up=yes" "tries=0" ];
+assert
+  cfg.boot.initrd.luks.cryptoModules == [
+    "aes"
+    "xts"
+    "sha256"
+    "sha512"
+    "input_leds"
+  ];
+assert lib.all (opt: builtins.elem opt cfg.boot.initrd.luks.devices.cryptroot.crypttabExtraOpts) [
+  "fido2-device=auto"
+  "fido2-pin=no"
+  "fido2-up=yes"
+  "tries=0"
+];
 assert cfg.services.sunshine.enable && !cfg.my.sunshine.proxy;
 assert cfg.services.sunshine.settings.output_name == "DP-1";
 assert cfg.services.sunshine.settings.upnp == "disabled";
@@ -81,7 +110,8 @@ assert !lib.any (lib.hasPrefix "plymouth.use-simpledrm") cfg.boot.kernelParams;
 assert cfg.system.activationScripts.surfacePrivateFirmware.deps == [ "udevd" ];
 assert !(lib.any (rule: builtins.elem "keke" rule.users) cfg.security.sudo.extraRules);
 assert cfg.security.sudo.wheelNeedsPassword;
-assert cfg.services.openssh.enable && !(cfg.services.openssh.settings.PermitEmptyPasswords or false);
+assert
+  cfg.services.openssh.enable && !(cfg.services.openssh.settings.PermitEmptyPasswords or false);
 assert !(lib.hasInfix "Match User keke" cfg.services.openssh.extraConfig);
 assert !(cfg.security.pam.services.sshd.rules.auth ? surface-test-keke);
 assert cfg.security.pam.services.sudo.u2f.enable;
