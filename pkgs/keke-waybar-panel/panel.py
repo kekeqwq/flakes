@@ -13,7 +13,7 @@ import subprocess
 import sys
 import threading
 import time
-from datetime import datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 
 if os.environ.get("KEKE_PANEL_DEBUG"):
@@ -22,6 +22,8 @@ if os.environ.get("KEKE_PANEL_DEBUG"):
 
 import cairo
 import gi
+
+from calendar_grid import days_for_month, shift_day, shift_month
 
 gi.require_version("Gtk", "3.0")
 gi.require_version("Gdk", "3.0")
@@ -480,6 +482,91 @@ class Bluetooth(Gtk.Box):
 # --------------------------------------------------------------------- clock
 
 
+class CalendarGrid(Gtk.Box):
+    def __init__(self, today):
+        super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+        self.get_style_context().add_class("keke-calendar")
+        self.today = self.selected = today
+        heading = Gtk.Box(spacing=4)
+        self.pack_start(heading, False, False, 0)
+        self.month = Gtk.Label()
+        self.year = Gtk.Label()
+        for label, step, unit in ((self.month, 1, "month"), (self.year, 12, "year")):
+            for glyph, offset, direction in (("‹", -step, "Previous"), ("›", step, "Next")):
+                if offset > 0:
+                    heading.pack_start(label, True, True, 0)
+                    label.get_style_context().add_class("calendar-heading")
+                button = Gtk.Button(label=glyph)
+                button.set_tooltip_text(f"{direction} {unit}")
+                button.get_accessible().set_name(f"{direction} {unit}")
+                button.get_style_context().add_class("calendar-nav")
+                button.connect("clicked", self.navigate, offset)
+                heading.pack_start(button, False, False, 0)
+        grid = Gtk.Grid(column_homogeneous=True, column_spacing=2, row_spacing=2)
+        self.pack_start(grid, False, False, 0)
+        sunday = date(2024, 1, 7)
+        for column in range(7):
+            label = Gtk.Label(label=(sunday + timedelta(days=column)).strftime("%a"))
+            label.get_style_context().add_class("calendar-weekday")
+            grid.attach(label, column, 0, 1, 1)
+        self.cells = []
+        for index in range(42):
+            button = Gtk.Button()
+            label = Gtk.Label(xalign=0.5, yalign=0.5, hexpand=True, vexpand=True)
+            button.add(label)
+            button.get_style_context().add_class("calendar-day")
+            button.connect("clicked", self.choose, index)
+            button.connect("key-press-event", self.on_day_key, index)
+            grid.attach(button, index % 7, 1 + index // 7, 1, 1)
+            self.cells.append((button, label))
+        self.render()
+
+    def navigate(self, _button, offset):
+        self.selected = shift_month(self.selected, offset)
+        self.render()
+
+    def choose(self, _button, index):
+        self.select(self.days[index])
+
+    def select(self, day):
+        if day is None:
+            return
+        self.selected = day
+        self.render()
+        self.cells[self.days.index(day)][0].grab_focus()
+
+    def on_day_key(self, _button, event, index):
+        offsets = {Gdk.KEY_Left: -1, Gdk.KEY_Right: 1, Gdk.KEY_Up: -7, Gdk.KEY_Down: 7}
+        if event.keyval not in offsets or self.days[index] is None:
+            return False
+        self.select(shift_day(self.days[index], offsets[event.keyval]))
+        return True
+
+    def update_today(self, today):
+        if self.today != today:
+            if self.selected == self.today:
+                self.selected = today
+            self.today = today
+            self.render()
+
+    def render(self):
+        self.month.set_text(self.selected.strftime("%B"))
+        self.year.set_text(str(self.selected.year))
+        self.days = days_for_month(self.selected)
+        for day, (button, label) in zip(self.days, self.cells):
+            label.set_text(str(day.day) if day else "")
+            button.set_sensitive(day is not None)
+            button.set_can_focus(day is not None and day == self.selected)
+            button.get_accessible().set_name(day.strftime("%A, %B %d, %Y") if day else "")
+            style = button.get_style_context()
+            for name, enabled in (
+                ("outside", day is not None and day.month != self.selected.month),
+                ("today", day == self.today),
+                ("selected", day == self.selected),
+            ):
+                (style.add_class if enabled else style.remove_class)(name)
+
+
 class Clock(Gtk.Box):
     def __init__(self):
         super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=8)
@@ -488,7 +575,7 @@ class Clock(Gtk.Box):
         self.time.set_xalign(0)
         self.date = Gtk.Label()
         self.date.set_xalign(0)
-        self.calendar = Gtk.Calendar()
+        self.calendar = CalendarGrid(date.today())
         self.pack_start(self.time, False, False, 0)
         self.pack_start(self.date, False, False, 0)
         self.pack_start(self.calendar, False, False, 0)
@@ -499,6 +586,7 @@ class Clock(Gtk.Box):
         now = datetime.now()
         self.time.set_text(now.strftime("%I:%M %p").lstrip("0"))
         self.date.set_text(now.strftime("%A, %B %d").replace(" 0", " "))
+        self.calendar.update_today(now.date())
         return True
 
 

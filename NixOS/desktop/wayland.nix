@@ -16,10 +16,7 @@ let
   '';
   iconTheme = mode: if mode == "light" then "Papirus-Light" else "Papirus-Dark";
   trayIcons = mode: "${hm.gtk.iconTheme.package}/share/icons/${iconTheme mode}/22x22/panel";
-  lightAccent = "#04a5e5";
-  lightOnAccent = "#17203b";
-  # Small glyphs and clock text need a darker shade on the light pill.
-  lightAccentText = "#006887";
+  accentFor = import ./appearance-accent.nix;
   # The CSS border and Niri shadow cutout must share a radius.
   waybarRadius = "12";
   mediaNotify = pkgs.writeShellApplication {
@@ -51,7 +48,7 @@ let
               '')
               waybarRadius
               (lib.getExe mediaNotify)
-              ''active-color "${if mode == "light" then lightAccent else "#cba6f7"}"''
+              ''active-color "${(accentFor mode).fill}"''
             ]
             (builtins.readFile ./niri/config.kdl)
       )
@@ -259,8 +256,8 @@ in
         builtins.replaceStrings [ "#cba6f7" "text-color: @bg;" ] (
           if mode == "light" then
             [
-              lightAccent
-              "text-color: ${lightOnAccent};"
+              (accentFor mode).fill
+              "text-color: ${(accentFor mode).onFill};"
             ]
           else
             [
@@ -270,11 +267,13 @@ in
         ) (builtins.readFile ./rofi-mocha.rasi)
       )
     );
-    "mako.conf" = pkgs.writeText "mako-${mode}.conf" (paint mode makoConfig);
+    "mako.conf" = pkgs.writeText "mako-${mode}.conf" (
+      paint mode (builtins.replaceStrings [ "#cba6f7" ] [ (accentFor mode).fill ] makoConfig)
+    );
     "waybar.css" = pkgs.writeText "waybar-${mode}.css" ''
-      @define-color appearance_accent ${if mode == "light" then lightAccent else "#cba6f7"};
-      @define-color appearance_on_accent ${if mode == "light" then lightOnAccent else "#1e1e2e"};
-      @define-color appearance_accent_text ${if mode == "light" then lightAccentText else "#cba6f7"};
+      @define-color appearance_accent ${(accentFor mode).fill};
+      @define-color appearance_on_accent ${(accentFor mode).onFill};
+      @define-color appearance_accent_text ${(accentFor mode).text};
       ${paint mode waybarCSS}
     '';
     "tray-qbittorrent.svg" = "${trayIcons mode}/qbittorrent-tray.svg";

@@ -1,4 +1,8 @@
-/* Catppuccin Mocha, mauve accent. Loaded on top of the system GTK theme. */
+/* Mocha fallback; the desktop generation supplies the active accent. */
+@define-color panel_accent #cba6f7;
+@define-color panel_on_accent #1e1e2e;
+@define-color panel_accent_text #cba6f7;
+
 window.keke-panel {
   background-color: transparent;
   box-shadow: none;
@@ -13,6 +17,7 @@ window.keke-panel {
   padding: 0;
   color: #cdd6f4;
   font-size: 14px;
+  caret-color: @panel_accent_text;
 }
 
 .keke-card scrolledwindow,
@@ -32,21 +37,40 @@ window.keke-panel {
   font-size: 12px;
 }
 
-.keke-value {
-  color: #cba6f7;
+.keke-value,
+.calendar-heading {
+  color: @panel_accent_text;
   font-size: 13px;
   font-weight: 600;
 }
 
 .keke-section {
-  color: #89b4fa;
+  color: @panel_accent_text;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 1px;
   margin-top: 6px;
 }
 
-button.keke-action {
+.keke-card button,
+.keke-card entry,
+.keke-card scale trough,
+.keke-card scale highlight,
+.keke-card scale slider,
+.keke-card scrollbar slider {
+  background-image: none;
+  box-shadow: none;
+  text-shadow: none;
+}
+
+.keke-card button:focus,
+.keke-card entry:focus {
+  outline: 1px solid @panel_accent_text;
+  outline-offset: -3px;
+}
+
+button.keke-action,
+button.keke-device {
   background-color: #313244;
   color: #cdd6f4;
   border: 1px solid #45475a;
@@ -55,71 +79,64 @@ button.keke-action {
   font-size: 12px;
 }
 
-button.keke-action:hover {
-  background-color: #45475a;
-}
-
-button.keke-action.suggested {
-  background-color: #cba6f7;
-  color: #1e1e2e;
-  border-color: #cba6f7;
-}
-
-/* Appearance mode is a persisted selection, not GTK pointer/keyboard focus. */
-button.keke-action.appearance-choice {
-  background-image: none;
-  box-shadow: none;
-  text-shadow: none;
-}
-
-button.keke-action.appearance-choice:focus {
-  outline: 1px solid #cba6f7;
-  outline-offset: -3px;
-}
-
-button.keke-action.appearance-selected,
-button.keke-action.appearance-selected:hover,
-button.keke-action.appearance-selected:focus {
-  background-image: none;
-  background-color: #cba6f7;
-  border-color: #cba6f7;
-  color: #1e1e2e;
-  font-weight: 700;
-}
-
 button.keke-device {
-  background-color: #313244;
-  color: #cdd6f4;
-  border: 1px solid transparent;
-  border-radius: 8px;
+  border-color: transparent;
   padding: 6px 10px;
 }
 
+button.keke-action:hover,
 button.keke-device:hover {
   background-color: #45475a;
 }
 
+button.keke-action.suggested,
+button.keke-action.appearance-selected,
+button.keke-action.appearance-selected:hover,
+button.keke-action.appearance-selected:focus,
+.keke-card button.calendar-day.selected,
+.keke-card button.calendar-day.selected:hover {
+  background-color: @panel_accent;
+  border-color: @panel_accent;
+  color: @panel_on_accent;
+  font-weight: 700;
+}
+
+/* Distinguish keyboard focus on an already selected button. */
+.keke-card button.appearance-selected:focus,
+.keke-card button.calendar-day.selected:focus {
+  outline-color: @panel_on_accent;
+}
+
 button.keke-device.active {
-  border-color: #cba6f7;
+  border-color: @panel_accent;
   background-color: #313244;
 }
 
-scale trough {
+.keke-card scale trough {
   background-color: #313244;
+  border: none;
   border-radius: 6px;
   min-height: 8px;
 }
 
-scale highlight {
-  background-color: #cba6f7;
+.keke-card scale highlight {
+  background-color: @panel_accent;
+  border: none;
   border-radius: 6px;
 }
 
-scale slider {
-  background-color: #cdd6f4;
-  border-radius: 8px;
+.keke-card scale slider {
+  background-color: @panel_accent_text;
+  border: 1px solid #313244;
+  border-radius: 50%;
   min-width: 14px;
   min-height: 14px;
+}
+
+.keke-card scale:focus slider,
+.keke-card scale:hover slider,
+.keke-card scrollbar slider:hover {
+  background-color: @panel_accent;
 }
 
 entry.keke-entry {
@@ -130,18 +147,53 @@ entry.keke-entry {
   padding: 4px 8px;
 }
 
-calendar {
+.keke-card entry selection {
+  background-color: @panel_accent;
+  color: @panel_on_accent;
+}
+
+.keke-calendar {
   background-color: rgba(49, 50, 68, 0.55);
-  color: #cdd6f4;
+  border: 1px solid #45475a;
   border-radius: 10px;
-  padding: 10px;
+  padding: 8px;
+  color: #cdd6f4;
+  font-size: 13px;
 }
 
-calendar:selected {
-  background-color: #cba6f7;
-  color: #1e1e2e;
+.calendar-weekday {
+  color: #a6adc8;
+  padding: 3px 0;
 }
 
-calendar.header {
-  color: #89b4fa;
+.keke-card button.calendar-nav,
+.keke-card button.calendar-day {
+  border: 1px solid transparent;
+  background-color: transparent;
+  border-radius: 8px;
+  min-width: 0;
+  min-height: 30px;
+  padding: 0;
+  margin: 0;
+  color: #cdd6f4;
+}
+
+.keke-card button.calendar-nav {
+  color: @panel_accent_text;
+  min-width: 24px;
+  min-height: 28px;
+}
+
+.keke-card button.calendar-nav:hover,
+.keke-card button.calendar-day:hover {
+  background-color: #45475a;
+}
+
+.keke-card button.calendar-day.outside {
+  color: #a6adc8;
+}
+
+.keke-card button.calendar-day.today:not(.selected) {
+  color: @panel_accent_text;
+  border-color: @panel_accent;
 }

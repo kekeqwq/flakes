@@ -9,9 +9,18 @@ let
   hm = config.home-manager.users.${config.myuser.name};
   root = "${hm.xdg.stateHome}/keke-appearance";
   paint = import ./appearance-palette.nix;
+  accentFor = import ./appearance-accent.nix;
   palettes = lib.genAttrs [ "light" "dark" ] (mode: {
     "panel.css" = pkgs.writeText "panel-${mode}.css" (
-      paint mode (builtins.readFile ../../pkgs/keke-waybar-panel/panel.css)
+      let
+        accent = accentFor mode;
+      in
+      ''
+        ${paint mode (builtins.readFile ../../pkgs/keke-waybar-panel/panel.css)}
+        @define-color panel_accent ${accent.fill};
+        @define-color panel_on_accent ${accent.onFill};
+        @define-color panel_accent_text ${accent.text};
+      ''
     );
     "ghostty-overlays.css" = pkgs.writeText "ghostty-overlays-${mode}.css" (
       paint mode (builtins.readFile ./ghostty-overlays.css)
