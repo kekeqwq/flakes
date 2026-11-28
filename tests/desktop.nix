@@ -226,9 +226,8 @@ assert !(c.home-manager.users.keke.programs.ghostty.settings ? background-blur);
 assert lib.hasInfix ''spawn "ghostty"'' (builtins.readFile ../NixOS/desktop/niri/config.kdl);
 assert !off.home-manager.users.keke.programs.obsidian.enable;
 assert builtins.elem enabled.pkgs.python3Packages.playwright c.my.pythonExtraPackages;
-assert lib.any (p: p.pname or "" == "cloakbrowser") c.my.pythonExtraPackages;
+assert builtins.elem enabled.pkgs.python3Packages.playwright-stealth c.my.pythonExtraPackages;
 assert off.my.pythonExtraPackages == [ ];
-assert !(off.environment.variables ? CLOAKBROWSER_AUTO_UPDATE);
 assert !(off.environment.variables ? PLAYWRIGHT_BROWSERS_PATH);
 assert
   c.environment.variables.PLAYWRIGHT_BROWSERS_PATH
