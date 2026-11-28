@@ -43,6 +43,8 @@ class AppearanceTest(unittest.TestCase):
                 raise subprocess.CalledProcessError(1, args)
             if args[1:2] == ("get",):
                 return "'previous'"
+            if "NameHasOwner" in args:
+                return "b true"
             if args[0] == "emacsclient":
                 return "latte" if (self.root / "current").resolve().name == "light" else "mocha"
             return ""
@@ -89,6 +91,14 @@ class AppearanceTest(unittest.TestCase):
         self.assertEqual(self.switch("light", 12, 0, "light"), ["waybar.service"])
         self.deny = None
         self.assertEqual(self.switch("reconcile", 12, 0, "light", stored="light"), [])
+
+    def test_fcitx_refresh_only_reloads_classic_ui(self):
+        self.switch("light", 12, 0, "light")
+        bus_calls = [command for command in self.commands if command[0] == "busctl"]
+        self.assertEqual(len(bus_calls), 2)
+        self.assertEqual(bus_calls[0][-3:], ("NameHasOwner", "s", "org.fcitx.Fcitx5"))
+        self.assertEqual(bus_calls[1][-3:], ("ReloadAddonConfig", "s", "classicui"))
+        self.assertTrue(all("--auto-start=no" in call for call in bus_calls))
 
     def test_emacs_non_confirmation_is_visible(self):
         original = appearance.command

@@ -49,6 +49,17 @@ def active(unit):
     return subprocess.run(["systemctl", "--user", "is-active", "--quiet", unit], timeout=5).returncode == 0
 
 
+def refresh_fcitx():
+    """Reload only the candidate UI; let its portal monitor choose the palette."""
+    name = "org.fcitx.Fcitx5"
+    bus = ("busctl", "--user", "--auto-start=no", "call")
+    owner = command(*bus, "org.freedesktop.DBus", "/org/freedesktop/DBus",
+                    "org.freedesktop.DBus", "NameHasOwner", "s", name)
+    if owner == "b true":
+        command(*bus, name, "/controller", "org.fcitx.Fcitx.Controller1",
+                "ReloadAddonConfig", "s", "classicui")
+
+
 def interface(mode):
     light = mode == "light"
     return {
@@ -120,6 +131,10 @@ def refresh(root, assets, mode, operation, emacs_init):
                     command("systemctl", "--user", "reload", unit)
             except (OSError, subprocess.SubprocessError):
                 failures.append(unit)
+        try:
+            refresh_fcitx()
+        except (OSError, subprocess.SubprocessError):
+            failures.append("Fcitx5 Classic UI")
         try:
             if active("emacs.service"):
                 load = f"(load {json.dumps(str(emacs_init), ensure_ascii=False)} nil 'nomessage)"
